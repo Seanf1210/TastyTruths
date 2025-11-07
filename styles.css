@@ -288,6 +288,20 @@ body {
   margin: var(--space-4) auto;
 }
 
+/* =========================================================
+   RECIPE FORM
+   ========================================================= */
+
+.recipe-form {
+  display: flex;
+  flex-direction: column;
+  background-color: color-mix(in oklab, var(--color-accent) 25%, white);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  width: min(500px, 92%);
+  margin: var(--space-4) auto;
+}
 
 /* =========================================================
    CONTACT SECTION
