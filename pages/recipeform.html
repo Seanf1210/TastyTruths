@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Tasty Truths</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Short page description." />
+    <script
+      type="module"
+      src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"
+    ></script>
+    <script
+      nomodule
+      src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"
+    ></script>
+
+    <link
+      rel="icon"
+      type="image/png"
+      href="/assets/favicon/favicon-96x96.png"
+      sizes="96x96"
+    />
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon/favicon.svg" />
+    <link rel="shortcut icon" href="/assets/favicon/favicon.ico" />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/assets/favicon/apple-touch-icon.png"
+    />
+    <link rel="manifest" href="/assets/favicon/site.webmanifest" />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+
+  <body>
+    <!-- header that can be used for all pages with small tweaks to links-->
+    <header class="site-header">
+      <div class="header-container container">
+        <div class="logo">
+          <a href="../index.html">
+            <img src="../assets/images/logo_main.png" alt="Tasty Truths" />
+          </a>
+        </div>
+
+        <nav class="main-nav" aria-label="Primary">
+          <a href="about_us.html">About</a>
+          <a href="recipes.html">Recipes</a>
+          <a href="blog.html">Blog</a>
+          <a href="contact.html">Contact</a>
+        </nav>
+
+        <div class="auth-links">
+          <a href="login.html" class="button">Login</a>
+          <a href="signup.html" class="button signup">Sign Up</a>
+        </div>
+      </div>
+    </header>
+
+  <div class="recipe-form">
+      <form action="/submit-recipe" method="post">
+        <h2>Recipe Submission</h2>
+
+        <label for="recipe-title">Recipe Title:</label><br />
+        <input type="text" id="recipe-title" name="recipe-title" placeholder="Delicious Dish" required /><br /><br />
+
+        <label for="attachment">Attachment (optional):</label><br />
+        <input type="file" id="attachment" name="attachment" accept="image/*,video/*" /><br /><br />
+
+        <label for="description">Description:</label><br />
+        <textarea id="description" name="description" rows="2" placeholder="Briefly describe your recipe..." required></textarea><br /><br />
+
+        <label for="ingredients">Ingredients:</label><br />
+        <textarea id="ingredients" name="ingredients" rows="4" placeholder="List your ingredients here..." required></textarea><br /><br />
+
+        <label for="instructions">Instructions:</label><br />
+        <textarea id="instructions" name="instructions" rows="4" placeholder="Describe the steps to prepare the dish..." required></textarea><br /><br />
+
+        <button type="submit">Submit</button>
+        <button type="button" onclick="window.location.href='../index.html'">Cancel</button>
+
+        <p>Don't have an account? <a href="signup.html">Sign up</a></p>
+      </form>
+    </div>
+
+  </body>
+
+
+
+  <footer class="footer">
+    <small>&copy; 2025</small>
+    <a href="mailto:tastytruths@gmail.com"
+      ><ion-icon name="mail-outline"></ion-icon
+    ></a>
+    <a href="tel:+1234567890"><ion-icon name="call-outline"></ion-icon></a>
+    <a href="https:www.instagram.com" target="_blank"
+      ><ion-icon name="logo-instagram"></ion-icon
+    ></a>
+    <a href="https:www.facebook.com" target="_blank"
+      ><ion-icon name="logo-facebook"></ion-icon
+    ></a>
+    <a href="https:www.youtube.com" target="_blank"
+      ><ion-icon name="logo-youtube"></ion-icon
+    ></a>
+  </footer>
+</html>
