@@ -377,6 +377,85 @@ ion-icon[name="logo-instagram"] {
   background-color: var(--color-foot);
 }
 
+.fbox{
+  width: auto;
+  height: auto;
+  margin-left: 10px;
+  margin-right: 10px;
+  position: relative;
+}
+
+.footerbox{
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  text-align: center;
+}
+
+.popup {
+  display: none;
+  position: absolute;
+  background-color: #111;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 10px 15px;
+  bottom: 35px;
+  left: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  z-index: 5;
+
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+}
+
+.hover-menu:hover + .popup,
+.popup:hover {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  color: white;
+}
+
+.popup a {
+  display: block;
+  color: white;
+  text-decoration: none;
+  padding: 6px 0;
+}
+
+.popup a:hover {
+  color: #ffcc00;
+}
+
+#fbox5 a{
+  text-decoration: none;
+}
+
+#fbox1 img {
+  width: 120px;           
+  height: auto;
+  display: block;
+  margin: 0 auto;          
+  object-fit: contain;    
+}
+
+#fbox3 a,#fbox4 a{
+  text-decoration: none;
+  color: var(--color-text); 
+}
+
+#fbox3 a:hover, #fbox4 a:hover{
+  color: white;
+}
+
+#fbox5 ion-icon{
+  font-size: 20px;
+}
+
 #copy {
   color: var(--color-info);
 }
