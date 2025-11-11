@@ -593,3 +593,147 @@ a:hover {
     font-size: 1.05rem;
   }
 }
+
+/* =========================================================
+   blog layout
+   ========================================================= */
+   .post-feed {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* * The main post card
+*/
+.post-card {
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Card Header: Avatar + User Info */
+.card-header {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+}
+
+.avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%; /* Makes the avatar circular */
+    margin-right: 0.75rem;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-name {
+    font-weight: 700;
+    color: #050505;
+}
+
+.user-id {
+    font-size: 0.9rem;
+    color: #5b7083;
+}
+
+/* Card Body: The main text content */
+.card-body {
+    font-size: 1rem;
+    line-height: 1.4;
+    margin-bottom: 0.75rem;
+}
+
+.card-body p {
+    margin: 0;
+}
+
+/* Card Media: The optional image */
+.card-media {
+    margin-top: 1rem;
+    border-radius: 12px; /* Rounded corners for the image */
+    overflow: hidden; /* Ensures the image respects the border-radius */
+    border: 1px solid #ddd;
+}
+
+.card-media img {
+    width: 100%;
+    height: auto;
+    display: block; /* Removes bottom spacing on images */
+}
+
+/* * Card Actions: The icon bar
+ * Uses flexbox to space the icons evenly.
+*/
+.card-actions {
+    display: flex;
+    justify-content: space-around; /* Distributes items evenly */
+    margin-top: 1rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #ebedf0;
+    color: #5b7083; /* Default icon/text color */
+}
+
+.action-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    color: inherit; /* Takes color from .card-actions */
+    font-size: 0.85rem;
+    padding: 0.5rem;
+    border-radius: 99px; /* Pill shape for hover background */
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.action-button svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor; 
+}
+
+.action-count {
+    margin-left: 0.5rem;
+}
+
+/* --- Hover and Focus States --- */
+/* Provides visual feedback on interaction */
+
+.action-button:hover,
+.action-button:focus {
+    outline: none;
+}
+
+/* Comment: Blue */
+.action-comment:hover,
+.action-comment:focus {
+    color: #1d9bf0;
+    background-color: rgba(29, 155, 240, 0.1);
+}
+
+/* Repost: Green */
+.action-repost:hover,
+.action-repost:focus {
+    color: #00ba7c;
+    background-color: rgba(0, 186, 124, 0.1);
+}
+
+/* Like: Pink/Red */
+.action-like:hover,
+.action-like:focus {
+    color: #f91880;
+    background-color: rgba(249, 24, 128, 0.1);
+}
+
+/* Share: Blue */
+.action-share:hover,
+.action-share:focus {
+    color: #1d9bf0;
+    background-color: rgba(29, 155, 240, 0.1);
+}
