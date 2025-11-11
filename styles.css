@@ -82,7 +82,9 @@ body {
   line-height: 1.5;
   margin: 0;
   padding-top: 150px;
-  padding-bottom: 100px;
+  padding-bottom: 900px;
+  padding-left: 3%;
+  padding-right: 3%;
 }
 
 /* Utility container */
@@ -103,10 +105,11 @@ body {
    HEADER / NAV
    ========================================================= */
 .site-header {
+  height: 135px;
   top: 0;
   left: 0;
   position: fixed;
-  background-color: var(--color-accent);
+  background-color: var(--color-foot);
   width: 100%;
 }
 
@@ -395,10 +398,9 @@ ion-icon[name="logo-instagram"] {
    FOOTER
    ========================================================= */
 .footer {
-  position: fixed;
+  position: end;
   text-align: center;
-  left: 0;
-  bottom: 0;
+  bottom: 100%;
   width: 100%;
   padding: var(--space-3) 0;
   font-size: 0.9rem;
