@@ -1,7 +1,7 @@
 /* =========================================================
-   DESIGN TOKENS
+  DESIGN TOKENS
    ========================================================= */
-   
+
 :root {
   /* Fonts */
   --font-base: "Lato", system-ui, -apple-system, "Segoe UI", Roboto,
@@ -62,7 +62,7 @@
 }
 
 /* =========================================================
-   GLOBAL / BASE
+  GLOBAL / BASE
    ========================================================= */
 * {
   box-sizing: border-box;
@@ -80,7 +80,7 @@ body {
   line-height: 1.5;
   margin: 0;
   padding-top: 150px;
-  padding-bottom: 100px;
+  padding-bottom: 900px;
 }
 
 /* Utility container */
@@ -98,7 +98,7 @@ body {
 }
 
 /* =========================================================
-   HEADER / NAV
+  HEADER / NAV
    ========================================================= */
 .site-header {
   top: 0;
@@ -183,7 +183,7 @@ body {
 }
 
 /* =========================================================
-   HERO
+  HERO
    ========================================================= */
 .hero {
   display: flex;
@@ -261,7 +261,7 @@ body {
 }
 
 /* =========================================================
-   SIGNUP FORM
+  SIGNUP FORM
    ========================================================= */
 .signup-form {
   display: flex;
@@ -275,7 +275,7 @@ body {
 }
 
 /* =========================================================
-   LOGIN FORM
+  LOGIN FORM
    ========================================================= */
 .login-form {
   display: flex;
@@ -289,7 +289,7 @@ body {
 }
 
 /* =========================================================
-   RECIPE FORM
+  RECIPE FORM
    ========================================================= */
 
 .recipe-form {
@@ -304,11 +304,11 @@ body {
 }
 
 /* =========================================================
-   CONTACT SECTION
+  CONTACT SECTION
    ========================================================= */
- .contact-body {
+.contact-body {
   padding-top: 200px;
- }
+}
 .contact-us {
   background-color: var(--color-surface-muted);
   width: 60%;
@@ -363,7 +363,7 @@ ion-icon[name="logo-instagram"] {
 }
 
 /* =========================================================
-   FOOTER
+  FOOTER
    ========================================================= */
 .footer {
   position: fixed;
@@ -371,13 +371,12 @@ ion-icon[name="logo-instagram"] {
   left: 0;
   bottom: 0;
   width: 100%;
-  padding: var(--space-3) 0;
   font-size: 0.9rem;
   color: var(--color-muted-text);
   background-color: var(--color-foot);
 }
 
-.fbox{
+.fbox {
   width: auto;
   height: auto;
   margin-left: 10px;
@@ -385,7 +384,7 @@ ion-icon[name="logo-instagram"] {
   position: relative;
 }
 
-.footerbox{
+.footerbox {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -402,7 +401,7 @@ ion-icon[name="logo-instagram"] {
   padding: 10px 15px;
   bottom: 35px;
   left: 0;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
   z-index: 5;
 
   opacity: 0;
@@ -431,28 +430,30 @@ ion-icon[name="logo-instagram"] {
   color: #ffcc00;
 }
 
-#fbox5 a{
+#fbox5 a {
   text-decoration: none;
 }
 
 #fbox1 img {
-  width: 120px;           
+  width: 120px;
   height: auto;
   display: block;
-  margin: 0 auto;          
-  object-fit: contain;    
+  margin: 0 auto;
+  object-fit: contain;
 }
 
-#fbox3 a,#fbox4 a{
+#fbox3 a,
+#fbox4 a {
   text-decoration: none;
-  color: var(--color-text); 
+  color: var(--color-text);
 }
 
-#fbox3 a:hover, #fbox4 a:hover{
+#fbox3 a:hover,
+#fbox4 a:hover {
   color: white;
 }
 
-#fbox5 ion-icon{
+#fbox5 ion-icon {
   font-size: 20px;
 }
 
@@ -461,7 +462,7 @@ ion-icon[name="logo-instagram"] {
 }
 
 /* =========================================================
-   BLOG PREVIEW CARDS
+  BLOG PREVIEW CARDS
    ========================================================= */
 .blog-preview-container {
   display: grid;
@@ -539,7 +540,7 @@ ion-icon[name="logo-instagram"] {
 }
 
 /* =========================================================
-   LINKS
+  LINKS
    ========================================================= */
 a {
   color: var(--color-link);
@@ -549,7 +550,7 @@ a:hover {
 }
 
 /* =========================================================
-   RESPONSIVE
+  RESPONSIVE
    ========================================================= */
 @media (max-width: 768px) {
   .auth-links {
