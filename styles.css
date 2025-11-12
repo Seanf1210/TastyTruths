@@ -31,7 +31,7 @@
   --color-primary: #31572c;
   --color-text: #132a13;
   --color-text-alt: #ff9505;
-  --color-foot: #4f772d;
+  --color-head-foot: #4f772d;
   --color-surface: #ffffff;
   --color-accent: #90a955;
   --color-muted-text: color-mix(in oklab, var(--color-text) 80%, transparent);
@@ -97,18 +97,39 @@ body {
 .index_top {
   text-align: center;
   text-decoration: overline;
-  color: color-mix(in oklab, var(--color-primary) 70%, white);
+  color: color-mix(in oklab, var(--color-primary) 70%, --color-surface);
 }
 
 /* =========================================================
-  HEADER / NAV
+  HEADER / FOOTER READABLE TEXT
+   ========================================================= */
+
+#fbox3 a,
+#fbox4 a,
+.header-container,
+.footerbox {
+  text-decoration: none;
+  font-size: 0.95rem;
+  color: var(--color-text-alt);
+}
+
+#fbox3 a:hover,
+#fbox4 a:hover,
+.main-nav a:hover,
+.auth-links a:hover {
+  color: var(--color-text);
+  background-color: var(--color-hover);
+}
+
+/* =========================================================
+  HEADER / NAV / FOOTER
    ========================================================= */
 .site-header {
   height: 135px;
   top: 0;
   left: 0;
   position: fixed;
-  background-color: var(--color-foot);
+  background-color: var(--color-head-foot);
   width: 100%;
 }
 
@@ -143,16 +164,10 @@ body {
   color: inherit;
 }
 
-.main-nav a:hover,
-.auth-links a:hover {
-  color: var(--color-text);
-  background-color: var(--color-hover);
-}
-
 /* Buttons */
 .button {
   display: inline-block;
-  background-color: var(--color-surface);
+  background-color: var(--color-surface-muted);
   color: var(--color-text);
   text-align: center;
   padding: var(--space-2) calc(var(--space-2) + 6px);
@@ -265,12 +280,45 @@ body {
 }
 
 /* =========================================================
+  INDEX RECIPE / BLOG
+   ========================================================= */
+.home-preview-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: calc(var(--space-3) + 2px);
+  margin: var(--space-4) auto;
+}
+
+.home-blog-preview {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  width: min(500px, 92%);
+  margin: auto;
+}
+
+.home-recipe-preview {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  width: min(500px, 92%);
+  margin: auto;
+}
+/* =========================================================
   SIGNUP FORM
    ========================================================= */
 .signup-form {
   display: flex;
   flex-direction: column;
-  background-color: color-mix(in oklab, var(--color-accent) 25%, white);
+  background-color: color-mix(
+    in oklab,
+    var(--color-accent) 25%,
+    --color-surface
+  );
   padding: var(--space-3);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
@@ -284,7 +332,11 @@ body {
 .login-form {
   display: flex;
   flex-direction: column;
-  background-color: color-mix(in oklab, var(--color-accent) 25%, white);
+  background-color: color-mix(
+    in oklab,
+    var(--color-accent) 25%,
+    --color-surface
+  );
   padding: var(--space-3);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
@@ -299,7 +351,11 @@ body {
 .recipe-form {
   display: flex;
   flex-direction: column;
-  background-color: color-mix(in oklab, var(--color-accent) 25%, white);
+  background-color: color-mix(
+    in oklab,
+    var(--color-accent) 25%,
+    var(--color-surface)
+  );
   padding: var(--space-3);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
@@ -376,7 +432,7 @@ ion-icon[name="logo-instagram"] {
   width: 100%;
   font-size: 0.9rem;
   color: var(--color-text-alt);
-  background-color: var(--color-foot);
+  background-color: var(--color-head-foot);
 }
 
 .fbox {
@@ -405,11 +461,10 @@ ion-icon[name="logo-instagram"] {
   bottom: 35px;
   left: 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-  z-index: 5;
-
+  z-index: 255;
   opacity: 0;
   transform: translateY(10px);
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition: opacity 0.8s ease, transform 0.8s ease;
   pointer-events: none;
 }
 
@@ -419,18 +474,18 @@ ion-icon[name="logo-instagram"] {
   opacity: 1;
   transform: translateY(0);
   pointer-events: auto;
-  color: white;
+  color: var(--color-);
 }
 
 .popup a {
   display: block;
-  color: white;
+  color: var(--color-accent);
   text-decoration: none;
   padding: 6px 0;
 }
 
 .popup a:hover {
-  color: #ffcc00;
+  color: var(--color-text-alt);
 }
 
 #fbox5 a {
@@ -445,23 +500,8 @@ ion-icon[name="logo-instagram"] {
   object-fit: contain;
 }
 
-#fbox3 a,
-#fbox4 a {
-  text-decoration: none;
-  color: var(--color-text);
-}
-
-#fbox3 a:hover,
-#fbox4 a:hover {
-  color: white;
-}
-
 #fbox5 ion-icon {
   font-size: 20px;
-}
-
-#copy {
-  color: var(--color-info);
 }
 
 /* =========================================================
