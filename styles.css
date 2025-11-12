@@ -30,6 +30,7 @@
   /* Theme (Green by default) */
   --color-primary: #31572c;
   --color-text: #132a13;
+  --color-text-alt: #ff9505;
   --color-foot: #4f772d;
   --color-surface: #ffffff;
   --color-accent: #90a955;
@@ -374,7 +375,7 @@ ion-icon[name="logo-instagram"] {
   bottom: 100%;
   width: 100%;
   font-size: 0.9rem;
-  color: var(--color-muted-text);
+  color: var(--color-text-alt);
   background-color: var(--color-foot);
 }
 
