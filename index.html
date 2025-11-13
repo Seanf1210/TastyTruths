@@ -32,25 +32,43 @@
     <link rel="stylesheet" href="../styles.css" />
   </head>
   <body>
-    <!-- header that can be used for all pages with small tweaks to links-->
-    <header class="site-header">
+    <!-- header that can be used for all pages until we move away from static-->
+    <header
+      id="site-header"
+      class="site-header"
+      data-auth-me="/api/auth/me"
+      data-csrf="/api/auth/csrf-token"
+      data-logout="/api/auth/logout"
+      data-login-url="/pages/login.html"
+      data-signup-url="/pages/signup.html"
+      data-profile-url="/pages/account.html"
+    >
       <div class="header-container container">
+        <!-- Left: Logo -->
         <div class="logo">
-          <a href="../index.html">
-            <img src="../assets/images/logo_main.png" alt="Tasty Truths logo" />
-          </a>
+          <a href="/"
+            ><img src="/assets/images/logo_main.png" alt="Tasty Truths logo"
+          /></a>
         </div>
 
-        <nav class="main-nav" aria-label="Primary navigation">
-          <a href="./pages/about_us.html">About</a>
-          <a href="./pages/recipes.html">Recipes</a>
-          <a href="./pages/blog.html">Blog</a>
-          <a href="./pages/contact.html">Contact</a>
+        <!-- Middle: Main nav -->
+        <nav class="main-nav" aria-label="Primary">
+          <a href="about_us.html">About</a>
+          <a href="/pages/recipes.html">Recipes</a>
+          <a href="/pages/contact.html">Contact</a>
+          <a href="/pages/blog.html">Blog</a>
         </nav>
 
-        <div class="auth-links">
-          <a href="./pages/login.html" class="button">Login</a>
-          <a href="./pages/signup.html" class="button signup">Sign Up</a>
+        <!-- Right: Auth state. Uses .auth-links styling -->
+        <div
+          id="auth-bar"
+          class="auth-links"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          <!-- Fallback content (replaced by script.js) -->
+          <a class="button" href="/pages/login.html">Log in</a>
+          <a class="button signup" href="/pages/signup.html">Sign up</a>
         </div>
       </div>
     </header>
@@ -213,16 +231,16 @@
     </article>
 
         </div>
-        <div class="home-preview-cont">
-          <div class="home-blog-preview">
-            <p class="blog-pre-head">
-              Blog preview top part!
-            </p>
-            <div class="blog-pre-example">
-              Rando Blog Here
-            </div>
-          </div>
-          <div class="home-recipe-preview"></div>
+      </section>
+      <section class="home-preview-container">
+        <div class="home-blog-preview">
+          <p class="blog-pre-head">Blog preview top part!</p>
+          <div class="blog-pre-example">Rando Blog Here</div>
+        </div>
+
+        <div class="home-recipe-preview">
+          <p class="recipe-pre-head">Recipe preview top part!</p>
+          <div class="recipe-pre-example">Rando Recipe Here</div>
         </div>
       </section>
     </main>
@@ -258,13 +276,13 @@
           <a href="tel:+1234567890"
             ><ion-icon name="call-outline"></ion-icon>
           </a>
-          <a href="https:www.instagram.com" target="_blank">
+          <a href="www.instagram.com" target="_blank">
             <ion-icon name="logo-instagram"></ion-icon>
           </a>
-          <a href="https:www.facebook.com" target="_blank">
+          <a href="www.facebook.com" target="_blank">
             <ion-icon name="logo-facebook"></ion-icon>
           </a>
-          <a href="https:www.youtube.com" target="_blank">
+          <a href="www.youtube.com" target="_blank">
             <ion-icon name="logo-youtube"></ion-icon>
           </a>
         </div>
@@ -273,6 +291,6 @@
       <small>&copy; 2025</small>
     </footer>
 
-    <script src="path/to/script.js"></script>
+    <script src="/static/js/script.js" defer></script>
   </body>
 </html>

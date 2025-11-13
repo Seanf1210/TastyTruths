@@ -1,4 +1,6 @@
 # services/models.py
+
+# Commented out sections are for initial login/sign up functionality, to be implemented later.
 from datetime import datetime
 from flask_login import UserMixin
 from sqlalchemy import func
@@ -21,26 +23,25 @@ class RecipeSlugHistory(db.Model):
     changed_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
 # --- Auto-generate slug on insert ---
-@event.listens_for(Recipe, "before_insert")
-def recipe_before_insert(mapper, connection, target: Recipe):
-    session = db.session
-    base = base_slug(target.title)
-    target.slug = uniquify_slug(session, Recipe, base)
+# @event.listens_for(Recipe, "before_insert")
+# def recipe_before_insert(mapper, connection, target: Recipe):
+#     session = db.session
+#     base = base_slug(target.title)
+#     target.slug = uniquify_slug(session, Recipe, base)
 
 # --- If title changes, rotate slug + save redirect history ---
-@event.listens_for(Recipe, "before_update")
-def recipe_before_update(mapper, connection, target: Recipe):
-    session = db.session
-    # Load current DB state to compare
-    db_obj = session.get(Recipe, target.id)
-    if not db_obj:
-        return
-    if db_obj.title != target.title:
-        old_slug = db_obj.slug
-        new_base = base_slug(target.title)
-        target.slug = uniquify_slug(session, Recipe, new_base, exclude_id=target.id)
-        if old_slug != target.slug:
-            session.add(RecipeSlugHistory(recipe_id=target.id, old_slug=old_slug))
+# @event.listens_for(Recipe, "before_update")
+# def recipe_before_update(mapper, connection, target: Recipe):
+#     session = db.session
+#     db_obj = session.get(Recipe, target.id)
+#     if not db_obj:
+#         return
+#     if db_obj.title != target.title:
+#         old_slug = db_obj.slug
+#         new_base = base_slug(target.title)
+#         target.slug = uniquify_slug(session, Recipe, new_base, exclude_id=target.id)
+#         if old_slug != target.slug:
+#             session.add(RecipeSlugHistory(recipe_id=target.id, old_slug=old_slug))
 
 class User(db.Model, UserMixin):
     __tablename__ = "users"
