@@ -1,9 +1,13 @@
+
+ 
 /* =========================================================
    DESIGN TOKENS
    ========================================================= */
+   
 :root {
   /* Fonts */
-  --font-base: "Lato", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-base: "Lato", system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
   --font-display: "Atma", var(--font-base);
 
   /* Spacing scale */
@@ -19,23 +23,25 @@
 
   /* Shadows */
   --shadow-sm: 0 0 10px rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 6px 18px rgba(0,0,0,0.08);
-  --shadow-lg: 0 10px 24px rgba(0,0,0,0.12);
+  --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 24px rgba(0, 0, 0, 0.12);
 
-  /* ✅ Permanent site background (kept exactly as requested) */
+  /* Permanent site background */
   --color-bg: rgb(123, 162, 128); /* #7BA280 */
 
   /* Theme (Green by default) */
-  --color-primary: #31572C;
-  --color-text: #0E2010;
+  --color-primary: #31572c;
+  --color-text: #132a13;
+  --color-text-alt: #ff9505;
+  --color-head-foot: #4f772d;
   --color-surface: #ffffff;
-  --color-accent: #90A955;
+  --color-accent: #90a955;
   --color-muted-text: color-mix(in oklab, var(--color-text) 80%, transparent);
 
   /* System/supporting tokens */
-  --color-surface-muted: #e5e5e5;            /* soft gray blocks */
-  --color-border: #000000;                   /* used where plain black was used */
-  --color-info: #1d4ed8;                     /* “blue” headings/icons */
+  --color-surface-muted: #ecf39e;
+  --color-border: #000000;
+  --color-info: #1d4ed8;
   --color-outline: color-mix(in oklab, var(--color-primary) 6%, transparent);
   --color-hover: color-mix(in oklab, var(--color-primary) 8%, transparent);
   --color-link: var(--color-primary);
@@ -44,16 +50,16 @@
 
 /* Optional theme override (still keeps the base bg!) */
 :root[data-theme="green"] {
-  --color-primary: #31572C;
-  --color-accent: #90A955;
-  --color-text: #0E2010;
+  --color-primary: #31572c;
+  --color-accent: #90a955;
+  --color-text: #0e2010;
 }
 
 /* Optional orange theme */
 :root[data-theme="orange"] {
-  --color-primary: #E2711D;
-  --color-accent: #FF9505;
-  --color-text: #2A1A12;
+  --color-primary: #e2711d;
+  --color-accent: #ff9505;
+  --color-text: #2a1a12;
   --color-outline: color-mix(in oklab, var(--color-primary) 8%, transparent);
   --color-hover: color-mix(in oklab, var(--color-primary) 10%, transparent);
 }
@@ -61,9 +67,12 @@
 /* =========================================================
    GLOBAL / BASE
    ========================================================= */
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
-html, body {
+html,
+body {
   height: 100%;
 }
 
@@ -73,6 +82,10 @@ body {
   font-family: var(--font-base);
   line-height: 1.5;
   margin: 0;
+  padding-top: 150px;
+  padding-bottom: 900px;
+  padding-left: 3%;
+  padding-right: 3%;
 }
 
 /* Utility container */
@@ -86,18 +99,48 @@ body {
 .index_top {
   text-align: center;
   text-decoration: overline;
-  color: color-mix(in oklab, var(--color-primary) 70%, white);
+  color: color-mix(in oklab, var(--color-primary) 70%, --color-surface);
 }
 
 /* =========================================================
-   HEADER / NAV
+  HEADER / FOOTER READABLE TEXT
    ========================================================= */
+
+#fbox3 a,
+#fbox4 a,
+.header-container,
+.footerbox {
+  text-decoration: none;
+  font-size: 0.95rem;
+  color: var(--color-text-alt);
+}
+
+#fbox3 a:hover,
+#fbox4 a:hover,
+.main-nav a:hover,
+.auth-links a:hover {
+  color: var(--color-text);
+  background-color: var(--color-hover);
+}
+
+/* =========================================================
+  HEADER / NAV / FOOTER
+   ========================================================= */
+.site-header {
+  height: 135px;
+  top: 0;
+  left: 0;
+  position: fixed;
+  background-color: var(--color-head-foot);
+  width: 100%;
+}
+
 .header-container {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  padding: var(--space-3) calc(var(--space-3) + var(--space-1)); /* 16px 20px */
+  padding: var(--space-3) calc(var(--space-3) + var(--space-1));
 }
 
 .logo img {
@@ -118,25 +161,21 @@ body {
   text-decoration: none;
   padding: var(--space-2) calc(var(--space-2) + 4px);
   border-radius: var(--radius-md);
-  transition: background-color 0.25s ease, color 0.25s ease, transform 0.08s ease;
+  transition: background-color 0.25s ease, color 0.25s ease,
+    transform 0.08s ease;
   color: inherit;
-}
-
-.main-nav a:hover,
-.auth-links a:hover {
-  color: var(--color-text);
-  background-color: var(--color-hover);
 }
 
 /* Buttons */
 .button {
   display: inline-block;
-  background-color: var(--color-surface);
+  background-color: var(--color-surface-muted);
   color: var(--color-text);
   text-align: center;
   padding: var(--space-2) calc(var(--space-2) + 6px);
   border-radius: var(--radius-md);
-  transition: background-color 0.25s ease, color 0.25s ease, transform 0.08s ease;
+  transition: background-color 0.25s ease, color 0.25s ease,
+    transform 0.08s ease;
   box-shadow: var(--shadow-sm);
 }
 
@@ -227,11 +266,20 @@ body {
 }
 
 /* Size variants to create visual variety */
-.hero_right_t_img img.wide { grid-column: span 2; }
-.hero_right_t_img img.tall { grid-row: span 2; }
-.hero_right_t_img img.big  { grid-column: span 2; grid-row: span 2; }
+.hero_right_t_img img.wide {
+  grid-column: span 2;
+}
+.hero_right_t_img img.tall {
+  grid-row: span 2;
+}
+.hero_right_t_img img.big {
+  grid-column: span 2;
+  grid-row: span 2;
+}
 
-.hero_right_b { margin-top: var(--space-2); }
+.hero_right_b {
+  margin-top: var(--space-2);
+}
 
 /* =========================================================
    SIGNUP FORM
@@ -239,7 +287,11 @@ body {
 .signup-form {
   display: flex;
   flex-direction: column;
-  background-color: color-mix(in oklab, var(--color-accent) 25%, white);
+  background-color: color-mix(
+    in oklab,
+    var(--color-accent) 25%,
+    --color-surface
+  );
   padding: var(--space-3);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
@@ -248,8 +300,75 @@ body {
 }
 
 /* =========================================================
+   LOGIN FORM
+   ========================================================= */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  background-color: color-mix(
+    in oklab,
+    var(--color-accent) 25%,
+    --color-surface
+  );
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  width: min(500px, 92%);
+  margin: var(--space-4) auto;
+}
+
+/* =========================================================
+   RECIPE FORM
+   ========================================================= */
+
+.recipe-form {
+  display: flex;
+  flex-direction: column;
+  background-color: color-mix(
+    in oklab,
+    var(--color-accent) 25%,
+    var(--color-surface)
+  );
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  width: min(500px, 92%);
+  margin: var(--space-4) auto;
+}
+
+/* =========================================================
+   404 PAGE
+   ========================================================= */
+
+.page404{
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 var(--space-3);
+  text-align: center;
+  padding: 50px 20px;
+}
+
+.page404 h1{
+  font-size: 3em;
+  margin-bottom: 20px;
+}
+
+.page404 p{
+  font-size: 1.2em;
+  margin-bottom: 30px;
+}
+
+.page404 a{
+  font-size: 1.1em; 
+  padding: 10px 24px;
+}
+
+/* =========================================================
    CONTACT SECTION
    ========================================================= */
+ .contact-body {
+  padding-top: 200px;
+ }
 .contact-us {
   background-color: var(--color-surface-muted);
   width: 60%;
@@ -295,10 +414,96 @@ ion-icon[name="logo-facebook"] {
   outline: var(--color-border);
 }
 
+ion-icon[name="logo-youtube"] {
+  color: #ff0000;
+}
+
+ion-icon[name="logo-instagram"] {
+  color: #e1306c;
+}
+
 /* =========================================================
    FOOTER
    ========================================================= */
-#copy { color: var(--color-info); }
+.footer {
+  position: end;
+  text-align: center;
+  bottom: 100%;
+  width: 100%;
+  padding: var(--space-3) 0;
+  font-size: 0.9rem;
+  color: var(--color-text-alt);
+  background-color: var(--color-head-foot);
+}
+
+.fbox{
+  width: auto;
+  height: auto;
+  margin-left: 10px;
+  margin-right: 10px;
+  position: relative;
+}
+
+.footerbox{
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  text-align: center;
+}
+
+.popup {
+  display: none;
+  position: absolute;
+  background-color: #111;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 10px 15px;
+  bottom: 35px;
+  left: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  z-index: 255;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+  pointer-events: none;
+}
+
+.hover-menu:hover + .popup,
+.popup:hover {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  color: var(--color-);
+}
+
+.popup a {
+  display: block;
+  color: var(--color-accent);
+  text-decoration: none;
+  padding: 6px 0;
+}
+
+.popup a:hover {
+  color: var(--color-text-alt);
+}
+
+#fbox5 a{
+  text-decoration: none;
+}
+
+#fbox1 img {
+  width: 120px;           
+  height: auto;
+  display: block;
+  margin: 0 auto;          
+  object-fit: contain;    
+}
+
+#fbox5 ion-icon {
+  font-size: 20px;
+}
 
 /* =========================================================
    BLOG PREVIEW CARDS
@@ -349,7 +554,9 @@ ion-icon[name="logo-facebook"] {
   text-decoration: none;
 }
 
-.blog-card h2 a:hover { text-decoration: underline; }
+.blog-card h2 a:hover {
+  text-decoration: underline;
+}
 
 .blog-card p {
   margin: 0 var(--space-2) var(--space-2);
@@ -366,7 +573,8 @@ ion-icon[name="logo-facebook"] {
   color: var(--color-primary);
   text-decoration: none;
   outline: 1px solid var(--color-outline);
-  transition: background-color 0.25s ease, color 0.25s ease, transform 0.08s ease;
+  transition: background-color 0.25s ease, color 0.25s ease,
+    transform 0.08s ease;
 }
 
 .blog-card .read-more:hover,
@@ -378,8 +586,12 @@ ion-icon[name="logo-facebook"] {
 /* =========================================================
    LINKS
    ========================================================= */
-a { color: var(--color-link); }
-a:hover { color: var(--color-link-hover); }
+a {
+  color: var(--color-link);
+}
+a:hover {
+  color: var(--color-link-hover);
+}
 
 /* =========================================================
    RESPONSIVE
@@ -392,6 +604,154 @@ a:hover { color: var(--color-link-hover); }
 }
 
 @media (max-width: 420px) {
-  .blog-preview-container { gap: calc(var(--space-2) - 2px); }
-  .blog-card h2 { font-size: 1.05rem; }
+  .blog-preview-container {
+    gap: calc(var(--space-2) - 2px);
+  }
+  .blog-card h2 {
+    font-size: 1.05rem;
+  }
+}
+
+/* =========================================================
+   blog layout
+   ========================================================= */
+   .post-feed {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* * The main post card
+*/
+.post-card {
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Card Header: Avatar + User Info */
+.card-header {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+}
+
+.avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%; /* Makes the avatar circular */
+    margin-right: 0.75rem;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-name {
+    font-weight: 700;
+    color: #050505;
+}
+
+.user-id {
+    font-size: 0.9rem;
+    color: #5b7083;
+}
+
+/* Card Body: The main text content */
+.card-body {
+    font-size: 1rem;
+    line-height: 1.4;
+    margin-bottom: 0.75rem;
+}
+
+.card-body p {
+    margin: 0;
+}
+
+/* Card Media: The optional image */
+.card-media {
+    margin-top: 1rem;
+    border-radius: 12px; /* Rounded corners for the image */
+    overflow: hidden; /* Ensures the image respects the border-radius */
+    border: 1px solid #ddd;
+}
+
+.card-media img {
+    width: 100%;
+    height: auto;
+    display: block; /* Removes bottom spacing on images */
+}
+
+/* * Card Actions: The icon bar
+ * Uses flexbox to space the icons evenly.
+*/
+.card-actions {
+    display: flex;
+    justify-content: space-around; /* Distributes items evenly */
+    margin-top: 1rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #ebedf0;
+    color: #5b7083; /* Default icon/text color */
+}
+
+.action-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    color: inherit; /* Takes color from .card-actions */
+    font-size: 0.85rem;
+    padding: 0.5rem;
+    border-radius: 99px; /* Pill shape for hover background */
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.action-button svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor; 
+}
+
+.action-count {
+    margin-left: 0.5rem;
+}
+
+/* --- Hover and Focus States --- */
+/* Provides visual feedback on interaction */
+
+.action-button:hover,
+.action-button:focus {
+    outline: none;
+}
+
+/* Comment: Blue */
+.action-comment:hover,
+.action-comment:focus {
+    color: #1d9bf0;
+    background-color: rgba(29, 155, 240, 0.1);
+}
+
+/* Repost: Green */
+.action-repost:hover,
+.action-repost:focus {
+    color: #00ba7c;
+    background-color: rgba(0, 186, 124, 0.1);
+}
+
+/* Like: Pink/Red */
+.action-like:hover,
+.action-like:focus {
+    color: #f91880;
+    background-color: rgba(249, 24, 128, 0.1);
+}
+
+/* Share: Blue */
+.action-share:hover,
+.action-share:focus {
+    color: #1d9bf0;
+    background-color: rgba(29, 155, 240, 0.1);
 }
