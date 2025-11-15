@@ -11,7 +11,7 @@ function renderFooter() {
         <div class="fbox" id="fbox2">
           <p class="hover-menu">Pages ↑</p>
           <div class="popup">
-            <a href="../index.html">Home</a>
+            <a href="/index.html">Home</a>
             <a href="/pages/recipes.html">Recipes</a>
             <a href="/pages/contact.html">Contact</a>
             <a href="/pages/blog.html">Blog</a>
