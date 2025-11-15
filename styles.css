@@ -1,9 +1,7 @@
-
- 
 /* =========================================================
    DESIGN TOKENS
    ========================================================= */
-   
+
 :root {
   /* Fonts */
   --font-base: "Lato", system-ui, -apple-system, "Segoe UI", Roboto,
@@ -15,6 +13,8 @@
   --space-2: 8px;
   --space-3: 16px;
   --space-4: 24px;
+  --space-5: 32px;
+  --space-6: 50px;
 
   /* Radius */
   --radius-sm: 8px;
@@ -103,13 +103,18 @@ body {
 }
 
 /* =========================================================
-  HEADER / FOOTER READABLE TEXT
+  HEADER / FOOTER BASE TEXT & LINKS
    ========================================================= */
+
+.header-container,
+.footerbox {
+  font-size: 0.95rem;
+  color: var(--color-text-alt);
+}
 
 #fbox3 a,
 #fbox4 a,
-.header-container,
-.footerbox {
+#fbox5 a {
   text-decoration: none;
   font-size: 0.95rem;
   color: var(--color-text-alt);
@@ -117,6 +122,7 @@ body {
 
 #fbox3 a:hover,
 #fbox4 a:hover,
+#fbox5 a:hover,
 .main-nav a:hover,
 .auth-links a:hover {
   color: var(--color-text);
@@ -124,15 +130,16 @@ body {
 }
 
 /* =========================================================
-  HEADER / NAV / FOOTER
+  HEADER / NAV LAYOUT
    ========================================================= */
+
 .site-header {
-  height: 135px;
+  position: fixed;
   top: 0;
   left: 0;
-  position: fixed;
-  background-color: var(--color-head-foot);
+  height: 135px;
   width: 100%;
+  background-color: var(--color-head-foot);
 }
 
 .header-container {
@@ -148,11 +155,15 @@ body {
   height: auto;
 }
 
+/* =========================================================
+  MAIN NAVIGATION & AUTH LINK STYLES
+   ========================================================= */
+
 .main-nav {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: calc(var(--space-2) + var(--space-1)); /* 20px */
+  gap: calc(var(--space-6) + var(--space-6));
   padding: var(--space-2) 0;
 }
 
@@ -166,8 +177,24 @@ body {
   color: inherit;
 }
 
-/* Buttons */
-.button {
+/* Auth links: column on desktop; row on mobile in media query */
+.auth-links {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: calc(var(--space-1) + 2px);
+}
+
+.auth-links a {
+  margin-top: var(--space-1);
+}
+
+/* =========================================================
+  BUTTONS
+   ========================================================= */
+
+.button,
+.random_recipe_btn {
   display: inline-block;
   background-color: var(--color-surface-muted);
   color: var(--color-text);
@@ -177,6 +204,12 @@ body {
   transition: background-color 0.25s ease, color 0.25s ease,
     transform 0.08s ease;
   box-shadow: var(--shadow-sm);
+}
+
+.random_recipe_btn {
+  font-weight: 600;
+  outline: 2px solid var(--color-outline);
+  margin-top: var(--space-4);
 }
 
 .button:hover {
@@ -190,18 +223,6 @@ body {
   outline: 2px solid var(--color-outline);
 }
 
-/* Auth links: column on desktop; row on mobile in media query */
-.auth-links {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: calc(var(--space-1) + 2px);
-}
-
-.auth-links a {
-  margin-top: var(--space-1);
-  text-decoration: none;
-}
 
 /* =========================================================
    HERO
@@ -282,6 +303,15 @@ body {
 }
 
 /* =========================================================
+   INDEX PREVIEWS
+   ========================================================= */
+.home-preview-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: calc(var(--space-3) + 2px); /* 18px */
+  margin: var(--space-4) auto;
+}
+/* =========================================================
    SIGNUP FORM
    ========================================================= */
 .signup-form {
@@ -340,7 +370,7 @@ body {
    404 PAGE
    ========================================================= */
 
-.page404{
+.page404 {
   max-width: 1100px;
   margin: 0 auto;
   padding: 0 var(--space-3);
@@ -348,27 +378,27 @@ body {
   padding: 50px 20px;
 }
 
-.page404 h1{
+.page404 h1 {
   font-size: 3em;
   margin-bottom: 20px;
 }
 
-.page404 p{
+.page404 p {
   font-size: 1.2em;
   margin-bottom: 30px;
 }
 
-.page404 a{
-  font-size: 1.1em; 
+.page404 a {
+  font-size: 1.1em;
   padding: 10px 24px;
 }
 
 /* =========================================================
    CONTACT SECTION
    ========================================================= */
- .contact-body {
+.contact-body {
   padding-top: 200px;
- }
+}
 .contact-us {
   background-color: var(--color-surface-muted);
   width: 60%;
@@ -436,7 +466,7 @@ ion-icon[name="logo-instagram"] {
   background-color: var(--color-head-foot);
 }
 
-.fbox{
+.fbox {
   width: auto;
   height: auto;
   margin-left: 10px;
@@ -444,7 +474,7 @@ ion-icon[name="logo-instagram"] {
   position: relative;
 }
 
-.footerbox{
+.footerbox {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -489,16 +519,16 @@ ion-icon[name="logo-instagram"] {
   color: var(--color-text-alt);
 }
 
-#fbox5 a{
+#fbox5 a {
   text-decoration: none;
 }
 
 #fbox1 img {
-  width: 120px;           
+  width: 120px;
   height: auto;
   display: block;
-  margin: 0 auto;          
-  object-fit: contain;    
+  margin: 0 auto;
+  object-fit: contain;
 }
 
 #fbox5 ion-icon {
@@ -615,109 +645,109 @@ a:hover {
 /* =========================================================
    blog layout
    ========================================================= */
-   .post-feed {
-    max-width: 600px;
-    margin: 0 auto;
+.post-feed {
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 /* * The main post card
 */
 .post-card {
-    background-color: #ffffff;
-    border: 1px solid #ddd;
-    border-radius: 12px;
-    margin-bottom: 1rem;
-    padding: 1rem;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  background-color: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 /* Card Header: Avatar + User Info */
 .card-header {
-    display: flex;
-    align-items: flex-start;
-    margin-bottom: 0.75rem;
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
 }
 
 .avatar {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%; /* Makes the avatar circular */
-    margin-right: 0.75rem;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%; /* Makes the avatar circular */
+  margin-right: 0.75rem;
 }
 
 .user-info {
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
 }
 
 .user-name {
-    font-weight: 700;
-    color: #050505;
+  font-weight: 700;
+  color: #050505;
 }
 
 .user-id {
-    font-size: 0.9rem;
-    color: #5b7083;
+  font-size: 0.9rem;
+  color: #5b7083;
 }
 
 /* Card Body: The main text content */
 .card-body {
-    font-size: 1rem;
-    line-height: 1.4;
-    margin-bottom: 0.75rem;
+  font-size: 1rem;
+  line-height: 1.4;
+  margin-bottom: 0.75rem;
 }
 
 .card-body p {
-    margin: 0;
+  margin: 0;
 }
 
 /* Card Media: The optional image */
 .card-media {
-    margin-top: 1rem;
-    border-radius: 12px; /* Rounded corners for the image */
-    overflow: hidden; /* Ensures the image respects the border-radius */
-    border: 1px solid #ddd;
+  margin-top: 1rem;
+  border-radius: 12px; /* Rounded corners for the image */
+  overflow: hidden; /* Ensures the image respects the border-radius */
+  border: 1px solid #ddd;
 }
 
 .card-media img {
-    width: 100%;
-    height: auto;
-    display: block; /* Removes bottom spacing on images */
+  width: 100%;
+  height: auto;
+  display: block; /* Removes bottom spacing on images */
 }
 
 /* * Card Actions: The icon bar
  * Uses flexbox to space the icons evenly.
 */
 .card-actions {
-    display: flex;
-    justify-content: space-around; /* Distributes items evenly */
-    margin-top: 1rem;
-    padding-top: 0.5rem;
-    border-top: 1px solid #ebedf0;
-    color: #5b7083; /* Default icon/text color */
+  display: flex;
+  justify-content: space-around; /* Distributes items evenly */
+  margin-top: 1rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #ebedf0;
+  color: #5b7083; /* Default icon/text color */
 }
 
 .action-button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    color: inherit; /* Takes color from .card-actions */
-    font-size: 0.85rem;
-    padding: 0.5rem;
-    border-radius: 99px; /* Pill shape for hover background */
-    transition: background-color 0.2s ease, color 0.2s ease;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  color: inherit; /* Takes color from .card-actions */
+  font-size: 0.85rem;
+  padding: 0.5rem;
+  border-radius: 99px; /* Pill shape for hover background */
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .action-button svg {
-    width: 18px;
-    height: 18px;
-    fill: currentColor; 
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
 }
 
 .action-count {
-    margin-left: 0.5rem;
+  margin-left: 0.5rem;
 }
 
 /* --- Hover and Focus States --- */
@@ -725,33 +755,33 @@ a:hover {
 
 .action-button:hover,
 .action-button:focus {
-    outline: none;
+  outline: none;
 }
 
 /* Comment: Blue */
 .action-comment:hover,
 .action-comment:focus {
-    color: #1d9bf0;
-    background-color: rgba(29, 155, 240, 0.1);
+  color: #1d9bf0;
+  background-color: rgba(29, 155, 240, 0.1);
 }
 
 /* Repost: Green */
 .action-repost:hover,
 .action-repost:focus {
-    color: #00ba7c;
-    background-color: rgba(0, 186, 124, 0.1);
+  color: #00ba7c;
+  background-color: rgba(0, 186, 124, 0.1);
 }
 
 /* Like: Pink/Red */
 .action-like:hover,
 .action-like:focus {
-    color: #f91880;
-    background-color: rgba(249, 24, 128, 0.1);
+  color: #f91880;
+  background-color: rgba(249, 24, 128, 0.1);
 }
 
 /* Share: Blue */
 .action-share:hover,
 .action-share:focus {
-    color: #1d9bf0;
-    background-color: rgba(29, 155, 240, 0.1);
+  color: #1d9bf0;
+  background-color: rgba(29, 155, 240, 0.1);
 }

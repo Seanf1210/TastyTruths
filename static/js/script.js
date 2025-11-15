@@ -1,12 +1,22 @@
 /* script.js - auth header controller (framework-agnostic) */
 (function () {
-  function $(sel, root = document) { return root.querySelector(sel); }
+  function $(sel, root = document) {
+    return root.querySelector(sel);
+  }
 
   // Minimal HTML escaping for safe label rendering
   function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, c => (
-      { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
-    ));
+    return String(s).replace(
+      /[&<>"']/g,
+      (c) =>
+        ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+        }[c])
+    );
   }
 
   async function getJSON(url) {
@@ -24,41 +34,23 @@
       credentials: "same-origin",
       headers: {
         "X-CSRFToken": csrfToken,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
-      body: body ? JSON.stringify(body) : null
+      body: body ? JSON.stringify(body) : null,
     });
   }
 
-  function renderLoggedOut(bar, loginUrl, signupUrl) {
-    bar.innerHTML = `
-      <span class="auth-status" data-status="logged-out">Not logged in</span>
-          <a href="login.html" class="button">Login</a>
-          <a href="signup.html" class="button signup">Sign Up</a>
-    `;
-  }
 
-  function renderLoggedIn(bar, profileUrl, user, onLogout) {
-    const label = user.username || user.name || user.email || "your account";
-    bar.innerHTML = `
-      <span class="auth-status" data-status="logged-in">
-        Logged in as <a class="auth-user" href="${profileUrl}">${escapeHtml(label)}</a>
-      </span>
-      <button type="button" class="auth-logout">Log out</button>
-    `;
-    const btn = $(".auth-logout", bar);
-    btn.addEventListener("click", onLogout);
-  }
 
   async function initAuthBar() {
     const headerEl = $("#site-header");
     const bar = $("#auth-bar");
     if (!headerEl || !bar) return;
 
-    const meUrl      = headerEl.dataset.authMe     || "/api/auth/me";
-    const logoutUrl  = headerEl.dataset.logout     || "/api/auth/logout";
-    const loginUrl   = headerEl.dataset.loginUrl   || "/login.html";
-    const signupUrl  = headerEl.dataset.signupUrl  || "/signup.html";
+    const meUrl = headerEl.dataset.authMe || "/api/auth/me";
+    const logoutUrl = headerEl.dataset.logout || "/api/auth/logout";
+    const loginUrl = headerEl.dataset.loginUrl || "/login.html";
+    const signupUrl = headerEl.dataset.signupUrl || "/signup.html";
     const profileUrl = headerEl.dataset.profileUrl || "/account.html";
 
     // Initial state while we check
