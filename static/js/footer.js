@@ -3,8 +3,8 @@ function renderFooter() {
     <footer class="footer">
       <div class="footerbox">
         <div class="fbox" id="fbox1">
-          <a href="../index.html">
-            <img src="../assets/images/logo_main.png" alt="Tasty Truths logo" />
+          <a href="/index.html">
+            <img src="/assets/images/logo_main.png" alt="Tasty Truths logo" />
           </a>
         </div>
 

@@ -2,9 +2,14 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Tasty Truths</title>
+    <title>Tasty Truths – Recipes</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Short page description." />
+    <meta
+      name="description"
+      content="Browse crowd-sourced recipes, filtered by cuisine, diet, and time."
+    />
+
+    <!-- Favicon set -->
     <link
       rel="icon"
       type="image/png"
@@ -19,169 +24,77 @@
       href="/assets/favicon/apple-touch-icon.png"
     />
     <link rel="manifest" href="/assets/favicon/site.webmanifest" />
-    <link rel="stylesheet" href=".../styles.css" />
+
+    <!-- Main stylesheet (adjust path to match your project) -->
+    <link rel="stylesheet" href="/assets/css/styles.css" />
   </head>
   <body>
-    <!-- header rendered in JS -->
+    <!-- Header rendered in JS -->
     <div id="header-root"></div>
     <script src="/static/js/header.js"></script>
 
     <main class="container">
+      <header class="page-header">
+        <h1>Recipes</h1>
+        <p class="page-subtitle">
+          Explore Tasty Truths recipes by cuisine, diet, and cook time.
+        </p>
+      </header>
 
-      <section class="filters" aria-label="Filters">
+      <!-- Filters -->
+      <section class="filters" aria-label="Recipe filters">
         <div class="filter-row">
           <label>
             <span>Cuisine</span>
-            <select name="cuisine">
+            <select name="cuisine" id="filter-cuisine">
               <option value="">Any</option>
-              <option>American</option>
-              <option>Mexican</option>
-              <option>Italian</option>
-              <option>Indian</option>
-              <option>Japanese</option>
+              <option value="American">American</option>
+              <option value="Mexican">Mexican</option>
+              <option value="Italian">Italian</option>
+              <option value="Indian">Indian</option>
+              <option value="Japanese">Japanese</option>
+              <option value="Korean">Korean</option>
             </select>
           </label>
+
           <label>
             <span>Diet</span>
-            <select name="diet">
+            <select name="diet" id="filter-diet">
               <option value="">Any</option>
-              <option>Vegetarian</option>
-              <option>Vegan</option>
-              <option>Gluten-Free</option>
-              <option>Dairy-Free</option>
-              <option>Keto</option>
+              <option value="Vegetarian">Vegetarian</option>
+              <option value="Vegan">Vegan</option>
+              <option value="Gluten-Free">Gluten-Free</option>
+              <option value="Dairy-Free">Dairy-Free</option>
+              <option value="Keto">Keto</option>
             </select>
           </label>
+
           <label>
             <span>Time</span>
-            <select name="time">
+            <select name="time" id="filter-time">
               <option value="">Any</option>
-              <option>&lt; 20 min</option>
-              <option>20–45 min</option>
-              <option>&gt; 45 min</option>
+              <option value="under-20">&lt; 20 min</option>
+              <option value="20-45">20–45 min</option>
+              <option value="over-45">&gt; 45 min</option>
             </select>
           </label>
-          <button class="apply-filters" type="button">Apply</button>
-          <button class="clear-filters" type="button">Clear</button>
+
+          <button class="apply-filters" type="button" id="apply-filters">
+            Apply
+          </button>
+          <button class="clear-filters" type="button" id="clear-filters">
+            Clear
+          </button>
         </div>
       </section>
 
+      <!-- Recipe grid: populated via JS -->
       <section class="recipe-grid" aria-label="Recipes">
-        <!-- Recipe Card -->
-        <article class="recipe-card">
-          <a
-            class="card-link"
-            href="/recipes/creamy-pesto-pasta.html"
-            aria-label="View recipe: Creamy Pesto Pasta"
-          >
-            <figure class="card-media">
-              <img
-                src="assets/images/recipes/pesto-pasta.jpg"
-                alt="Creamy pesto pasta in a bowl topped with parmesan"
-                loading="lazy"
-              />
-            </figure>
-            <div class="card-body">
-              <h2 class="card-title">Creamy Pesto Pasta</h2>
-              <p class="card-excerpt">
-                Weeknight comfort with basil, garlic, and a silky finish.
-              </p>
-              <dl class="meta">
-                <div>
-                  <dt>Time</dt>
-                  <dd><time datetime="PT25M">25 min</time></dd>
-                </div>
-                <div>
-                  <dt>Serves</dt>
-                  <dd>4</dd>
-                </div>
-                <div>
-                  <dt>Level</dt>
-                  <dd>Easy</dd>
-                </div>
-              </dl>
-              <ul class="tags" aria-label="Tags">
-                <li><a href="/tags/vegetarian.html">Vegetarian</a></li>
-                <li><a href="/tags/pasta.html">Pasta</a></li>
-                <li><a href="/tags/quick.html">Quick</a></li>
-              </ul>
-            </div>
-          </a>
-          <div class="card-footer">
-            <div class="rating" aria-label="Rated 4.6 out of 5">
-              ★★★★☆
-              <span class="rating-count">(128)</span>
-            </div>
-            <button
-              class="save-button"
-              type="button"
-              aria-pressed="false"
-              aria-label="Save recipe"
-            >
-              Save
-            </button>
-          </div>
-        </article>
-
-        <!-- Repeatable Recipe Card -->
-        <article class="recipe-card">
-          <a
-            class="card-link"
-            href="/recipes/kimchi-fried-rice.html"
-            aria-label="View recipe: Kimchi Fried Rice"
-          >
-            <figure class="card-media">
-              <img
-                src="assets/images/recipes/kimchi-fried-rice.jpg"
-                alt="Kimchi fried rice topped with a sunny-side egg"
-                loading="lazy"
-              />
-            </figure>
-            <div class="card-body">
-              <h2 class="card-title">Kimchi Fried Rice</h2>
-              <p class="card-excerpt">
-                Tangy, spicy, and ready in under 15 minutes.
-              </p>
-              <dl class="meta">
-                <div>
-                  <dt>Time</dt>
-                  <dd><time datetime="PT15M">15 min</time></dd>
-                </div>
-                <div>
-                  <dt>Serves</dt>
-                  <dd>2</dd>
-                </div>
-                <div>
-                  <dt>Level</dt>
-                  <dd>Easy</dd>
-                </div>
-              </dl>
-              <ul class="tags" aria-label="Tags">
-                <li><a href="/tags/korean.html">Korean</a></li>
-                <li><a href="/tags/rice.html">Rice</a></li>
-                <li><a href="/tags/spicy.html">Spicy</a></li>
-              </ul>
-            </div>
-          </a>
-          <div class="card-footer">
-            <div class="rating" aria-label="Rated 4.8 out of 5">
-              ★★★★★
-              <span class="rating-count">(342)</span>
-            </div>
-            <button
-              class="save-button"
-              type="button"
-              aria-pressed="false"
-              aria-label="Save recipe"
-            >
-              Save
-            </button>
-          </div>
-        </article>
-
-        <!-- Add more .recipe-card items as needed -->
+        <p class="empty-state" hidden>No recipes found. Try adjusting filters.</p>
+        <!-- JS will inject <article class="recipe-card"> items here -->
       </section>
 
+      <!-- Pagination (JS can wire this up later) -->
       <nav class="pagination" aria-label="Pagination">
         <button class="page-prev" type="button" disabled>Prev</button>
         <ol class="page-list">
@@ -190,12 +103,9 @@
               1
             </button>
           </li>
-          <li><button type="button">2</button></li>
-          <li><button type="button">3</button></li>
-          <li><button type="button">…</button></li>
-          <li><button type="button">10</button></li>
+          <!-- Future pages can be injected via JS -->
         </ol>
-        <button class="page-next" type="button">Next</button>
+        <button class="page-next" type="button" disabled>Next</button>
       </nav>
     </main>
 
@@ -203,7 +113,7 @@
     <div id="footer-root"></div>
     <script src="/static/js/footer.js"></script>
 
-    <!-- Optional: lightweight template for a card (use with JS) -->
+    <!-- Recipe card template used by JS -->
     <template id="recipe-card-template">
       <article class="recipe-card">
         <a class="card-link" href="#">
@@ -227,12 +137,12 @@
                 <dd></dd>
               </div>
             </dl>
-            <ul class="tags"></ul>
+            <ul class="tags" aria-label="Tags"></ul>
           </div>
         </a>
         <div class="card-footer">
           <div class="rating" aria-label="">
-            ★★★★☆
+            <span class="rating-stars">★★★★☆</span>
             <span class="rating-count"></span>
           </div>
           <button
@@ -247,6 +157,7 @@
       </article>
     </template>
 
-    <script src="path/to/script.js"></script>
+    <!-- Page JS: uses store.js to render recipes -->
+    <script type="module" src="/static/js/recipes-page.js"></script>
   </body>
 </html>
