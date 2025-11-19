@@ -12,6 +12,7 @@ from services.models import Recipe, RecipeSlugHistory, User  # <-- add User
 
 ph = PasswordHasher()
 login_manager = LoginManager()
+csrf = CSRFProtect()
 
 def create_app():
     app = Flask(__name__)
@@ -30,7 +31,7 @@ def create_app():
     # --- init extensions in the right order ---
     db.init_app(app)
     Migrate(app, db)
-    CSRFProtect(app)
+    csrf.init_app(app)
     login_manager.init_app(app)
 
     # ---- login manager user loader ----
@@ -50,6 +51,7 @@ def create_app():
         return jsonify({"csrfToken": generate_csrf()})
 
     # ---- auth: register/login/logout/me ----
+    @csrf.exempt
     @app.post("/api/auth/register")
     def register():
         data = _json()
@@ -67,6 +69,7 @@ def create_app():
         db.session.commit()
         return jsonify({"ok": True})
 
+    @csrf.exempt
     @app.post("/api/auth/login")
     def login():
         data = _json()
@@ -83,7 +86,8 @@ def create_app():
         # Rotates session; use remember=False for pure server session
         login_user(user, remember=False, duration=timedelta(hours=8))
         return jsonify({"ok": True})
-
+    
+    @csrf.exempt
     @app.post("/api/auth/logout")
     @login_required
     def logout():
@@ -99,6 +103,7 @@ def create_app():
     # ---- RECIPES (unchanged behavior, plus auth on create) ----
 
     # Create a recipe (JSON: {title, content})
+    @csrf.exempt
     @app.post("/api/recipes")
     @login_required
     def create_recipe():
