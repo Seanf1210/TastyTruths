@@ -4,7 +4,7 @@ function renderFooter() {
       <div class="footerbox">
         <div class="fbox" id="fbox1">
           <a href="/index.html">
-            <img src="/assets/images/logo_main.png" alt="Tasty Truths logo" />
+            <img src="/assets/images/logo_main.webp" alt="Tasty Truths logo" />
           </a>
         </div>
 

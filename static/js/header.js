@@ -55,7 +55,7 @@
         <div class="header-container container">
           <div class="logo">
             <a href="/index.html">
-              <img src="/assets/images/logo_main.png" alt="Tasty Truths logo" />
+              <img src="/assets/images/logo_main.webp" alt="Tasty Truths logo" />
             </a>
           </div>
 
