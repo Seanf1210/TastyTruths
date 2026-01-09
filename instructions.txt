@@ -8,9 +8,15 @@ WINDOWS:
 python -m venv .venv
 .venv\Scripts\activate
 
+TO USE YOUR VENV:
+source .venv/bin/activate
+I alias this, if you ask, I can show you how
+
 =========================================================
 INSTALL ALL REQUIREMENTS FOR THE PROJECT
 =========================================================
+pip install -r requirements.txt
+OR
 pip install -r requirements.txt
 
 =========================================================
