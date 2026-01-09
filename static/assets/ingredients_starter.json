@@ -1,0 +1,211 @@
+[
+  {
+    "id": "all_purpose_flour",
+    "name": "All-Purpose Flour",
+    "category": "grain",
+    "dietary_restrictions": [
+      "halal",
+      "not_kosher",
+      "not_gluten_free",
+      "vegan",
+      "vegetarian"
+    ],
+    "nutrition_per_gram": {
+      "calories": 3.64,
+      "protein_g": 0.10,
+      "fat_g": 0.01,
+      "carbs_g": 0.76
+    },
+    "notes": "Wheat-based flour; contains gluten. Kosher status depends on certification."
+  },
+  {
+    "id": "chicken_breast_raw",
+    "name": "Chicken Breast, Raw",
+    "category": "meat",
+    "dietary_restrictions": [
+      "not_vegan",
+      "not_vegetarian",
+      "gluten_free",
+      "halal",
+      "kosher"
+    ],
+    "nutrition_per_gram": {
+      "calories": 1.65,
+      "protein_g": 0.31,
+      "fat_g": 0.04,
+      "carbs_g": 0.00
+    },
+    "notes": "Halal and kosher status depend on slaughter and certification."
+  },
+  {
+    "id": "white_rice_cooked",
+    "name": "White Rice, Cooked",
+    "category": "grain",
+    "dietary_restrictions": [
+      "halal",
+      "kosher",
+      "gluten_free",
+      "vegan",
+      "vegetarian"
+    ],
+    "nutrition_per_gram": {
+      "calories": 1.30,
+      "protein_g": 0.02,
+      "fat_g": 0.00,
+      "carbs_g": 0.28
+    },
+    "notes": "Naturally gluten-free, but may be contaminated if processed with gluten grains."
+  },
+  {
+    "id": "unsalted_butter",
+    "name": "Butter, Unsalted",
+    "category": "dairy",
+    "dietary_restrictions": [
+      "halal",
+      "kosher",
+      "not_gluten_free",
+      "not_vegan",
+      "vegetarian"
+    ],
+    "nutrition_per_gram": {
+      "calories": 7.17,
+      "protein_g": 0.01,
+      "fat_g": 0.81,
+      "carbs_g": 0.00
+    },
+    "notes": "Dairy product; suitable for vegetarians but not vegans. Gluten-free in pure form."
+  },
+  {
+    "id": "olive_oil",
+    "name": "Olive Oil",
+    "category": "oil",
+    "dietary_restrictions": [
+      "halal",
+      "kosher",
+      "gluten_free",
+      "vegan",
+      "vegetarian"
+    ],
+    "nutrition_per_gram": {
+      "calories": 8.84,
+      "protein_g": 0.00,
+      "fat_g": 1.00,
+      "carbs_g": 0.00
+    },
+    "notes": "Plant-based oil; typically suitable for most diets."
+  },
+  {
+    "id": "granulated_sugar",
+    "name": "Sugar, Granulated",
+    "category": "sweetener",
+    "dietary_restrictions": [
+      "halal",
+      "kosher",
+      "gluten_free",
+      "vegan",
+      "vegetarian"
+    ],
+    "nutrition_per_gram": {
+      "calories": 3.87,
+      "protein_g": 0.00,
+      "fat_g": 0.00,
+      "carbs_g": 1.00
+    },
+    "notes": "Refined sugar; some processing methods may use bone char, which concerns some vegans."
+  },
+  {
+    "id": "whole_milk",
+    "name": "Whole Milk",
+    "category": "dairy",
+    "dietary_restrictions": [
+      "halal",
+      "kosher",
+      "gluten_free",
+      "not_vegan",
+      "vegetarian"
+    ],
+    "nutrition_per_gram": {
+      "calories": 0.42,
+      "protein_g": 0.03,
+      "fat_g": 0.01,
+      "carbs_g": 0.05
+    },
+    "notes": "Cow’s milk; generally gluten-free. Lactose content may affect some individuals."
+  },
+  {
+    "id": "egg_whole_raw",
+    "name": "Egg, Whole, Raw",
+    "category": "egg",
+    "dietary_restrictions": [
+      "halal",
+      "kosher",
+      "gluten_free",
+      "not_vegan",
+      "vegetarian"
+    ],
+    "nutrition_per_gram": {
+      "calories": 1.55,
+      "protein_g": 0.13,
+      "fat_g": 0.11,
+      "carbs_g": 0.01
+    },
+    "notes": "Chicken egg; typically considered vegetarian but not vegan."
+  },
+  {
+    "id": "carrot_raw",
+    "name": "Carrot, Raw",
+    "category": "vegetable",
+    "dietary_restrictions": [
+      "halal",
+      "kosher",
+      "gluten_free",
+      "vegan",
+      "vegetarian"
+    ],
+    "nutrition_per_gram": {
+      "calories": 0.41,
+      "protein_g": 0.01,
+      "fat_g": 0.00,
+      "carbs_g": 0.10
+    },
+    "notes": "Root vegetable; suitable for most dietary patterns."
+  },
+  {
+    "id": "tomato_raw",
+    "name": "Tomato, Raw",
+    "category": "vegetable",
+    "dietary_restrictions": [
+      "halal",
+      "kosher",
+      "gluten_free",
+      "vegan",
+      "vegetarian"
+    ],
+    "nutrition_per_gram": {
+      "calories": 0.18,
+      "protein_g": 0.01,
+      "fat_g": 0.00,
+      "carbs_g": 0.04
+    },
+    "notes": "Common culinary vegetable (botanically a fruit); low in calories."
+  },
+  {
+    "id": "black_beans_dry",
+    "name": "Black Beans, Dry",
+    "category": "legume",
+    "dietary_restrictions": [
+      "halal",
+      "kosher",
+      "gluten_free",
+      "vegan",
+      "vegetarian"
+    ],
+    "nutrition_per_gram": {
+      "calories": 3.39,
+      "protein_g": 0.21,
+      "fat_g": 0.01,
+      "carbs_g": 0.63
+    },
+    "notes": "Values are for dry beans; cooked beans have different per-gram values due to added water."
+  }
+]

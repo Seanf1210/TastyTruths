@@ -1,0 +1,118 @@
+{% extends "base.html" %} {% block title %}Tasty Truths — Recipes{% endblock %}
+{% block content %}
+<div class="recipes-page">
+  <div class="recipes-header">
+    <h2>Recipes</h2>
+    {% if current_user.is_authenticated %}
+    <a href="{{ url_for('create_recipe_page') }}" class="button-primary"
+      >Add Recipe</a
+    >
+    {% else %}
+    <button class="button-primary" disabled title="Log in to add a new recipe">
+      Add Recipe
+    </button>
+    <p class="button-helper-text">Log in to add a new recipe.</p>
+    {% endif %}
+  </div>
+
+  {% if featured_recipes %}
+  <section class="featured-recipes">
+    <h3>Featured Recipes</h3>
+    <div class="recipe-grid">
+      {% for recipe in featured_recipes %} {% include
+      'partials/_recipe_card.html' %} {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- List -->
+  <div id="recipe-list">
+    <p>Loading recipes...</p>
+  </div>
+</div>
+
+<script>
+  // Fetch and render recipe list
+  async function loadRecipes() {
+    const listEl = document.getElementById("recipe-list");
+    listEl.innerHTML = "<p>Loading recipes...</p>";
+
+    try {
+      const res = await fetch("/api/recipes");
+      if (!res.ok) {
+        listEl.innerHTML = "<p>Failed to load recipes.</p>";
+        return;
+      }
+      const data = await res.json();
+      if (!data.length) {
+        listEl.innerHTML = "<p>No recipes yet. Be the first to add one!</p>";
+        return;
+      }
+
+      const ul = document.createElement("ul");
+      data.forEach((r) => {
+        const li = document.createElement("li");
+        const a = document.createElement("a");
+        a.href = `/recipes/${r.id}-${r.slug}`;
+        a.textContent = r.title;
+        li.appendChild(a);
+        ul.appendChild(li);
+      });
+      listEl.innerHTML = "";
+      listEl.appendChild(ul);
+    } catch (err) {
+      console.error(err);
+      listEl.innerHTML = "<p>Error loading recipes.</p>";
+    }
+  }
+
+  // Handle add-recipe form
+  async function handleNewRecipe(event) {
+    event.preventDefault();
+    const msgEl = document.getElementById("recipe-form-message");
+    msgEl.textContent = "Saving...";
+
+    const title = document.getElementById("title").value.trim();
+    const content = document.getElementById("content").value.trim();
+
+    if (!title || !content) {
+      msgEl.textContent = "Title and content are required.";
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/recipes", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ title, content }),
+      });
+
+      if (res.status === 401) {
+        msgEl.textContent = "You must be logged in to add recipes.";
+        return;
+      }
+
+      if (!res.ok) {
+        msgEl.textContent = "Failed to save recipe.";
+        return;
+      }
+
+      document.getElementById("new-recipe-form").reset();
+      msgEl.textContent = "Recipe saved!";
+      loadRecipes(); // reload list
+    } catch (err) {
+      console.error(err);
+      msgEl.textContent = "Error saving recipe.";
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    loadRecipes();
+    document
+      .getElementById("new-recipe-form")
+      .addEventListener("submit", handleNewRecipe);
+  });
+</script>
+{% endblock %}

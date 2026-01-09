@@ -54,15 +54,15 @@
       >
         <div class="header-container container">
           <div class="logo">
-            <a href="/index.html">
-              <img src="/assets/images/logo_main.webp" alt="Tasty Truths logo" />
+            <a href="/static/index.html">
+              <img src="{{ url_for('static', filename='assets/images/logo_main.png') }}" alt="Tasty Truths logo">
             </a>
           </div>
 
           <nav class="main-nav" aria-label="Primary">
-            <a href="/pages/about_us.html">About</a>
-            <a href="/pages/recipes.html">Recipes</a>
-            <a href="/pages/blog.html">Blog</a>
+            <a href="/static/pages/about_us.html">About</a>
+            <a href="/static/pages/recipes.html">Recipes</a>
+            <a href="/static/pages/blog.html">Blog</a>
           </nav>
 
           <div

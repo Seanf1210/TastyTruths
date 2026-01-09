@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}{{ recipe.title }} — Tasty Truths{% endblock %}
+{% block content %}
+
+<div class="container">
+  <article class="recipe-detail">
+    <!-- Header -->
+    <div class="recipe-header">
+      <h1>{{ recipe.title }}</h1>
+      <p class="recipe-meta">
+        {% if recipe.created_at %}
+          Posted {{ recipe.created_at.strftime('%B %d, %Y') }}
+        {% endif %}
+        {% if recipe.author_id %}
+          by <span class="recipe-author">User #{{ recipe.author_id }}</span>
+        {% endif %}
+      </p>
+    </div>
+
+    <!-- Image -->
+    {% if recipe.image_filename %}
+      <div class="recipe-image-container">
+        <img 
+          src="{{ url_for('static', filename=recipe.image_filename) }}" 
+          alt="{{ recipe.title }}" 
+          class="recipe-image"
+        />
+      </div>
+    {% endif %}
+
+    <!-- Info Section (Timing & Cost) -->
+    <div class="recipe-info-section">
+      <div class="info-grid">
+        {% if recipe.prep_time_minutes %}
+          <div class="info-item">
+            <span class="info-label">Prep Time:</span>
+            <span class="info-value">{{ recipe.prep_time_minutes }} min</span>
+          </div>
+        {% endif %}
+        {% if recipe.cook_time_minutes %}
+          <div class="info-item">
+            <span class="info-label">Cook Time:</span>
+            <span class="info-value">{{ recipe.cook_time_minutes }} min</span>
+          </div>
+        {% endif %}
+        {% if recipe.prep_time_minutes and recipe.cook_time_minutes %}
+          <div class="info-item">
+            <span class="info-label">Total Time:</span>
+            <span class="info-value">{{ recipe.prep_time_minutes + recipe.cook_time_minutes }} min</span>
+          </div>
+        {% endif %}
+        {% if recipe.estimated_cost %}
+          <div class="info-item">
+            <span class="info-label">Estimated Cost:</span>
+            <span class="info-value">{{ recipe.estimated_cost }}</span>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Two-Column Layout: Ingredients & Instructions -->
+    <div class="recipe-content">
+      <!-- Ingredients Column -->
+      <aside class="recipe-ingredients-section">
+        <h2>Ingredients</h2>
+        {% if ingredients %}
+          <ul class="ingredients-list">
+            {% for ingredient in ingredients %}
+              <li class="ingredient-item">{{ ingredient }}</li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="no-data">No ingredients listed.</p>
+        {% endif %}
+      </aside>
+
+      <!-- Instructions Column -->
+      <section class="recipe-instructions-section">
+        <h2>Instructions</h2>
+        {% if recipe.instructions %}
+          <div class="instructions-text">
+            {{ recipe.instructions | replace('\n', '<br>') | safe }}
+          </div>
+        {% else %}
+          <p class="no-data">No instructions provided.</p>
+        {% endif %}
+      </section>
+    </div>
+
+    <!-- Back Link -->
+    <div class="recipe-actions">
+      <a href="{{ url_for('recipes') }}" class="button button-secondary">← Back to Recipes</a>
+    </div>
+  </article>
+</div>
+
+{% endblock %}

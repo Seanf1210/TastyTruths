@@ -1,0 +1,151 @@
+{% extends "base.html" %} {% block title %}Tasty Truths — Blog{% endblock %} {%
+block content %}
+
+<div class="layout">
+  <!-- Posts list (index page) -->
+  <section
+    class="post-list"
+    aria-label="Recent posts"
+    itemscope
+    itemtype="https://schema.org/Blog"
+  >
+    <article
+      class="post-card"
+      itemprop="blogPost"
+      itemscope
+      itemtype="https://schema.org/BlogPosting"
+    >
+      <header>
+        <h2 itemprop="headline">
+          <a href="/posts/example-post.html" itemprop="url"
+            >Example Post Title</a
+          >
+        </h2>
+        <p class="post-meta">
+          <time datetime="2025-10-19" itemprop="datePublished"
+            >October 19, 2025</time
+          >
+          ·
+          <span
+            itemprop="author"
+            itemscope
+            itemtype="https://schema.org/Person"
+          >
+            <span itemprop="name">Your Name</span>
+          </span>
+          · <a href="/tags/html.html" rel="tag">HTML</a>
+        </p>
+      </header>
+      <figure class="post-thumb">
+        <img src="/assets/example.jpg" alt="Descriptive alt text" />
+      </figure>
+      <p class="post-excerpt" itemprop="description">
+        A short excerpt from the article to entice readers to click through…
+      </p>
+      <p>
+        <a
+          class="read-more"
+          href="/posts/example-post.html"
+          aria-label="Read more: Example Post Title"
+          >Read more →</a
+        >
+      </p>
+    </article>
+
+    <!-- repeat <article> blocks for more posts -->
+
+    <nav class="pagination" aria-label="Pagination">
+      <a class="newer" href="/page/1.html" rel="prev">← Newer</a>
+      <span class="page-current">Page 2 of 10</span>
+      <a class="older" href="/page/3.html" rel="next">Older →</a>
+    </nav>
+  </section>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" aria-label="Sidebar">
+    <section class="widget about">
+      <h3>About</h3>
+      <p>One or two lines about this blog or the author.</p>
+    </section>
+
+    <section class="widget categories">
+      <h3>Categories</h3>
+      <ul>
+        <li><a href="/category/news.html">News</a></li>
+        <li><a href="/category/tutorials.html">Tutorials</a></li>
+        <li><a href="/category/opinion.html">Opinion</a></li>
+      </ul>
+    </section>
+
+    <section class="widget tags">
+      <h3>Tags</h3>
+      <p class="tag-cloud">
+        <a href="/tags/html.html">#html</a>
+        <a href="/tags/css.html">#css</a>
+        <a href="/tags/js.html">#javascript</a>
+      </p>
+    </section>
+  </aside>
+</div>
+
+<!-- Single post template (use on post pages) -->
+<article
+  class="post"
+  hidden
+  itemscope
+  itemtype="https://schema.org/BlogPosting"
+>
+  <header>
+    <h1 itemprop="headline">Single Post Title</h1>
+    <p class="post-meta">
+      <time datetime="2025-10-19" itemprop="datePublished"
+        >October 19, 2025</time
+      >
+      ·
+      <span itemprop="author" itemscope itemtype="https://schema.org/Person">
+        <span itemprop="name">Your Name</span>
+      </span>
+      · <span itemprop="wordCount">1200 words</span>
+    </p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p>Post content goes here…</p>
+    <h2>Subheading</h2>
+    <p>More content…</p>
+    <pre><code>// code samples</code></pre>
+    <blockquote>Nice pull-quote.</blockquote>
+    <figure>
+      <img src="/assets/photo.jpg" alt="Alt text" />
+      <figcaption>Caption for the image.</figcaption>
+    </figure>
+  </div>
+
+  <!-- Comments (static example) -->
+  <section class="comments" aria-label="Comments">
+    <h2>Comments</h2>
+
+    <article class="comment" itemscope itemtype="https://schema.org/Comment">
+      <header>
+        <strong itemprop="author">Jane Doe</strong>
+        <time datetime="2025-10-18" itemprop="datePublished">Oct 18, 2025</time>
+      </header>
+      <p itemprop="text">Great post!</p>
+    </article>
+
+    <form class="comment-form" action="/comments" method="post">
+      <h3>Leave a comment</h3>
+      <label>
+        Name
+        <input type="text" name="name" required />
+      </label>
+      <label>
+        Comment
+        <textarea name="comment" rows="5" required></textarea>
+      </label>
+      <button type="submit">Post Comment</button>
+    </form>
+  </section>
+</article>
+
+{% endblock %}
