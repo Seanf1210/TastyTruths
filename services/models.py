@@ -36,12 +36,32 @@ class Recipe(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     author_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
 
+class BlogPost(db.Model):
+    __tablename__ = "blog_posts"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
+    title = db.Column(db.String(120), nullable=False)
+    slug = db.Column(db.String(90), unique=True, index=True, nullable=False)
+    summary = db.Column(db.String(280), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    author = db.relationship("User", back_populates="blog_posts")
+
 class RecipeSlugHistory(db.Model):
     __tablename__ = "recipe_slug_history"
     id = db.Column(db.Integer, primary_key=True)
     recipe_id = db.Column(db.Integer, db.ForeignKey("recipes.id", ondelete="CASCADE"), nullable=False)
     old_slug = db.Column(db.String(90), index=True, nullable=False)
     changed_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+# --- Auto-generate blog slug on insert ---
+@event.listens_for(BlogPost, "before_insert")
+def blog_before_insert(mapper, connection, target: BlogPost):
+    session = db.session
+    base = base_slug(target.title)
+    target.slug = uniquify_slug(session, BlogPost, base)
 
 # --- Auto-generate slug on insert ---
 @event.listens_for(Recipe, "before_insert")
@@ -76,6 +96,7 @@ class User(db.Model, UserMixin):
     date_of_birth = db.Column(db.Date, nullable=True)
     gender = db.Column(db.String(20), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    blog_posts = db.relationship("BlogPost", back_populates="author", cascade="all, delete-orphan")
 
     def set_password(self, raw_password, hasher=ph):
         """Hash and store the password."""

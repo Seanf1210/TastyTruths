@@ -1020,6 +1020,185 @@ ion-icon[name="logo-instagram"] {
 }
 
 /* =========================================================
+   BLOG LISTING & POST PAGES
+   ========================================================= */
+.blog-hero {
+  text-align: center;
+  margin: var(--space-5) auto var(--space-4);
+}
+
+.blog-hero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  margin: 0 0 var(--space-2) 0;
+  color: var(--color-primary);
+}
+
+.blog-hero p {
+  margin: 0;
+  color: var(--color-muted-text);
+}
+
+.blog-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.blog-admin {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.blog-post-card {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.blog-post-card h2 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-family: var(--font-display);
+}
+
+.blog-post-card h2 a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.blog-post-card h2 a:hover {
+  text-decoration: underline;
+}
+
+.blog-meta {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-muted-text);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  align-items: center;
+}
+
+.blog-author {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.blog-summary {
+  margin: 0;
+  color: var(--color-text);
+  line-height: 1.6;
+}
+
+.blog-read-more {
+  align-self: flex-start;
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  background-color: var(--color-accent);
+  color: var(--color-text);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  transition: background-color 0.2s ease, transform 0.08s ease;
+}
+
+.blog-read-more:hover,
+.blog-read-more:focus {
+  background-color: color-mix(in oklab, var(--color-accent) 85%, black);
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.blog-empty {
+  background-color: var(--color-surface);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+  color: var(--color-muted-text);
+}
+
+.blog-post {
+  max-width: 840px;
+  margin: var(--space-5) auto;
+  padding: var(--space-4);
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.blog-post-header h1 {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 2.6rem);
+  margin: var(--space-2) 0;
+  color: var(--color-primary);
+}
+
+.blog-kicker {
+  margin: 0;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.blog-kicker a {
+  color: var(--color-muted-text);
+  text-decoration: none;
+}
+
+.blog-kicker a:hover {
+  color: var(--color-primary);
+}
+
+.blog-post-body {
+  margin-top: var(--space-4);
+  line-height: 1.8;
+  color: var(--color-text);
+}
+
+.blog-post-body p {
+  margin: 0 0 var(--space-3) 0;
+}
+
+.blog-owner-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.blog-owner-actions form {
+  margin: 0;
+}
+
+.blog-delete {
+  background-color: color-mix(in oklab, #dc2626 20%, var(--color-surface));
+  color: #7f1d1d;
+}
+
+.blog-delete:hover,
+.blog-delete:focus {
+  background-color: color-mix(in oklab, #dc2626 30%, var(--color-surface));
+}
+
+@media (max-width: 768px) {
+  .blog-post {
+    padding: var(--space-3);
+  }
+}
+
+/* =========================================================
    LINKS
    ========================================================= */
 a {

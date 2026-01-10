@@ -17,7 +17,7 @@ INSTALL ALL REQUIREMENTS FOR THE PROJECT
 =========================================================
 pip install -r requirements.txt
 OR
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 
 =========================================================
 RUN IT
