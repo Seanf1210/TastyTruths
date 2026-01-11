@@ -23,7 +23,7 @@ Tasty Truths fixes that.
 
 Features (Planned & In Progress)
 
-Working webstite with all links working
+Working website with all links working
 
 About us page, describing each of the founder members
 
@@ -54,6 +54,6 @@ Project Philosophy
 Food is universal — learning should be too.
 Tasty Truths is about sharing knowledge and culture through recipes, connecting people one meal at a time.
 
-Project Guidlines
+Project Guidelines
 As a team we strive to ensure each member is involved in the process, and we each come away from this project with
 a stronger knowledge of working together to make a usable project.
