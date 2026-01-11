@@ -87,3 +87,33 @@ class RecipeForm(FlaskForm):
     )
 
     submit = SubmitField("Create Recipe")
+
+
+class BlogPostForm(FlaskForm):
+    """Form for creating and editing blog posts."""
+
+    title = StringField(
+        "Title",
+        validators=[
+            DataRequired(message="Title is required."),
+            Length(max=120, message="Title must be 120 characters or fewer."),
+        ],
+        render_kw={"placeholder": "e.g., Our Weekend Market Finds"},
+    )
+
+    summary = TextAreaField(
+        "Summary",
+        validators=[
+            DataRequired(message="Summary is required."),
+            Length(max=280, message="Summary must be 280 characters or fewer."),
+        ],
+        render_kw={"rows": 4, "placeholder": "Short preview shown on the blog listing."},
+    )
+
+    content = TextAreaField(
+        "Content",
+        validators=[DataRequired(message="Content is required.")],
+        render_kw={"rows": 12, "placeholder": "Write the full post here..."},
+    )
+
+    submit = SubmitField("Publish Post")

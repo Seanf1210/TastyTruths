@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}{{ post.title }} - Tasty Truths{% endblock %}
+{% block content %}
+<article
+  class="blog-post container"
+  itemscope
+  itemtype="https://schema.org/BlogPosting"
+>
+  <header class="blog-post-header">
+    <p class="blog-kicker">
+      <a href="{{ url_for('blog') }}">Blog</a>
+    </p>
+    <h1 itemprop="headline">{{ post.title }}</h1>
+    <p class="blog-meta">
+      <time datetime="{{ post.created_at.isoformat() }}" itemprop="datePublished">
+        {{ post.created_at.strftime("%B %d, %Y") }}
+      </time>
+      <span aria-hidden="true">·</span>
+      <span
+        class="blog-author"
+        itemprop="author"
+        itemscope
+        itemtype="https://schema.org/Person"
+      >
+        <span itemprop="name">{{ post.author.username if post.author else "Unknown" }}</span>
+      </span>
+    </p>
+    {% if current_user.is_authenticated and post.user_id == current_user.id %}
+    <div class="blog-owner-actions">
+      <a class="blog-read-more" href="{{ url_for('blog_edit', slug=post.slug) }}">
+        Edit
+      </a>
+      <form method="post" action="{{ url_for('blog_delete', slug=post.slug) }}">
+        {{ csrf_token() }}
+        <button class="blog-read-more blog-delete" type="submit">
+          Delete
+        </button>
+      </form>
+    </div>
+    {% endif %}
+  </header>
+
+  <div class="blog-post-body" itemprop="articleBody">
+    {% for paragraph in post.content.split("\n\n") %}
+    <p>{{ paragraph | e | replace("\n", "<br>") | safe }}</p>
+    {% endfor %}
+  </div>
+</article>
+{% endblock %}

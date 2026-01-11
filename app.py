@@ -9,8 +9,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.utils import secure_filename
 import os
 from services.db import db
-from services.models import Recipe, RecipeSlugHistory, User
-from services.forms import RecipeForm
+from services.models import Recipe, RecipeSlugHistory, BlogPost, User
+from services.forms import RecipeForm, BlogPostForm
 
 ph = PasswordHasher()
 login_manager = LoginManager()
@@ -60,7 +60,86 @@ def create_app():
 
     @app.route("/blog")
     def blog():
-        return render_template("blog.html")
+        posts = BlogPost.query.order_by(BlogPost.created_at.desc()).all()
+        return render_template("blog.html", posts=posts)
+
+    @app.route("/blog/new", methods=["GET", "POST"])
+    @login_required
+    def blog_new():
+        form = BlogPostForm()
+        if form.validate_on_submit():
+            post = BlogPost(
+                user_id=current_user.id,
+                title=form.title.data,
+                summary=form.summary.data,
+                content=form.content.data,
+            )
+            try:
+                db.session.add(post)
+                db.session.commit()
+                flash("Blog post published.", "success")
+                return redirect(url_for("blog_post", slug=post.slug))
+            except SQLAlchemyError as exc:
+                db.session.rollback()
+                print(f"ERROR saving blog post: {exc}")
+                flash("An error occurred while saving the blog post.", "error")
+
+        return render_template("blog_new.html", form=form)
+
+    @app.route("/blog/<slug>")
+    def blog_post(slug: str):
+        post = BlogPost.query.filter_by(slug=slug).first()
+        if not post:
+            return render_template("404.html"), 404
+        return render_template("blog_post.html", post=post)
+
+    @app.route("/blog/<slug>/edit", methods=["GET", "POST"])
+    @login_required
+    def blog_edit(slug: str):
+        post = BlogPost.query.filter_by(slug=slug).first()
+        if not post:
+            return render_template("404.html"), 404
+        if post.user_id != current_user.id:
+            flash("You do not have permission to edit this post.", "error")
+            return redirect(url_for("blog_post", slug=post.slug))
+
+        form = BlogPostForm(obj=post)
+        if form.validate_on_submit():
+            post.title = form.title.data
+            post.summary = form.summary.data
+            post.content = form.content.data
+            try:
+                db.session.commit()
+                flash("Blog post updated.", "success")
+                return redirect(url_for("blog_post", slug=post.slug))
+            except SQLAlchemyError as exc:
+                db.session.rollback()
+                print(f"ERROR updating blog post: {exc}")
+                flash("An error occurred while updating the blog post.", "error")
+
+        return render_template("blog_edit.html", form=form, post=post)
+
+    @app.post("/blog/<slug>/delete")
+    @login_required
+    def blog_delete(slug: str):
+        post = BlogPost.query.filter_by(slug=slug).first()
+        if not post:
+            return render_template("404.html"), 404
+        if post.user_id != current_user.id:
+            flash("You do not have permission to delete this post.", "error")
+            return redirect(url_for("blog_post", slug=post.slug))
+
+        try:
+            db.session.delete(post)
+            db.session.commit()
+            flash("Blog post deleted.", "success")
+        except SQLAlchemyError as exc:
+            db.session.rollback()
+            print(f"ERROR deleting blog post: {exc}")
+            flash("An error occurred while deleting the blog post.", "error")
+            return redirect(url_for("blog_post", slug=post.slug))
+
+        return redirect(url_for("blog"))
 
     @app.route("/contact")
     def contact():
