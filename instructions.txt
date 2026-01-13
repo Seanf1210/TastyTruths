@@ -2,16 +2,22 @@
 CREATE A VIRTUAL ENVIRONMENT
 =========================================================
 MAC:
-python -m venv .venv && source .venv/bin/activate 
+python3 -m venv .venv && source .venv/bin/activate 
 
 WINDOWS:
 python -m venv .venv
 .venv\Scripts\activate
 
+TO USE YOUR VENV:
+source .venv/bin/activate
+I alias this, if you ask, I can show you how
+
 =========================================================
 INSTALL ALL REQUIREMENTS FOR THE PROJECT
 =========================================================
 pip install -r requirements.txt
+OR
+pip3 install -r requirements.txt
 
 =========================================================
 RUN IT
@@ -37,12 +43,5 @@ instance/*.sqlite3
 =========================================================
 EXAMPLE TEST USAGE
 =========================================================
-MAC:
-curl -X POST http://127.0.0.1:5000/api/recipes \
-     -H "Content-Type: application/json" \
-     -d '{"title":"Chicken Tikka Masala","content":"..." }'
-
-POWERSHELL:
-$body = @{ title = "Chicken Tikka Masala"; content = "..." } | ConvertTo-Json
-Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:5000/api/recipes" `
-  -ContentType "application/json" -Body $body
+Create a user to login through the site. 
+Our databases will be kept separate (see .gitignore).

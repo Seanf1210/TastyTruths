@@ -1,0 +1,105 @@
+{% extends "base.html" %} {% block title %}Tasty Truths — Signup{% endblock %} {%
+block content %}
+
+<div class="signup-form">
+  <form action="/signup" method="POST">
+    <h2>Create An Account!</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <label for="firstName">First Name</label><br />
+    <input type="text" id="firstName" name="firstName" required /><br />
+
+    <label for="lastName">Last Name</label><br />
+    <input type="text" id="lastName" name="lastName" required /><br />
+
+    <label for="email">Email Address</label><br />
+    <input
+      type="email"
+      id="email"
+      name="email"
+      placeholder="you@example.com"
+      required
+    /><br />
+
+    <label for="username">Username</label><br />
+    <input
+      type="text"
+      id="username"
+      name="username"
+      minlength="3"
+      maxlength="20"
+      required
+    /><br />
+
+    <label for="password">Password</label><br />
+    <input
+      type="password"
+      id="password"
+      name="password"
+      minlength="8"
+      required
+    /><br />
+
+    <label for="confirmPassword">Confirm Password</label><br />
+    <input
+      type="password"
+      id="confirmPassword"
+      name="confirmPassword"
+      minlength="8"
+      required
+    /><br />
+
+    <label for="dob">Date of Birth</label><br />
+    <input type="date" id="dob" name="dob" min="2010-01-01" value="2010-01-01" required /><br />
+
+    <label for="gender">Gender</label><br />
+    <select id="gender" name="gender" required>
+      <option value="">Select</option>
+      <option value="female">Female</option>
+      <option value="male">Male</option>
+      <option value="nonbinary">Non-binary</option>
+      <option value="other">Other</option>
+      <option value="prefer_not_say">Prefer not to say</option></select
+    ><br /><br /><br />
+
+    <div class="terms">
+      <input type="checkbox" id="terms" name="terms" required />
+      <label for="terms"
+        >I agree to the <a href="/terms">Terms of Service</a> and
+        <a href="/privacy">Privacy Policy</a>.</label
+      ><br /><br />
+    </div>
+
+    <button type="submit">Sign Up</button>
+
+    <p>Already have an account? <a href="{{ url_for('login') }}">Log in</a></p>
+  </form>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('.signup-form form');
+    const passwordField = document.getElementById('password');
+    const confirmPasswordField = document.getElementById('confirmPassword');
+    const alerts = document.querySelectorAll('.alert');
+
+    // If there are any alerts and password mismatch is detected, clear only password fields
+    if (alerts.length > 0) {
+      alerts.forEach(alert => {
+        if (alert.textContent.includes('Passwords do not match')) {
+          passwordField.value = '';
+          confirmPasswordField.value = '';
+        }
+      });
+    }
+  });
+</script>
+
+{% endblock %}

@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Tasty Truths — Create Recipe{% endblock %}
+{% block content %}
+
+<div class="container">
+  <div class="recipe-form">
+    <h2>Create New Recipe</h2>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    
+    <form method="POST" enctype="multipart/form-data">
+      {{ form.hidden_tag() }}
+      
+      <!-- Title -->
+      <div class="form-group">
+        <label for="{{ form.title.id }}">{{ form.title.label }} <span class="required">*</span></label>
+        {% if form.title.errors %}
+          {{ form.title(class="form-control form-control-error") }}
+          <small class="form-error">{{ form.title.errors[0] }}</small>
+        {% else %}
+          {{ form.title(class="form-control") }}
+        {% endif %}
+        <small class="form-hint">A descriptive title for your recipe (max 150 characters)</small>
+      </div>
+
+      <!-- Image Upload -->
+      <div class="form-group">
+        <label for="{{ form.image.id }}">{{ form.image.label }}</label>
+        {% if form.image.errors %}
+          {{ form.image(class="form-control form-control-error") }}
+          <small class="form-error">{{ form.image.errors[0] }}</small>
+        {% else %}
+          {{ form.image(class="form-control") }}
+        {% endif %}
+        <small class="form-hint">Upload an image of your recipe (jpg, jpeg, png, webp, gif). Max 2MB.</small>
+      </div>
+
+      <!-- Instructions -->
+      <div class="form-group">
+        <label for="{{ form.instructions.id }}">{{ form.instructions.label }} <span class="required">*</span></label>
+        {% if form.instructions.errors %}
+          {{ form.instructions(class="form-control form-control-error") }}
+          <small class="form-error">{{ form.instructions.errors[0] }}</small>
+        {% else %}
+          {{ form.instructions(class="form-control") }}
+        {% endif %}
+        <small class="form-hint">Detailed step-by-step cooking instructions</small>
+      </div>
+
+      <!-- Ingredients -->
+      <div class="form-group">
+        <label for="{{ form.ingredients.id }}">{{ form.ingredients.label }} <span class="required">*</span></label>
+        {% if form.ingredients.errors %}
+          {{ form.ingredients(class="form-control form-control-error") }}
+          <small class="form-error">{{ form.ingredients.errors[0] }}</small>
+        {% else %}
+          {{ form.ingredients(class="form-control") }}
+        {% endif %}
+        <small class="form-hint">{{ form.ingredients.render_kw.placeholder }}</small>
+      </div>
+
+      <!-- Timing and Cost (Row) -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="{{ form.prep_time_minutes.id }}">{{ form.prep_time_minutes.label }}</label>
+          {% if form.prep_time_minutes.errors %}
+            {{ form.prep_time_minutes(class="form-control form-control-error") }}
+            <small class="form-error">{{ form.prep_time_minutes.errors[0] }}</small>
+          {% else %}
+            {{ form.prep_time_minutes(class="form-control") }}
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.cook_time_minutes.id }}">{{ form.cook_time_minutes.label }}</label>
+          {% if form.cook_time_minutes.errors %}
+            {{ form.cook_time_minutes(class="form-control form-control-error") }}
+            <small class="form-error">{{ form.cook_time_minutes.errors[0] }}</small>
+          {% else %}
+            {{ form.cook_time_minutes(class="form-control") }}
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.estimated_cost.id }}">{{ form.estimated_cost.label }}</label>
+          {% if form.estimated_cost.errors %}
+            {{ form.estimated_cost(class="form-control form-control-error") }}
+            <small class="form-error">{{ form.estimated_cost.errors[0] }}</small>
+          {% else %}
+            {{ form.estimated_cost(class="form-control") }}
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="form-actions">
+        {{ form.submit(class="button button-primary") }}
+        <a href="{{ url_for('recipes') }}" class="button button-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+

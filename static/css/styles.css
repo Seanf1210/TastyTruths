@@ -1,0 +1,1893 @@
+/* =========================================================
+   DESIGN TOKENS
+   ========================================================= */
+
+:root {
+  /* Fonts */
+  --font-base: "Lato", system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Atma", var(--font-base);
+
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --space-5: 32px;
+  --space-6: 50px;
+
+  /* Radius */
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+
+  /* Shadows */
+  --shadow-sm: 0 0 10px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 24px rgba(0, 0, 0, 0.12);
+
+  /* Permanent site background */
+  --color-bg: rgb(123, 162, 128); /* #7BA280 */
+
+  /* Theme (Green by default) */
+  --color-primary: #31572c;
+  --color-text: #132a13;
+  --color-text-alt: #ff9505;
+  --color-head-foot: #4f772d;
+  --color-surface: #ffffff;
+  --color-accent: #90a955;
+  --color-muted-text: color-mix(in oklab, var(--color-text) 80%, transparent);
+
+  /* System/supporting tokens */
+  --color-surface-muted: #ecf39e;
+  --color-border: #000000;
+  --color-info: #1d4ed8;
+  --color-outline: color-mix(in oklab, var(--color-primary) 6%, transparent);
+  --color-hover: color-mix(in oklab, var(--color-primary) 8%, transparent);
+  --color-link: var(--color-primary);
+  --color-link-hover: color-mix(in oklab, var(--color-primary) 85%, black);
+
+  /* Social media brand colors */
+  --color-youtube: #ff0000;
+  --color-instagram: #e1306c;
+}
+
+/* Optional theme override (still keeps the base bg!) */
+:root[data-theme="green"] {
+  --color-primary: #31572c;
+  --color-accent: #90a955;
+  --color-text: #0e2010;
+}
+
+/* Optional orange theme */
+:root[data-theme="orange"] {
+  --color-primary: #e2711d;
+  --color-accent: #ff9505;
+  --color-text: #2a1a12;
+  --color-outline: color-mix(in oklab, var(--color-primary) 8%, transparent);
+  --color-hover: color-mix(in oklab, var(--color-primary) 10%, transparent);
+}
+
+/* =========================================================
+   GLOBAL / BASE
+   ========================================================= */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-base);
+  line-height: 1.5;
+  margin: 0;
+  padding-top: 150px;
+  padding-left: 3%;
+  padding-right: 3%;
+}
+
+/* Utility container */
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 var(--space-3);
+}
+
+/* Index top */
+.index_top {
+  text-align: center;
+  text-decoration: overline;
+  color: color-mix(in oklab, var(--color-primary) 70%, var(--color-surface));
+}
+
+/* =========================================================
+  HEADER / FOOTER BASE TEXT & LINKS
+   ========================================================= */
+
+.header-container,
+.footerbox {
+  font-size: 0.95rem;
+  color: var(--color-text-alt);
+}
+
+#fbox3 a,
+#fbox4 a,
+#fbox5 a {
+  text-decoration: none;
+  font-size: 0.95rem;
+  color: var(--color-text-alt);
+}
+
+#fbox3 a:hover,
+#fbox4 a:hover,
+#fbox5 a:hover,
+.main-nav a:hover,
+.auth-links a:hover {
+  color: var(--color-text);
+  background-color: var(--color-hover);
+}
+
+/* =========================================================
+  HEADER / NAV LAYOUT
+   ========================================================= */
+
+.site-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 135px;
+  width: 100%;
+  background-color: var(--color-head-foot);
+  z-index: 1000;
+  border-bottom: 3px solid var(--color-accent);
+}
+
+.header-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3) calc(var(--space-3) + var(--space-1));
+}
+
+.logo img {
+  width: 120px;
+  height: auto;
+}
+
+/* =========================================================
+  MAIN NAVIGATION & AUTH LINK STYLES
+   ========================================================= */
+
+.main-nav {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: calc(var(--space-6) + var(--space-6));
+  padding: var(--space-2) 0;
+}
+
+.main-nav a,
+.auth-links a {
+  text-decoration: none;
+  padding: var(--space-2) calc(var(--space-2) + 4px);
+  border-radius: var(--radius-md);
+  transition: background-color 0.25s ease, color 0.25s ease,
+    transform 0.08s ease;
+  color: inherit;
+}
+
+/* Auth links: column on desktop; row on mobile in media query */
+.auth-links {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: calc(var(--space-1) + 2px);
+}
+
+.auth-links a {
+  margin-top: var(--space-1);
+}
+
+/* =========================================================
+  BUTTONS
+   ========================================================= */
+
+.button,
+.random_recipe_btn {
+  display: inline-block;
+  background-color: var(--color-surface-muted);
+  color: var(--color-text);
+  text-align: center;
+  padding: var(--space-2) calc(var(--space-2) + 6px);
+  border-radius: var(--radius-md);
+  transition: background-color 0.25s ease, color 0.25s ease,
+    transform 0.08s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.random_recipe_btn {
+  font-weight: 600;
+  outline: 2px solid var(--color-outline);
+  margin-top: var(--space-4);
+}
+
+.button:hover {
+  background-color: var(--color-surface);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.button.signup {
+  font-weight: 600;
+  outline: 2px solid var(--color-outline);
+}
+
+/* =========================================================
+   HERO
+   ========================================================= */
+.hero {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--space-3) - 8px);
+  width: 100%;
+  align-items: center;
+  padding: calc(var(--space-3) * 2) 0;
+}
+
+.hero_left {
+  flex: 1 1 320px;
+  max-width: 520px;
+}
+
+.hero_left h1 {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 3.5vw, 3rem);
+  margin: 0 0 calc(var(--space-1) + 4px) 0;
+}
+
+.hero_tagline {
+  font-size: 1.1rem;
+  margin: 0 0 var(--space-2) 0;
+}
+
+.hero_cta {
+  display: flex;
+  gap: calc(var(--space-2) - 2px);
+  margin: calc(var(--space-1) + 2px) 0 var(--space-2) 0;
+}
+
+.hero_points {
+  margin: 0;
+  padding-left: var(--space-3);
+}
+
+.hero_right {
+  flex: 1 1 420px;
+  display: flex;
+  flex-direction: column;
+}
+
+.hero_right_t_img {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  grid-auto-rows: 120px;
+  grid-auto-flow: dense;
+  gap: calc(var(--space-2) - 2px);
+}
+
+.hero_right_t_img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Size variants to create visual variety */
+.hero_right_t_img img.wide {
+  grid-column: span 2;
+}
+.hero_right_t_img img.tall {
+  grid-row: span 2;
+}
+.hero_right_t_img img.big {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+
+.hero_right_b {
+  margin-top: var(--space-2);
+}
+
+/* =========================================================
+   INDEX PREVIEWS
+   ========================================================= */
+.home-preview-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: calc(var(--space-3) + 2px); /* 18px */
+  margin: var(--space-4) auto;
+}
+/* =========================================================
+   SIGNUP FORM
+   ========================================================= */
+.signup-form {
+  display: flex;
+  flex-direction: column;
+  background-color: color-mix(
+    in oklab,
+    var(--color-accent) 25%,
+    --color-surface
+  );
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  width: min(500px, 92%);
+  margin: var(--space-4) auto;
+}
+
+/* =========================================================
+   LOGIN FORM
+   ========================================================= */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  background-color: color-mix(
+    in oklab,
+    var(--color-accent) 25%,
+    --color-surface
+  );
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  width: min(500px, 92%);
+  margin: var(--space-4) auto;
+}
+
+/* =========================================================
+   RECIPE FORM
+   ========================================================= */
+
+.recipe-form {
+  display: flex;
+  flex-direction: column;
+  background-color: color-mix(
+    in oklab,
+    var(--color-accent) 25%,
+    var(--color-surface)
+  );
+  padding: var(--space-5);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  width: min(700px, 92%);
+  margin: var(--space-5) auto;
+}
+
+.recipe-form h2 {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  color: var(--color-primary);
+  margin: 0 0 var(--space-4) 0;
+  text-align: center;
+}
+
+/* Form groups */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: var(--space-4);
+}
+
+.form-group label {
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--space-2);
+  font-size: 0.95rem;
+}
+
+.form-group .required {
+  color: var(--color-text-alt);
+  font-weight: 700;
+}
+
+.form-group input[type="text"],
+.form-group textarea {
+  padding: var(--space-2) var(--space-3);
+  border: 2px solid var(--color-outline);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-base);
+  font-size: 1rem;
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-group input[type="text"]:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-outline);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 200px;
+  line-height: 1.6;
+}
+
+.form-group input[type="number"],
+.form-group input[type="file"] {
+  padding: var(--space-2) var(--space-3);
+  border: 2px solid var(--color-outline);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-base);
+  font-size: 1rem;
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-group input[type="number"]:focus,
+.form-group input[type="file"]:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-outline);
+}
+
+/* Form error styling */
+.form-control-error {
+  border-color: #c33 !important;
+}
+
+.form-error {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: 0.85rem;
+  color: #933;
+  font-weight: 500;
+}
+
+/* Form row for multiple fields on same line */
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-3);
+}
+
+.form-hint {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: 0.85rem;
+  color: var(--color-muted-text);
+  font-style: italic;
+}
+
+/* Form actions */
+.form-actions {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.button-primary {
+  background-color: var(--color-primary);
+  color: var(--color-surface);
+  font-weight: 600;
+  padding: var(--space-3) var(--space-5);
+  border: none;
+  cursor: pointer;
+  position: relative;
+}
+
+.button-primary:hover:not(:disabled) {
+  background-color: color-mix(in oklab, var(--color-primary) 85%, black);
+}
+
+.button-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.button-primary.loading {
+  color: transparent;
+}
+
+.button-secondary {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border: 2px solid var(--color-outline);
+  padding: calc(var(--space-3) - 2px) calc(var(--space-5) - 2px);
+}
+
+.button-secondary:hover {
+  background-color: var(--color-hover);
+  border-color: var(--color-primary);
+}
+
+/* Form messages */
+.form-message {
+  margin-top: var(--space-4);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  text-align: center;
+}
+
+.form-message-error {
+  background-color: color-mix(in oklab, #dc2626 15%, var(--color-surface));
+  color: #dc2626;
+  border: 1px solid #dc2626;
+}
+
+.form-message-success {
+  background-color: color-mix(in oklab, #16a34a 15%, var(--color-surface));
+  color: #16a34a;
+  border: 1px solid #16a34a;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .recipe-form {
+    padding: var(--space-4);
+  }
+
+  .recipe-form h2 {
+    font-size: 1.75rem;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .form-actions .button {
+    width: 100%;
+  }
+}
+
+/* =========================================================
+   404 PAGE
+   ========================================================= */
+
+.page404 {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 var(--space-3);
+  text-align: center;
+  padding: 50px 20px;
+}
+
+.page404 h1 {
+  font-size: 3em;
+  margin-bottom: 20px;
+}
+
+.page404 p {
+  font-size: 1.2em;
+  margin-bottom: 30px;
+}
+
+.page404 a {
+  font-size: 1.1em;
+  padding: 10px 24px;
+}
+
+/* =========================================================
+   CONTACT SECTION
+   ========================================================= */
+.contact-body {
+  padding-top: 200px;
+}
+.contact-us {
+  background-color: var(--color-surface-muted);
+  width: 60%;
+  text-align: center;
+  margin: auto;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.contact-us h2 {
+  background-color: var(--color-info);
+  color: var(--color-surface);
+  margin: 0;
+  padding: calc(var(--space-3) - 1px);
+  border-left: 3px solid var(--color-border);
+  border-right: 3px solid var(--color-border);
+  border-top: 3px solid var(--color-border);
+}
+
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-right: 3px solid var(--color-border);
+  border-left: 2px solid var(--color-border);
+  border-bottom: 3px solid var(--color-border);
+  border-top: 3px solid var(--color-border);
+}
+
+.contact-box {
+  padding: calc(var(--space-2) + 2px);
+  border-left: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.contact-box ion-icon {
+  font-size: 36px;
+  margin-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+ion-icon[name="logo-facebook"] {
+  color: var(--color-info);
+  outline: var(--color-border);
+}
+
+ion-icon[name="logo-youtube"] {
+  color: var(--color-youtube);
+}
+
+ion-icon[name="logo-instagram"] {
+  color: var(--color-instagram);
+}
+
+/* =========================================================D
+   FOOTER
+   ========================================================= */
+
+.footer {
+  background-color: var(--color-head-foot);
+  border-top: 3px solid var(--color-accent);
+  position: relative;
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  padding: var(--space-5) var(--space-3) var(--space-4);
+  color: color-mix(in oklab, var(--color-surface) 90%, transparent);
+  font-family: var(--font-base);
+  font-size: 0.9rem;
+}
+
+.footerbox {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--space-4) var(--space-5);
+
+  max-width: 1200px;
+  margin: 0 auto;
+
+  text-align: left;
+  align-items: start;
+}
+
+.fbox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  position: relative;
+}
+
+#fbox1 {
+  grid-column: 1;
+  justify-content: flex-start;
+}
+
+#fbox1 img {
+  width: 140px;
+  height: auto;
+  display: block;
+  object-fit: contain;
+  filter: drop-shadow(var(--shadow-sm));
+}
+
+#fbox2,
+#fbox3,
+#fbox4,
+#fbox5,
+#fbox6 {
+  & > p,
+  & > .hover-menu {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--color-text-alt);
+    margin: 0 0 var(--space-2) 0;
+    letter-spacing: 0.025em;
+  }
+}
+
+.hover-menu {
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.2s ease;
+}
+
+#fbox2:hover .hover-menu {
+  color: var(--color-text);
+}
+
+#fbox2 a,
+#fbox3 a,
+#fbox4 a,
+#fbox5 a,
+#fbox6 a {
+  color: color-mix(in oklab, var(--color-text-alt) 75%, transparent);
+  text-decoration: none;
+  padding: var(--space-1) 0;
+  border-radius: var(--radius-sm);
+  transition: color 0.25s ease, padding-left 0.2s ease;
+  display: inline-block;
+  font-size: 0.9rem;
+}
+
+/* Hover effect: brighten color + subtle slide animation */
+#fbox2 a:hover,
+#fbox3 a:hover,
+#fbox4 a:hover,
+#fbox5 a:hover,
+#fbox6 a:hover {
+  color: var(--color-text);
+  padding-left: var(--space-1);
+}
+
+.popup {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 0;
+  width: 200px;
+  min-width: 200px;
+  max-width: 200px;
+
+  /* Styling */
+  background-color: color-mix(in oklab, var(--color-primary) 85%, black);
+  border: 1px solid color-mix(in oklab, var(--color-accent) 40%, transparent);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  box-shadow: var(--shadow-lg);
+
+  /* Hidden state: invisible and not interactive */
+  opacity: 0;
+  pointer-events: none;
+
+  /* Smooth animation */
+  transform: translateY(var(--space-2));
+  transition: opacity 0.25s ease, transform 0.25s ease;
+
+  /* Stack above other elements */
+  z-index: 500;
+}
+
+#fbox2:hover .popup {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+@media (hover: none) {
+  /* On touch devices, make the trigger focusable */
+  .hover-menu {
+    cursor: pointer;
+  }
+
+  /* Keep popup visible when any child element has focus */
+  #fbox2:focus-within .popup {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+}
+
+/* 
+ * Popup links styling
+ * 
+ * LAYOUT STABILITY FIXES:
+ * - display: block ensures links stack vertically (flex child behavior)
+ * - width: 100% makes them fill container width consistently
+ * - box-sizing: border-box prevents padding from changing dimensions
+ * - No inline-block to avoid text-wrapping issues
+ */
+.popup a {
+  /* Block display for stable vertical stacking */
+  display: block;
+  width: 100%; /* Fill parent width - prevents shifting */
+  box-sizing: border-box; /* Padding doesn't affect width */
+
+  /* Typography */
+  color: color-mix(in oklab, var(--color-accent) 90%, var(--color-surface));
+  text-decoration: none;
+  font-size: 0.9rem;
+  white-space: nowrap; /* Prevent text wrapping */
+
+  /* Spacing - using padding instead of margin for stable hitbox */
+  padding: var(--space-2) 0;
+
+  /* Visual separator */
+  border-bottom: 1px solid
+    color-mix(in oklab, var(--color-surface) 10%, transparent);
+
+  /* Smooth transitions */
+  transition: color 0.2s ease, padding-left 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.popup a:last-child {
+  border-bottom: none;
+}
+
+/* 
+ * Hover effect with stable layout
+ * Using background color instead of just padding-left to maintain visual feedback
+ * Padding-left creates indent but doesn't change overall width (box-sizing handles it)
+ */
+.popup a:hover {
+  color: var(--color-surface);
+  padding-left: var(--space-2); /* Indent on hover */
+  background-color: color-mix(in oklab, var(--color-surface) 8%, transparent);
+}
+
+/* Social icons column */
+#fbox6 {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+#fbox6 a {
+  padding: var(--space-2);
+  background-color: color-mix(in oklab, var(--color-surface) 10%, transparent);
+  border-radius: var(--radius-md);
+  transition: background-color 0.25s ease, transform 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#fbox6 a:hover {
+  background-color: color-mix(in oklab, var(--color-accent) 30%, transparent);
+  transform: translateY(-2px);
+  padding-left: var(--space-2); /* Override general hover effect */
+}
+
+#fbox6 ion-icon {
+  font-size: 24px;
+  color: var(--color-surface);
+}
+
+/* Copyright text at footer bottom */
+.footer > small {
+  display: block;
+  text-align: center;
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid
+    color-mix(in oklab, var(--color-surface) 15%, transparent);
+  color: color-mix(in oklab, var(--color-surface) 60%, transparent);
+  font-size: 0.85rem;
+}
+
+/* 
+ * RESPONSIVE: Mobile/Tablet
+ * Breakpoint: 768px - stack columns vertically
+ */
+@media (max-width: 768px) {
+  .footerbox {
+    /* Switch to single column flexbox layout */
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    text-align: center;
+  }
+
+  .fbox {
+    align-items: center;
+  }
+
+  #fbox1 img {
+    width: 120px;
+  }
+
+  /* Center align section headings on mobile */
+  #fbox2 > p,
+  #fbox2 > .hover-menu,
+  #fbox3 > p,
+  #fbox4 > p,
+  #fbox5 > p,
+  #fbox6 > p {
+    text-align: center;
+  }
+
+  /* 
+   * Popup layout stability on mobile
+   * Maintain flex column even on small screens
+   */
+  .popup {
+    /* Center the popup on mobile */
+    left: 50%;
+    transform: translateX(-50%) translateY(var(--space-2));
+
+    /* Maintain flex column layout - NEVER switch to row */
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+
+    /* Slightly narrower on mobile but still fixed */
+    width: 180px;
+    min-width: 180px;
+    max-width: 180px;
+  }
+
+  #fbox2:hover .popup,
+  #fbox2:focus-within .popup {
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* Social icons: center and adjust for mobile */
+  #fbox6 {
+    justify-content: center;
+  }
+}
+
+/* =========================================================
+   BLOG PREVIEW CARDS
+   ========================================================= */
+.blog-preview-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: calc(var(--space-3) + 2px); /* 18px */
+  margin: var(--space-4) auto;
+}
+
+.blog-card {
+  background: var(--color-surface);
+  color: inherit;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  transition: transform 0.08s ease, box-shadow 0.25s ease;
+}
+
+.blog-card:hover,
+.blog-card:focus-within {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}
+
+.blog-card > a:first-child {
+  display: block;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+}
+
+.blog-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.blog-card h2 {
+  font-size: 1.1rem;
+  line-height: 1.3;
+  margin: var(--space-2) var(--space-2) calc(var(--space-1) + 2px);
+}
+
+.blog-card h2 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.blog-card h2 a:hover {
+  text-decoration: underline;
+}
+
+.blog-card p {
+  margin: 0 var(--space-2) var(--space-2);
+  color: var(--color-muted-text);
+}
+
+/* CTA link styled to match your button/hover vibe */
+.blog-card .read-more {
+  display: inline-block;
+  margin: 0 var(--space-2) calc(var(--space-2) + 2px);
+  padding: var(--space-2) calc(var(--space-2) + 4px);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-primary);
+  text-decoration: none;
+  outline: 1px solid var(--color-outline);
+  transition: background-color 0.25s ease, color 0.25s ease,
+    transform 0.08s ease;
+}
+
+.blog-card .read-more:hover,
+.blog-card .read-more:focus {
+  background-color: var(--color-hover);
+  transform: translateY(-1px);
+}
+
+/* =========================================================
+   BLOG LISTING & POST PAGES
+   ========================================================= */
+.blog-hero {
+  text-align: center;
+  margin: var(--space-5) auto var(--space-4);
+}
+
+.blog-hero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  margin: 0 0 var(--space-2) 0;
+  color: var(--color-primary);
+}
+
+.blog-hero p {
+  margin: 0;
+  color: var(--color-muted-text);
+}
+
+.blog-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.blog-admin {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.blog-post-card {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.blog-post-card h2 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-family: var(--font-display);
+}
+
+.blog-post-card h2 a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.blog-post-card h2 a:hover {
+  text-decoration: underline;
+}
+
+.blog-meta {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-muted-text);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  align-items: center;
+}
+
+.blog-author {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.blog-summary {
+  margin: 0;
+  color: var(--color-text);
+  line-height: 1.6;
+}
+
+.blog-read-more {
+  align-self: flex-start;
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  background-color: var(--color-accent);
+  color: var(--color-text);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  transition: background-color 0.2s ease, transform 0.08s ease;
+}
+
+.blog-read-more:hover,
+.blog-read-more:focus {
+  background-color: color-mix(in oklab, var(--color-accent) 85%, black);
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.blog-empty {
+  background-color: var(--color-surface);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+  color: var(--color-muted-text);
+}
+
+.blog-post {
+  max-width: 840px;
+  margin: var(--space-5) auto;
+  padding: var(--space-4);
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.blog-post-header h1 {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 2.6rem);
+  margin: var(--space-2) 0;
+  color: var(--color-primary);
+}
+
+.blog-kicker {
+  margin: 0;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.blog-kicker a {
+  color: var(--color-muted-text);
+  text-decoration: none;
+}
+
+.blog-kicker a:hover {
+  color: var(--color-primary);
+}
+
+.blog-post-body {
+  margin-top: var(--space-4);
+  line-height: 1.8;
+  color: var(--color-text);
+}
+
+.blog-post-body p {
+  margin: 0 0 var(--space-3) 0;
+}
+
+.blog-owner-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.blog-owner-actions form {
+  margin: 0;
+}
+
+.blog-delete {
+  background-color: color-mix(in oklab, #dc2626 20%, var(--color-surface));
+  color: #7f1d1d;
+}
+
+.blog-delete:hover,
+.blog-delete:focus {
+  background-color: color-mix(in oklab, #dc2626 30%, var(--color-surface));
+}
+
+@media (max-width: 768px) {
+  .blog-post {
+    padding: var(--space-3);
+  }
+}
+
+/* =========================================================
+   LINKS
+   ========================================================= */
+a {
+  color: var(--color-link);
+}
+a:hover {
+  color: var(--color-link-hover);
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+@media (max-width: 768px) {
+  .auth-links {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+@media (max-width: 420px) {
+  .blog-preview-container {
+    gap: calc(var(--space-2) - 2px);
+  }
+  .blog-card h2 {
+    font-size: 1.05rem;
+  }
+}
+
+/* =========================================================
+   blog layout
+   ========================================================= */
+.post-feed {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* * The main post card
+*/
+.post-card {
+  background-color: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Card Header: Avatar + User Info */
+.card-header {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%; /* Makes the avatar circular */
+  margin-right: 0.75rem;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  font-weight: 700;
+  color: #050505;
+}
+
+.user-id {
+  font-size: 0.9rem;
+  color: #5b7083;
+}
+
+/* Card Body: The main text content */
+.card-body {
+  font-size: 1rem;
+  line-height: 1.4;
+  margin-bottom: 0.75rem;
+}
+
+.card-body p {
+  margin: 0;
+}
+
+/* Card Media: The optional image */
+.card-media {
+  margin-top: 1rem;
+  border-radius: 12px; /* Rounded corners for the image */
+  overflow: hidden; /* Ensures the image respects the border-radius */
+  border: 1px solid #ddd;
+}
+
+.card-media img {
+  width: 100%;
+  height: auto;
+  display: block; /* Removes bottom spacing on images */
+}
+
+/* * Card Actions: The icon bar
+ * Uses flexbox to space the icons evenly.
+*/
+.card-actions {
+  display: flex;
+  justify-content: space-around; /* Distributes items evenly */
+  margin-top: 1rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #ebedf0;
+  color: #5b7083; /* Default icon/text color */
+}
+
+.action-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  color: inherit; /* Takes color from .card-actions */
+  font-size: 0.85rem;
+  padding: 0.5rem;
+  border-radius: 99px; /* Pill shape for hover background */
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.action-button svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.action-count {
+  margin-left: 0.5rem;
+}
+
+/* --- Hover and Focus States --- */
+/* Provides visual feedback on interaction */
+
+.action-button:hover,
+.action-button:focus {
+  outline: none;
+}
+
+/* Comment: Blue */
+.action-comment:hover,
+.action-comment:focus {
+  color: #1d9bf0;
+  background-color: rgba(29, 155, 240, 0.1);
+}
+
+/* Repost: Green */
+.action-repost:hover,
+.action-repost:focus {
+  color: #00ba7c;
+  background-color: rgba(0, 186, 124, 0.1);
+}
+
+/* Like: Pink/Red */
+.action-like:hover,
+.action-like:focus {
+  color: #f91880;
+  background-color: rgba(249, 24, 128, 0.1);
+}
+
+/* Share: Blue */
+.action-share:hover,
+.action-share:focus {
+  color: #1d9bf0;
+  background-color: rgba(29, 155, 240, 0.1);
+}
+
+/* =========================================================
+   RECIPE CARDS & FEATURED SECTION
+   ========================================================= */
+
+.recipes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+  flex-wrap: wrap;
+}
+
+.recipes-header h2 {
+  margin: 0;
+  flex: 1 1 auto;
+  min-width: 200px;
+}
+
+.featured-recipes {
+  margin-bottom: var(--space-6);
+}
+
+.featured-recipes h3 {
+  margin-top: 0;
+  margin-bottom: var(--space-4);
+}
+
+.recipe-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.recipe-card {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  transition: transform 0.2s ease, box-shadow 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.recipe-card:hover,
+.recipe-card:focus-within {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.recipe-card-image {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background-color: var(--color-surface-muted);
+}
+
+.recipe-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.recipe-card-image-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-muted-text);
+  font-style: italic;
+  font-size: 0.95rem;
+}
+
+.recipe-card-content {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  padding: var(--space-3);
+}
+
+.recipe-card-title {
+  margin: 0 0 var(--space-2) 0;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  line-height: 1.3;
+  color: var(--color-primary);
+}
+
+.recipe-card-description {
+  margin: 0 0 var(--space-2) 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--color-muted-text);
+  flex-grow: 1;
+}
+
+.recipe-card-description-empty {
+  font-style: italic;
+  color: color-mix(in oklab, var(--color-muted-text) 70%, transparent);
+}
+
+.recipe-card-meta {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  margin: var(--space-2) 0;
+  font-size: 0.85rem;
+  color: var(--color-muted-text);
+  flex-wrap: wrap;
+}
+
+.recipe-cuisine {
+  font-weight: 500;
+  color: var(--color-primary);
+}
+
+.recipe-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.recipe-tags {
+  display: flex;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+  margin: var(--space-2) 0;
+}
+
+.tag {
+  display: inline-block;
+  padding: 4px var(--space-2);
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+/* Badge color variants for dietary tags */
+.badge-gluten_free {
+  background-color: color-mix(in oklab, #3b82f6 20%, var(--color-surface));
+  color: #1e40af;
+}
+
+.badge-halal {
+  background-color: color-mix(in oklab, #10b981 20%, var(--color-surface));
+  color: #065f46;
+}
+
+.badge-vegetarian {
+  background-color: color-mix(in oklab, #8b5cf6 20%, var(--color-surface));
+  color: #5b21b6;
+}
+
+.badge-vegan {
+  background-color: color-mix(in oklab, #ec4899 20%, var(--color-surface));
+  color: #831843;
+}
+
+.badge-nut_free {
+  background-color: color-mix(in oklab, #f59e0b 20%, var(--color-surface));
+  color: #92400e;
+}
+
+.badge-dairy_free {
+  background-color: color-mix(in oklab, #14b8a6 20%, var(--color-surface));
+  color: #134e4a;
+}
+
+.badge-contains_gluten,
+.badge-contains_pork {
+  background-color: color-mix(in oklab, #ef4444 20%, var(--color-surface));
+  color: #7f1d1d;
+}
+
+.recipe-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: auto;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-outline);
+}
+
+.recipe-card-rating {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.rating-value {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.rating-empty {
+  color: var(--color-muted-text);
+  font-style: italic;
+}
+
+.recipe-card-link {
+  display: inline-block;
+  padding: var(--space-2) var(--space-3);
+  background-color: var(--color-accent);
+  color: var(--color-text);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background-color 0.2s ease, transform 0.08s ease;
+}
+
+.recipe-card-link:hover,
+.recipe-card-link:focus {
+  background-color: color-mix(in oklab, var(--color-accent) 85%, black);
+  transform: translateY(-1px);
+  outline: none;
+}
+
+/* =========================================================
+   DISABLED BUTTON & HELPER TEXT
+   ========================================================= */
+
+.button-primary:disabled {
+  background-color: color-mix(in oklab, var(--color-primary) 60%, transparent);
+  color: var(--color-muted-text);
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.button-primary:disabled:hover {
+  background-color: color-mix(in oklab, var(--color-primary) 60%, transparent);
+  transform: none;
+}
+
+.button-helper-text {
+  margin: var(--space-2) 0 0 0;
+  font-size: 0.85rem;
+  color: var(--color-muted-text);
+  font-style: italic;
+}
+
+/* =========================================================
+   RESPONSIVE: Recipe Cards & Header
+   ========================================================= */
+
+@media (max-width: 768px) {
+  .recipes-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .recipes-header h2 {
+    min-width: unset;
+  }
+
+  .recipes-header .button-primary {
+    width: 100%;
+    text-align: center;
+  }
+
+  .recipe-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-3);
+  }
+}
+
+@media (max-width: 420px) {
+  .recipe-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .recipes-header {
+    gap: var(--space-2);
+  }
+}
+
+/* =========================================================
+   RECIPE DETAIL PAGE
+   ========================================================= */
+.recipe-detail {
+  max-width: 900px;
+  margin: var(--space-5) auto;
+  padding: var(--space-4);
+}
+
+.recipe-header {
+  text-align: center;
+  margin-bottom: var(--space-5);
+  border-bottom: 2px solid var(--color-accent);
+  padding-bottom: var(--space-4);
+}
+
+.recipe-header h1 {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  color: var(--color-primary);
+  margin: 0 0 var(--space-2) 0;
+}
+
+.recipe-meta {
+  font-size: 0.9rem;
+  color: var(--color-muted-text);
+  margin: 0;
+}
+
+.recipe-author {
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+/* Recipe image */
+.recipe-image-container {
+  text-align: center;
+  margin: var(--space-4) 0;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background-color: var(--color-surface-muted);
+}
+
+.recipe-image {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  border-radius: var(--radius-md);
+}
+
+/* Info section (timing, cost) */
+.recipe-info-section {
+  background: color-mix(
+    in oklab,
+    var(--color-accent) 15%,
+    var(--color-surface)
+  );
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  margin: var(--space-4) 0;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-3);
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.info-label {
+  font-weight: 600;
+  color: var(--color-text);
+  font-size: 0.9rem;
+}
+
+.info-value {
+  color: var(--color-primary);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+/* Main content layout */
+.recipe-content {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: var(--space-5);
+  margin: var(--space-5) 0;
+}
+
+.recipe-ingredients-section,
+.recipe-instructions-section {
+  background: color-mix(
+    in oklab,
+    var(--color-accent) 10%,
+    var(--color-surface)
+  );
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+}
+
+.recipe-ingredients-section h2,
+.recipe-instructions-section h2 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  color: var(--color-primary);
+  margin: 0 0 var(--space-3) 0;
+  border-bottom: 2px solid var(--color-accent);
+  padding-bottom: var(--space-2);
+}
+
+.ingredients-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.ingredient-item {
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-outline);
+  position: relative;
+  padding-left: var(--space-3);
+}
+
+.ingredient-item:last-child {
+  border-bottom: none;
+}
+
+.ingredient-item::before {
+  content: "○";
+  position: absolute;
+  left: 0;
+  color: var(--color-primary);
+  font-weight: bold;
+}
+
+.instructions-text {
+  line-height: 1.8;
+  color: var(--color-text);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.no-data {
+  color: var(--color-muted-text);
+  font-style: italic;
+  margin: var(--space-3) 0;
+}
+
+/* Recipe actions */
+.recipe-actions {
+  text-align: center;
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 2px solid var(--color-accent);
+}
+
+.button-secondary {
+  background-color: var(--color-accent);
+  color: var(--color-primary);
+  font-weight: 600;
+  padding: var(--space-2) var(--space-4);
+  border: none;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  display: inline-block;
+  transition: background-color 0.2s ease;
+}
+
+.button-secondary:hover {
+  background-color: color-mix(in oklab, var(--color-accent) 85%, black);
+}
+
+/* Responsive recipe detail */
+@media (max-width: 768px) {
+  .recipe-header h1 {
+    font-size: 1.8rem;
+  }
+
+  .recipe-content {
+    grid-template-columns: 1fr;
+  }
+
+  .info-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .recipe-detail {
+    padding: var(--space-3);
+  }
+
+  .recipe-ingredients-section,
+  .recipe-instructions-section {
+    padding: var(--space-3);
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================================================
+   ALERT / FLASH MESSAGES
+   ========================================================= */
+.alert {
+  padding: var(--space-3);
+  margin-bottom: var(--space-3);
+  border-radius: var(--radius-md);
+  border-left: 4px solid;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.alert-error {
+  background-color: #fee;
+  border-left-color: #c33;
+  color: #933;
+}
+
+.alert-success {
+  background-color: #efe;
+  border-left-color: #3c3;
+  color: #393;
+}
+
+.alert-info {
+  background-color: #eef;
+  border-left-color: #33c;
+  color: #339;
+}
+

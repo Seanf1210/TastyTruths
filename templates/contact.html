@@ -1,0 +1,40 @@
+{% extends "base.html" %} {% block title %}Tasty Truths — Contact Us{% endblock %} {%
+block content %}
+
+<main>
+  <section class="contact-us">
+    <h2>Contact Us!</h2>
+    <div class="contact-grid">
+      <div class="contact-box">
+        <a href="tel:+1234567890">
+          <ion-icon name="call-outline"></ion-icon>
+        </a>
+        <h3>Phone Number</h3>
+        <p>(123)-456-7890</p>
+      </div>
+      <div class="contact-box">
+        <a href="mailto:tastytruths@gmail.com">
+          <ion-icon name="mail-outline"></ion-icon>
+        </a>
+        <h3>Email</h3>
+        <p>tastytruths@gmail.com</p>
+      </div>
+      <div class="contact-box">
+        <a href="https://www.facebook.com" target="_blank">
+          <ion-icon name="logo-facebook"></ion-icon>
+        </a>
+        <h3>Facebook</h3>
+        <p>Follow us!</p>
+      </div>
+      <div class="contact-box">
+        <a href="mailto:support@tastytruths.com?subject=Customer%20Support">
+          <ion-icon name="time-outline"></ion-icon>
+        </a>
+        <h3>Customer Service Hours</h3>
+        <p>Mon-Fri: 9AM - 5PM</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Tasty Truths - Blog{% endblock %}
+{% block content %}
+<section class="blog-hero container">
+  <h1>From the Tasty Truths Kitchen</h1>
+  <p>
+    Stories, tips, and behind-the-scenes notes from the team that cooks,
+    tests, and tastes it all.
+  </p>
+</section>
+
+<section
+  class="blog-list container"
+  aria-label="Blog posts"
+  itemscope
+  itemtype="https://schema.org/Blog"
+>
+  {% if current_user.is_authenticated %}
+  <div class="blog-admin">
+    <a class="blog-read-more" href="{{ url_for('blog_new') }}">
+      New Post
+    </a>
+  </div>
+  {% endif %}
+  {% for post in posts %}
+  <article
+    class="blog-post-card"
+    itemprop="blogPost"
+    itemscope
+    itemtype="https://schema.org/BlogPosting"
+  >
+    <header>
+      <h2 itemprop="headline">
+        <a href="{{ url_for('blog_post', slug=post.slug) }}" itemprop="url">
+          {{ post.title }}
+        </a>
+      </h2>
+      <p class="blog-meta">
+        <time datetime="{{ post.created_at.isoformat() }}" itemprop="datePublished">
+          {{ post.created_at.strftime("%B %d, %Y") }}
+        </time>
+        <span aria-hidden="true">·</span>
+        <span
+          class="blog-author"
+          itemprop="author"
+          itemscope
+          itemtype="https://schema.org/Person"
+        >
+          <span itemprop="name">{{ post.author.username if post.author else "Unknown" }}</span>
+        </span>
+      </p>
+    </header>
+    <p class="blog-summary" itemprop="description">{{ post.summary }}</p>
+    <a
+      class="blog-read-more"
+      href="{{ url_for('blog_post', slug=post.slug) }}"
+      aria-label="Read more: {{ post.title }}"
+    >
+      Read more
+    </a>
+  </article>
+  {% else %}
+  <p class="blog-empty">No blog posts yet. Check back soon.</p>
+  {% endfor %}
+</section>
+{% endblock %}
