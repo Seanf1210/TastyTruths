@@ -46,12 +46,12 @@ def create_app(admin_override: bool = False):
     login_manager.init_app(app)
 
     def _enable_admin_override():
-        # ⚠️ DEVELOPMENT ONLY — NEVER ENABLE IN PRODUCTION
-        print("⚠️ DEVELOPMENT ONLY — NEVER ENABLE IN PRODUCTION: admin override enabled")
+        # DEVELOPMENT ONLY — NEVER ENABLE IN PRODUCTION
+        print("DEVELOPMENT ONLY — NEVER ENABLE IN PRODUCTION: admin override enabled")
 
         @app.before_request
         def _admin_override_user():
-            # ⚠️ DEVELOPMENT ONLY — NEVER ENABLE IN PRODUCTION
+            # DEVELOPMENT ONLY — NEVER ENABLE IN PRODUCTION
             g._login_user = AdminOverrideUser()
     
     @app.route("/logout")
