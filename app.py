@@ -1,6 +1,7 @@
 # app.py
 from datetime import timedelta
-from flask import Flask, request, jsonify, redirect, url_for, redirect, render_template, flash
+import argparse
+from flask import Flask, request, jsonify, redirect, url_for, redirect, render_template, flash, g
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect, generate_csrf
@@ -17,7 +18,12 @@ login_manager = LoginManager()
 csrf = CSRFProtect()
 migrate = Migrate()
 
-def create_app():
+class AdminOverrideUser(UserMixin):
+    def __init__(self, user_id: str = "admin-override"):
+        self.id = user_id
+        self.username = user_id
+
+def create_app(admin_override: bool = False):
     app = Flask(__name__, static_folder="static", template_folder="templates")
     # --- security & session config ---
     app.config.update(
@@ -31,12 +37,22 @@ def create_app():
         WTF_CSRF_TIME_LIMIT=None,        # CSRF token lifetime (optional)
         MAX_CONTENT_LENGTH=2 * 1024 * 1024,  # 2MB file upload limit
     )
+    app.config["ADMIN_OVERRIDE"] = bool(admin_override)
 
     # --- init extensions in the right order ---
     db.init_app(app)
     Migrate(app, db)
     csrf.init_app(app)
     login_manager.init_app(app)
+
+    def _enable_admin_override():
+        # ⚠️ DEVELOPMENT ONLY — NEVER ENABLE IN PRODUCTION
+        print("⚠️ DEVELOPMENT ONLY — NEVER ENABLE IN PRODUCTION: admin override enabled")
+
+        @app.before_request
+        def _admin_override_user():
+            # ⚠️ DEVELOPMENT ONLY — NEVER ENABLE IN PRODUCTION
+            g._login_user = AdminOverrideUser()
     
     @app.route("/logout")
     @login_required
@@ -431,9 +447,27 @@ def create_app():
     with app.app_context():
         db.create_all()
 
+    if app.config.get("ADMIN_OVERRIDE"):
+        _enable_admin_override()
+
     return app
 
-app = create_app()
+def _parse_args():
+    parser = argparse.ArgumentParser(description="Run the Tasty Truths Flask app.")
+    parser.add_argument(
+        "-A",
+        "--admin-override",
+        action="store_true",
+        help="Enable DEVELOPMENT-ONLY admin override mode.",
+    )
+    return parser.parse_args()
+
+def _run_dev_server():
+    args = _parse_args()
+    app = create_app(admin_override=args.admin_override)
+    app.run(debug=True, host="0.0.0.0", port=5500)
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5500)
+    _run_dev_server()
+else:
+    app = create_app()
