@@ -1,0 +1,37 @@
+Table,Number of Records
+acquisition_samples.csv,7417
+agricultural_samples.csv,810
+all_downloaded_table_record_counts.csv,2
+branded_food.csv,1947155
+Download API Field Descriptions.xlsx,97
+fndds_derivation.csv,49
+fndds_ingredient_nutrient_value.csv,122330
+food_attribute.csv,2385473
+food_attribute_type.csv,5
+food_calorie_conversion_factor.csv,5001
+food_category.csv,28
+food_component.csv,3066
+food.csv,2021090
+food_nutrient_conversion_factor.csv,556
+food_nutrient.csv,26235946
+food_nutrient_derivation.csv,80
+food_nutrient_source.csv,10
+food_portion.csv,47837
+food_protein_conversion_factor.csv,266
+food_update_log_entry.csv,1556895
+foundation_food.csv,265
+input_food.csv,24401
+lab_method_code.csv,188
+lab_method.csv,279
+lab_method_nutrient.csv,559
+market_acquisition.csv,6633
+measure_unit.csv,122
+microbe.csv,11
+nutrient.csv,477
+retention_factor.csv,270
+sample_food.csv,3135
+sr_legacy_food.csv,7793
+sub_sample_food.csv,49518
+sub_sample_result.csv,108730
+survey_fndds_food.csv,5624
+wweia_food_category.csv,169
