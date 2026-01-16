@@ -1,6 +1,7 @@
 # app.py
 from datetime import timedelta
 import argparse
+import random
 from flask import Flask, request, jsonify, redirect, url_for, redirect, render_template, flash, g
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
 from flask_migrate import Migrate
@@ -62,7 +63,33 @@ def create_app(admin_override: bool = False):
     
     @app.route("/")
     def index():
-        return render_template("index.html")
+        recipes = Recipe.query.all()
+        featured_recipe = None
+        if recipes:
+            recipe = random.choice(recipes)
+            snippet = (recipe.description or "").strip()
+            if not snippet:
+                snippet = (recipe.instructions or "").strip()
+            if not snippet:
+                snippet = (recipe.content or "").strip()
+
+            if snippet:
+                max_length = 160
+                if len(snippet) > max_length:
+                    snippet = f"{snippet[: max_length - 3].rstrip()}..."
+
+            image_url = None
+            if recipe.image_filename:
+                image_url = url_for("static", filename=recipe.image_filename)
+
+            featured_recipe = {
+                "title": recipe.title,
+                "snippet": snippet,
+                "image_url": image_url,
+                "url": url_for("recipe_detail", id_slug=f"{recipe.id}-{recipe.slug}"),
+            }
+
+        return render_template("index.html", featured_recipe=featured_recipe)
     
     @app.route("/about")
     def about_us():
