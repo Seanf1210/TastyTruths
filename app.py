@@ -2,6 +2,7 @@
 from datetime import timedelta
 import argparse
 import random
+from sqlalchemy import func
 from flask import Flask, request, jsonify, redirect, url_for, redirect, render_template, flash, g
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
 from flask_migrate import Migrate
@@ -89,7 +90,53 @@ def create_app(admin_override: bool = False):
                 "url": url_for("recipe_detail", id_slug=f"{recipe.id}-{recipe.slug}"),
             }
 
-        return render_template("index.html", featured_recipe=featured_recipe)
+        featured_blog = None
+        blog_query = BlogPost.query
+        if hasattr(BlogPost, "is_published"):
+            blog_query = blog_query.filter_by(is_published=True)
+        elif hasattr(BlogPost, "published"):
+            blog_query = blog_query.filter_by(published=True)
+        elif hasattr(BlogPost, "status"):
+            blog_query = blog_query.filter(BlogPost.status == "published")
+
+        post = blog_query.order_by(func.random()).first()
+        if post:
+            author_name = None
+            if post.author:
+                full_name = " ".join(
+                    part for part in [post.author.first_name, post.author.last_name] if part
+                )
+                author_name = full_name or post.author.username
+
+            excerpt = (post.content or "").strip()
+            if not excerpt:
+                excerpt = (post.summary or "").strip()
+
+            if excerpt:
+                max_length = 200
+                if len(excerpt) > max_length:
+                    excerpt = f"{excerpt[: max_length - 3].rstrip()}..."
+
+            published_date = None
+            published_iso = None
+            if post.created_at:
+                published_date = post.created_at.strftime("%b %d, %Y")
+                published_iso = post.created_at.date().isoformat()
+
+            featured_blog = {
+                "title": post.title,
+                "author_name": author_name,
+                "published_date": published_date,
+                "published_iso": published_iso,
+                "excerpt": excerpt,
+                "url": url_for("blog_post", slug=post.slug),
+            }
+
+        return render_template(
+            "index.html",
+            featured_recipe=featured_recipe,
+            featured_blog=featured_blog,
+        )
     
     @app.route("/about")
     def about_us():
