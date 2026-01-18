@@ -190,23 +190,32 @@ body {
 /* Auth links: column on desktop; row on mobile in media query */
 .auth-links {
   display: flex;
+  flex-direction: row; 
+  align-items: center; /* Vertically centers the moon with the buttons */
+  gap: var(--space-3);  /* Adds space between buttons and the moon */
+}
+
+/* Add this new class to keep the buttons stacked vertically */
+.auth-buttons-stack {
+  display: flex;
   flex-direction: column;
-  justify-content: center;
   gap: calc(var(--space-1) + 2px);
 }
 
-.auth-links a {
-  margin-top: var(--space-1);
-  margin-top: 0;
-}
-
+/* Remove the inline styles from the button in base.html and use this instead */
 .theme-toggle {
   background: none;
   border: none;
   cursor: pointer;
-  padding: 0;
+  font-size: 1.8rem;
   display: flex;
   align-items: center;
+  padding: 0;
+  transition: transform 0.2s ease;
+}
+
+.theme-toggle:hover {
+  transform: scale(1.1);
 }
 
 .theme-toggle ion-icon {
@@ -1911,3 +1920,15 @@ a:hover {
   color: #339;
 }
 
+/* =========================================================
+  DARK MODE SUPPORT (testing purposes)
+  ========================================================= */
+body.dark-mode {
+  background-color: #1a1a1a;
+  color: #ffffff;
+}
+
+/* You can then style other elements based on this class */
+body.dark-mode .site-header {
+  background-color: #333;
+}
