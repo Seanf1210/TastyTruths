@@ -6,8 +6,6 @@ instance/*.db
 instance/*.sqlite
 instance/*.sqlite3
 notes.txt
-
-.gitignore
 .venv
 
 # Compiled source #

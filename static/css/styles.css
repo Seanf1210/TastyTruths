@@ -68,6 +68,29 @@
   --color-hover: color-mix(in oklab, var(--color-primary) 10%, transparent);
 }
 
+/* Optional dark green theme */
+:root[data-theme="dark"] {
+  --color-bg: #0b0f0c;            /* page background */
+  --color-surface: #121814;       /* cards */
+  --color-surface-muted: #18211b; /* muted cards/sections */
+
+  --color-primary: #6ee7a8;       /* buttons/links */
+  --color-accent: #2dd4bf;        /* highlights/borders */
+
+  --color-text: #e8f5ee;          /* main text */
+  --color-text-alt: #ffd166;      /* header/footer text pop */
+  --color-muted-text: rgba(232, 245, 238, 0.72);
+
+  --color-head-foot: #0f2a1a;     /* header/footer background */
+  --color-border: rgba(255, 255, 255, 0.12);
+
+  --color-outline: rgba(110, 231, 168, 0.18);
+  --color-hover: rgba(110, 231, 168, 0.12);
+  --color-link: var(--color-primary);
+  --color-link-hover: #34d399;
+}
+
+
 /* =========================================================
    GLOBAL / BASE
    ========================================================= */
@@ -1920,15 +1943,69 @@ a:hover {
   color: #339;
 }
 
+
 /* =========================================================
-  DARK MODE SUPPORT (testing purposes)
-  ========================================================= */
-body.dark-mode {
-  background-color: #1a1a1a;
-  color: #ffffff;
+   About us page section
+   ========================================================= */
+
+.Author-template{
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2 cards per row */
+  gap: 24px;
+  max-width: 1000px;
+  margin: 0 auto; /* centers the whole grid */
+  padding: 20px;
 }
 
-/* You can then style other elements based on this class */
-body.dark-mode .site-header {
-  background-color: #333;
+.author-card {
+  background:var(--color-accent);
+  border: 2px solid black;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
 }
+
+.team-card h2 {
+  margin-bottom: 10px;
+}
+
+.About-us-photo {
+  width: 140px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin-bottom: 12px;
+}
+
+.team-card p {
+  line-height: 1.4;
+}
+
+/* BIO BOX INSIDE EACH CARD */
+.author-bio {
+  background: rgba(255, 255, 255, 0.75);
+  border: 2px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-top: 10px;
+  text-align: left;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* BIO TEXT */
+.author-bio p {
+  margin: 0;
+  line-height: 1.5;
+  font-size: 1rem;
+  color: #1f1f1f;
+}
+
+/* Only affects the team bios on About Us page */
+.Author-template,
+.Author-template h2,
+.Author-template .author-bio,
+.Author-template .author-bio p {
+  font-family: "Fredoka", sans-serif;
+}
+
