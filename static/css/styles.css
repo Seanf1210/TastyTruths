@@ -203,18 +203,47 @@ body {
   transition: background-color 0.25s ease, color 0.25s ease,
     transform 0.08s ease;
   color: inherit;
+  display: flex;
+  flex-direction: row; /* Changed from column to row */
+  align-items: center; /* Ensures the moon is vertically centered with buttons */
+  justify-content: center;
+  gap: var(--space-3); /* Adjust gap for better spacing */
 }
 
 /* Auth links: column on desktop; row on mobile in media query */
 .auth-links {
   display: flex;
+  flex-direction: row; 
+  align-items: center; /* Vertically centers the moon with the buttons */
+  gap: var(--space-3);  /* Adds space between buttons and the moon */
+}
+
+/* Add this new class to keep the buttons stacked vertically */
+.auth-buttons-stack {
+  display: flex;
   flex-direction: column;
-  justify-content: center;
   gap: calc(var(--space-1) + 2px);
 }
 
-.auth-links a {
-  margin-top: var(--space-1);
+/* Remove the inline styles from the button in base.html and use this instead */
+.theme-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.8rem;
+  display: flex;
+  align-items: center;
+  padding: 0;
+  transition: transform 0.2s ease;
+}
+
+.theme-toggle:hover {
+  transform: scale(1.1);
+}
+
+.theme-toggle ion-icon {
+  font-size: 24px;
+  color: var(--button-bg, #f9f871); /* Using your yellow accent color */
 }
 
 /* =========================================================
@@ -1979,5 +2008,4 @@ a:hover {
 .Author-template .author-bio p {
   font-family: "Fredoka", sans-serif;
 }
-
 
