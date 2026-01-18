@@ -68,6 +68,29 @@
   --color-hover: color-mix(in oklab, var(--color-primary) 10%, transparent);
 }
 
+/* Optional dark green theme */
+:root[data-theme="dark"] {
+  --color-bg: #0b0f0c;            /* page background */
+  --color-surface: #121814;       /* cards */
+  --color-surface-muted: #18211b; /* muted cards/sections */
+
+  --color-primary: #6ee7a8;       /* buttons/links */
+  --color-accent: #2dd4bf;        /* highlights/borders */
+
+  --color-text: #e8f5ee;          /* main text */
+  --color-text-alt: #ffd166;      /* header/footer text pop */
+  --color-muted-text: rgba(232, 245, 238, 0.72);
+
+  --color-head-foot: #0f2a1a;     /* header/footer background */
+  --color-border: rgba(255, 255, 255, 0.12);
+
+  --color-outline: rgba(110, 231, 168, 0.18);
+  --color-hover: rgba(110, 231, 168, 0.12);
+  --color-link: var(--color-primary);
+  --color-link-hover: #34d399;
+}
+
+
 /* =========================================================
    GLOBAL / BASE
    ========================================================= */
