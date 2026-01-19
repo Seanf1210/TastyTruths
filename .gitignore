@@ -105,3 +105,4 @@ __pycache__/
 .cache
 .sass-cache
 Notes.txt
+static/uploads/recipes/*
