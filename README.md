@@ -57,3 +57,5 @@ Tasty Truths is about sharing knowledge and culture through recipes, connecting 
 Project Guidelines
 As a team we strive to ensure each member is involved in the process, and we each come away from this project with
 a stronger knowledge of working together to make a usable project.
+
+Refer to instructions.txt to know how to run the project
