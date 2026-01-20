@@ -7,10 +7,20 @@ block content %}
       Real recipes from real people — no paywalls, no clutter.
     </p>
     <div class="hero_cta">
-      <a href="{{ url_for('signup') }}" class="button signup"
-        >Create your free account</a
-      >
-      <a href="{{ url_for('recipes') }}" class="button">Browse recipes</a>
+      <div>
+        <a href="{{ url_for('signup') }}" class="button signup"
+          >Create your free account</a
+        >
+        <a href="{{ url_for('recipes') }}" class="button">Browse recipes</a>
+      </div>
+      <div class="hero_cta-secondary">
+        <a href="{{ url_for('random_recipe') }}" class="button button-secondary"
+          >Random recipe</a
+        >
+        <a href="{{ url_for('random_blog') }}" class="button button-secondary"
+          >Random blog</a
+        >
+      </div>
     </div>
     <ul class="hero_points">
       <li>Community-curated, student-friendly</li>

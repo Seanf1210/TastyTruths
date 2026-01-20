@@ -153,6 +153,23 @@ def create_app(admin_override: bool = False):
         posts = BlogPost.query.order_by(BlogPost.created_at.desc()).all()
         return render_template("blog.html", posts=posts)
 
+    @app.get("/blogs/random")
+    def random_blog():
+        """Redirect to a random blog post without loading all posts into memory."""
+        total = db.session.query(func.count(BlogPost.id)).scalar()
+        if not total:
+            flash("No blog posts yet — check back soon!", "info")
+            return redirect(url_for("index"))
+
+        # COUNT + OFFSET keeps selection in SQL; works on SQLite/Postgres/MySQL
+        random_index = random.randint(0, total - 1)
+        post = BlogPost.query.order_by(BlogPost.id).offset(random_index).first()
+        if not post:
+            flash("No blog posts yet — check back soon!", "info")
+            return redirect(url_for("index"))
+
+        return redirect(url_for("blog_post", slug=post.slug))
+
     @app.route("/blog/new", methods=["GET", "POST"])
     @login_required
     def blog_new():
@@ -496,6 +513,23 @@ def create_app(admin_override: bool = False):
             ingredients_list = [line.strip() for line in r.ingredients.split("\n") if line.strip()]
 
         return render_template("recipe_detail.html", recipe=r, ingredients=ingredients_list)
+
+    @app.get("/recipes/random")
+    def random_recipe():
+        """Redirect to a random recipe without loading all rows into memory."""
+        total = db.session.query(func.count(Recipe.id)).scalar()
+        if not total:
+            flash("No recipes yet — share one to get started!", "info")
+            return redirect(url_for("index"))
+
+        # COUNT + OFFSET keeps selection in SQL for scalability
+        random_index = random.randint(0, total - 1)
+        recipe = Recipe.query.order_by(Recipe.id).offset(random_index).first()
+        if not recipe:
+            flash("No recipes yet — share one to get started!", "info")
+            return redirect(url_for("index"))
+
+        return redirect(url_for("recipe_detail", id_slug=f"{recipe.id}-{recipe.slug}"))
 
     # Simple list
     @app.get("/api/recipes")
