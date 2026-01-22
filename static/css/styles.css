@@ -651,6 +651,7 @@ body {
   margin: auto;
   border-radius: var(--radius-sm);
   overflow: hidden;
+  margin-bottom: 10px;
 }
 
 .contact-us h2 {
@@ -670,6 +671,7 @@ body {
   border-left: 2px solid var(--color-border);
   border-bottom: 3px solid var(--color-border);
   border-top: 3px solid var(--color-border);
+  
 }
 
 .contact-box {
