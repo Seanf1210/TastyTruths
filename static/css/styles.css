@@ -314,6 +314,12 @@ body {
   margin: calc(var(--space-1) + 2px) 0 var(--space-2) 0;
 }
 
+.hero_cta > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
 .hero_points {
   margin: 0;
   padding-left: var(--space-3);
