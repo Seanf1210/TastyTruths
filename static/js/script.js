@@ -29,32 +29,39 @@ export async function postWithCsrf(csrfUrl, url, body = null) {
   });
 }
 
+/* --- Dark Mode Logic --- */
 document.addEventListener('DOMContentLoaded', () => {
   const themeToggle = document.querySelector('.theme-toggle');
   
-  // Only run if the button exists on the current page
   if (themeToggle) {
     const themeIcon = themeToggle.querySelector('ion-icon');
+    
+    // 1. Check Local Storage on Load
+    const currentTheme = localStorage.getItem('theme');
+    
+    // If user previously chose dark, apply it immediately
+    if (currentTheme === 'dark') {
+      document.body.classList.add('dark-mode');
+      themeIcon.setAttribute('name', 'sunny-outline');
+      // Note: Color is now handled by CSS variables
+    }
 
+    // 2. Handle Click Event
     themeToggle.addEventListener('click', () => {
-      // Get the current icon name
-      const currentIcon = themeIcon.getAttribute('name');
+      // Toggle the class
+      document.body.classList.toggle('dark-mode');
+      
+      // Check if dark mode is now active
+      const isDark = document.body.classList.contains('dark-mode');
 
-      if (currentIcon === 'moon-outline') {
-        // Switch to Sun
+      if (isDark) {
+        // Switch to Sun icon
         themeIcon.setAttribute('name', 'sunny-outline');
-        // Change color to an orange/yellow sun color if desired
-        themeIcon.style.color = '#ffce00'; 
-        
-        // Optional: Add a class to the body to actually trigger dark mode colors
-        document.body.classList.add('dark-mode');
+        localStorage.setItem('theme', 'dark');
       } else {
-        // Switch back to Moon
+        // Switch to Moon icon
         themeIcon.setAttribute('name', 'moon-outline');
-        themeIcon.style.color = '#f9f871'; 
-        
-        // Optional: Remove dark mode class
-        document.body.classList.remove('dark-mode');
+        localStorage.setItem('theme', 'light');
       }
     });
   }
