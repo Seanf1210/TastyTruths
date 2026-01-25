@@ -38,6 +38,19 @@
   --color-accent: #90a955;
   --color-muted-text: color-mix(in oklab, var(--color-text) 80%, transparent);
 
+  /* Dark Mode Specifics */
+  --dm-bg-page:      #0b0f0c;  /* Page background */
+  --dm-bg-card:      #121814;  /* Cards */
+  --dm-bg-muted:     #18211b;  /* Muted sections/inputs */
+  --dm-bg-header:    #0f2a1a;  /* Header/Footer background */
+  --dm-text-main:    #e8f5ee;  /* Main text */
+  --dm-highlight:    #6ee7a8;  /* Buttons/Links */
+  --dm-border:       #2dd4bf;  /* Borders */
+
+  /* Icon Colors */
+  --icon-sun:        #ffce00;
+  --icon-moon:       #f9f871;
+
   /* System/supporting tokens */
   --color-surface-muted: #ecf39e;
   --color-border: #000000;
@@ -2017,3 +2030,57 @@ a:hover {
   font-family: "Fredoka", sans-serif;
 }
 
+
+/* =========================================
+   DARK MODE STYLES
+   ========================================= */
+
+/* 1. Base Styles */
+body.dark-mode {
+    background-color: var(--dm-bg-page);
+    color: var(--dm-text-main);
+}
+
+/* 2. Header & Footer */
+body.dark-mode .site-header,
+body.dark-mode .footer {
+    background-color: var(--dm-bg-header);
+}
+
+/* 3. Cards & Content Boxes */
+body.dark-mode .card,
+body.dark-mode .recipe-card,
+body.dark-mode .fbox {
+    background-color: var(--dm-bg-card);
+    color: var(--dm-text-main);
+    border-color: var(--color-green-med); /* Optional border addition */
+}
+
+/* 4. Interactive Elements (Buttons/Links) */
+body.dark-mode a {
+    color: var(--dm-highlight);
+}
+
+body.dark-mode .button {
+    background-color: var(--dm-highlight);
+    color: var(--dm-bg-page); /* Dark text on bright button */
+    border: 1px solid var(--dm-border);
+}
+
+body.dark-mode input,
+body.dark-mode textarea {
+    background-color: var(--dm-bg-muted);
+    color: var(--dm-text-main);
+    border: 1px solid var(--color-green-med);
+}
+
+/* 5. Icon Specifics */
+/* This handles the color change via CSS instead of JS */
+.theme-toggle ion-icon {
+    color: var(--icon-moon); /* Default (Light mode) color */
+    transition: color 0.3s ease;
+}
+
+body.dark-mode .theme-toggle ion-icon {
+    color: var(--icon-sun); /* Dark mode color */
+}
