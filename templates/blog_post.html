@@ -25,6 +25,9 @@
         <span itemprop="name">{{ post.author.username if post.author else "Unknown" }}</span>
       </span>
     </p>
+    <div class="blog-actions">
+      <a class="button" href="{{ url_for('random_blog') }}">Random Blog</a>
+    </div>
     {% if current_user.is_authenticated and post.user_id == current_user.id %}
     <div class="blog-owner-actions">
       <a class="blog-read-more" href="{{ url_for('blog_edit', slug=post.slug) }}">

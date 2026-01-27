@@ -16,6 +16,25 @@ Two Palettes:
     #90A955
     #ECF39E
 
+Dark Pallete:
+    #0b0f0c;            /* page background */
+    #121814;       /* cards */
+    #18211b; /* muted cards/sections */
+
+    #6ee7a8;       /* buttons/links */
+    #2dd4bf;        /* highlights/borders */
+
+    #e8f5ee;          /* main text */
+    #ffd166;      /* header/footer text pop */
+    rgba(232, 245, 238, 0.72);
+
+    #0f2a1a;     /* header/footer background */
+    rgba(255, 255, 255, 0.12);
+
+    rgba(110, 231, 168, 0.18);
+    rgba(110, 231, 168, 0.12);
+    #34d399;
+
 background-color: rgb(123, 162, 128);
 
 Fonts:

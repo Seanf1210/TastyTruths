@@ -68,6 +68,29 @@
   --color-hover: color-mix(in oklab, var(--color-primary) 10%, transparent);
 }
 
+/* Optional dark green theme */
+:root[data-theme="dark"] {
+  --color-bg: #0b0f0c;            /* page background */
+  --color-surface: #121814;       /* cards */
+  --color-surface-muted: #18211b; /* muted cards/sections */
+
+  --color-primary: #6ee7a8;       /* buttons/links */
+  --color-accent: #2dd4bf;        /* highlights/borders */
+
+  --color-text: #e8f5ee;          /* main text */
+  --color-text-alt: #ffd166;      /* header/footer text pop */
+  --color-muted-text: rgba(232, 245, 238, 0.72);
+
+  --color-head-foot: #0f2a1a;     /* header/footer background */
+  --color-border: rgba(255, 255, 255, 0.12);
+
+  --color-outline: rgba(110, 231, 168, 0.18);
+  --color-hover: rgba(110, 231, 168, 0.12);
+  --color-link: var(--color-primary);
+  --color-link-hover: #34d399;
+}
+
+
 /* =========================================================
    GLOBAL / BASE
    ========================================================= */
@@ -180,18 +203,47 @@ body {
   transition: background-color 0.25s ease, color 0.25s ease,
     transform 0.08s ease;
   color: inherit;
+  display: flex;
+  flex-direction: row; /* Changed from column to row */
+  align-items: center; /* Ensures the moon is vertically centered with buttons */
+  justify-content: center;
+  gap: var(--space-3); /* Adjust gap for better spacing */
 }
 
 /* Auth links: column on desktop; row on mobile in media query */
 .auth-links {
   display: flex;
+  flex-direction: row; 
+  align-items: center; /* Vertically centers the moon with the buttons */
+  gap: var(--space-3);  /* Adds space between buttons and the moon */
+}
+
+/* Add this new class to keep the buttons stacked vertically */
+.auth-buttons-stack {
+  display: flex;
   flex-direction: column;
-  justify-content: center;
   gap: calc(var(--space-1) + 2px);
 }
 
-.auth-links a {
-  margin-top: var(--space-1);
+/* Remove the inline styles from the button in base.html and use this instead */
+.theme-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.8rem;
+  display: flex;
+  align-items: center;
+  padding: 0;
+  transition: transform 0.2s ease;
+}
+
+.theme-toggle:hover {
+  transform: scale(1.1);
+}
+
+.theme-toggle ion-icon {
+  font-size: 24px;
+  color: var(--button-bg, #f9f871); /* Using your yellow accent color */
 }
 
 /* =========================================================
@@ -260,6 +312,12 @@ body {
   display: flex;
   gap: calc(var(--space-2) - 2px);
   margin: calc(var(--space-1) + 2px) 0 var(--space-2) 0;
+}
+
+.hero_cta > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
 }
 
 .hero_points {
@@ -1889,5 +1947,71 @@ a:hover {
   background-color: #eef;
   border-left-color: #33c;
   color: #339;
+}
+
+
+/* =========================================================
+   About us page section
+   ========================================================= */
+
+.Author-template{
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2 cards per row */
+  gap: 24px;
+  max-width: 1000px;
+  margin: 0 auto; /* centers the whole grid */
+  padding: 20px;
+}
+
+.author-card {
+  background:var(--color-accent);
+  border: 2px solid black;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+
+.team-card h2 {
+  margin-bottom: 10px;
+}
+
+.About-us-photo {
+  width: 140px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin-bottom: 12px;
+}
+
+.team-card p {
+  line-height: 1.4;
+}
+
+/* BIO BOX INSIDE EACH CARD */
+.author-bio {
+  background: rgba(255, 255, 255, 0.75);
+  border: 2px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-top: 10px;
+  text-align: left;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* BIO TEXT */
+.author-bio p {
+  margin: 0;
+  line-height: 1.5;
+  font-size: 1rem;
+  color: #1f1f1f;
+}
+
+/* Only affects the team bios on About Us page */
+.Author-template,
+.Author-template h2,
+.Author-template .author-bio,
+.Author-template .author-bio p {
+  font-family: "Fredoka", sans-serif;
 }
 

@@ -7,10 +7,20 @@ block content %}
       Real recipes from real people — no paywalls, no clutter.
     </p>
     <div class="hero_cta">
-      <a href="{{ url_for('signup') }}" class="button signup"
-        >Create your free account</a
-      >
-      <a href="{{ url_for('recipes') }}" class="button">Browse recipes</a>
+      <div>
+        <a href="{{ url_for('signup') }}" class="button signup"
+          >Create your free account</a
+        >
+        <a href="{{ url_for('recipes') }}" class="button">Browse recipes</a>
+      </div>
+      <div class="hero_cta-secondary">
+        <a href="{{ url_for('random_recipe') }}" class="button button-secondary"
+          >Random recipe</a
+        >
+        <a href="{{ url_for('random_blog') }}" class="button button-secondary"
+          >Random blog</a
+        >
+      </div>
     </div>
     <ul class="hero_points">
       <li>Community-curated, student-friendly</li>
@@ -47,7 +57,7 @@ block content %}
       </p>
     </div>
   </div>
-</section>
+            </section>
 
 <section class="home-preview-container">
         <div class="home-blog-preview">
@@ -62,58 +72,59 @@ block content %}
               itemscope
               itemtype="https://schema.org/Blog"
             >
-              <article
-                class="post-card"
-                itemprop="blogPost"
-                itemscope
-                itemtype="https://schema.org/BlogPosting"
-              >
-                <header>
-                  <h2 itemprop="headline">
-                    <a href="/posts/example-post.html" itemprop="url"
-                      >Example Post Title</a
+              {% if featured_blog %}
+                <article
+                  class="post-card"
+                  itemprop="blogPost"
+                  itemscope
+                  itemtype="https://schema.org/BlogPosting"
+                >
+                  <header>
+                    <h2 itemprop="headline">
+                      <a href="{{ featured_blog.url }}" itemprop="url"
+                        >{{ featured_blog.title }}</a
+                      >
+                    </h2>
+                    {% if featured_blog.published_date or featured_blog.author_name %}
+                      <p class="post-meta">
+                        {% if featured_blog.published_date %}
+                          <time
+                            datetime="{{ featured_blog.published_iso }}"
+                            itemprop="datePublished"
+                            >{{ featured_blog.published_date }}</time
+                          >
+                        {% endif %}
+                        {% if featured_blog.author_name %}
+                          <span
+                            itemprop="author"
+                            itemscope
+                            itemtype="https://schema.org/Person"
+                          >
+                            <span itemprop="name"
+                              >{{ featured_blog.author_name }}</span
+                            >
+                          </span>
+                        {% endif %}
+                      </p>
+                    {% endif %}
+                  </header>
+                  {% if featured_blog.excerpt %}
+                    <p class="post-excerpt" itemprop="description">
+                      {{ featured_blog.excerpt }}
+                    </p>
+                  {% endif %}
+                  <p>
+                    <a class="read-more" href="{{ featured_blog.url }}"
+                      >Read more -></a
                     >
-                  </h2>
-                  <p class="post-meta">
-                    <time datetime="2025-10-19" itemprop="datePublished"
-                      >October 19, 2025</time
-                    >
-                    ·
-                    <span
-                      itemprop="author"
-                      itemscope
-                      itemtype="https://schema.org/Person"
-                    >
-                      <span itemprop="name">Your Name</span>
-                    </span>
-                    · <a href="/tags/html.html" rel="tag">HTML</a>
                   </p>
-                </header>
-                <figure class="post-thumb">
-                  <img src="/assets/example.jpg" alt="Descriptive alt text" />
-                </figure>
-                <p class="post-excerpt" itemprop="description">
-                  A short excerpt from the article to entice readers to click
-                  through…
+                </article>
+              {% else %}
+                <p class="blog-placeholder">
+                  No blog posts yet. Check back soon.
                 </p>
-                <p>
-                  <a
-                    class="read-more"
-                    href="/posts/example-post.html"
-                    aria-label="Read more: Example Post Title"
-                    >Read more →</a
-                  >
-                </p>
-              </article>
-
-              <!-- repeat <article> blocks for more posts -->
-
-              <nav class="pagination" aria-label="Pagination">
-                <a class="newer" href="/page/1.html" rel="prev">← Newer</a>
-                <span class="page-current">Page 2 of 10</span>
-                <a class="older" href="/page/3.html" rel="next">Older →</a>
-              </nav>
-            </section>
+              {% endif %}
+</section>
           </div>
         </div>
 

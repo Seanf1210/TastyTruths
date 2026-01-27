@@ -28,3 +28,34 @@ export async function postWithCsrf(csrfUrl, url, body = null) {
     body: body ? JSON.stringify(body) : null,
   });
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  const themeToggle = document.querySelector('.theme-toggle');
+  
+  // Only run if the button exists on the current page
+  if (themeToggle) {
+    const themeIcon = themeToggle.querySelector('ion-icon');
+
+    themeToggle.addEventListener('click', () => {
+      // Get the current icon name
+      const currentIcon = themeIcon.getAttribute('name');
+
+      if (currentIcon === 'moon-outline') {
+        // Switch to Sun
+        themeIcon.setAttribute('name', 'sunny-outline');
+        // Change color to an orange/yellow sun color if desired
+        themeIcon.style.color = '#ffce00'; 
+        
+        // Optional: Add a class to the body to actually trigger dark mode colors
+        document.body.classList.add('dark-mode');
+      } else {
+        // Switch back to Moon
+        themeIcon.setAttribute('name', 'moon-outline');
+        themeIcon.style.color = '#f9f871'; 
+        
+        // Optional: Remove dark mode class
+        document.body.classList.remove('dark-mode');
+      }
+    });
+  }
+});

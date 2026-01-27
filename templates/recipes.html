@@ -13,6 +13,7 @@
     </button>
     <p class="button-helper-text">Log in to add a new recipe.</p>
     {% endif %}
+    <a href="{{ url_for('random_recipe') }}" class="button">Random recipe</a>
   </div>
 
   {% if featured_recipes %}
