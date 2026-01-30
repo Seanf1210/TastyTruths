@@ -1,7 +1,8 @@
 // /static/js/recipes-page.js
 // Page controller for recipe_template.html
-
+//Last modified by Joaquin on 01-30-2026
 import { store } from "/static/js/store.js";
+import { seedIngredients } from "/static/js/seed-ingredients.js";
 
 // --- initial seed data (only used if store is empty) ---
 const SEED_RECIPES = [
@@ -33,7 +34,7 @@ const SEED_RECIPES = [
     serves: 2,
     level: "Easy",
     cuisine: "Korean",
-    diet: "None", // or "Carnivore", "Omnivore", etc.
+    diet: "None", 
     tags: ["Korean", "Rice", "Spicy"],
     ratingValue: 4.8,
     ratingStars: "★★★★★",
@@ -43,21 +44,15 @@ const SEED_RECIPES = [
 
 // --- utilities ---
 function minutesFromISO(duration) {
-  // Very small helper for PTxxM style strings
-  // e.g. "PT25M" -> 25
   const match = /^PT(\d+)M$/.exec(duration);
   return match ? parseInt(match[1], 10) : null;
 }
 
 function filterRecipes(all, filters) {
   return all.filter((r) => {
-    // Cuisine (string)
     if (filters.cuisine && r.cuisine !== filters.cuisine) return false;
-
-    // Diet (string; could be "Vegetarian", "Vegan", etc.)
     if (filters.diet && r.diet !== filters.diet) return false;
 
-    // Time buckets
     if (filters.time) {
       const mins = minutesFromISO(r.timeISO || "");
       if (mins == null) return false;
@@ -74,12 +69,12 @@ function filterRecipes(all, filters) {
 // --- rendering ---
 function renderRecipes(recipes) {
   const grid = document.querySelector(".recipe-grid");
-  const emptyState = grid.querySelector(".empty-state");
+  const emptyState = grid?.querySelector(".empty-state");
   const template = document.getElementById("recipe-card-template");
 
   if (!grid || !template) return;
 
-  // Clear previous cards (leave empty-state paragraph)
+  // Clear previous cards
   [...grid.querySelectorAll(".recipe-card")].forEach((el) => el.remove());
 
   if (!recipes.length) {
@@ -91,8 +86,7 @@ function renderRecipes(recipes) {
 
   recipes.forEach((recipe) => {
     const node = template.content.cloneNode(true);
-    const card = node.querySelector(".recipe-card");
-
+    
     // Link
     const link = node.querySelector(".card-link");
     if (link) {
@@ -113,7 +107,7 @@ function renderRecipes(recipes) {
     if (titleEl) titleEl.textContent = recipe.title || "";
     if (excerptEl) excerptEl.textContent = recipe.excerpt || "";
 
-    // Meta (time, serves, level)
+    // Meta
     const timeEl = node.querySelector(".meta time");
     if (timeEl) {
       timeEl.dateTime = recipe.timeISO || "";
@@ -145,26 +139,20 @@ function renderRecipes(recipes) {
     const countSpan = node.querySelector(".rating-count");
     if (ratingDiv) {
       const value = recipe.ratingValue ?? 0;
-      ratingDiv.setAttribute(
-        "aria-label",
-        `Rated ${value.toFixed(1)} out of 5`
-      );
+      ratingDiv.setAttribute("aria-label", `Rated ${value.toFixed(1)} out of 5`);
     }
-    if (starsSpan) {
-      starsSpan.textContent = recipe.ratingStars || "★★★★☆";
-    }
+    if (starsSpan) starsSpan.textContent = recipe.ratingStars || "★★★★☆";
     if (countSpan) {
       const count = recipe.ratingCount ?? 0;
       countSpan.textContent = count ? `(${count})` : "";
     }
 
-    // Save button (stub for now)
+    // Save button
     const saveBtn = node.querySelector(".save-button");
     if (saveBtn) {
       saveBtn.addEventListener("click", () => {
         const pressed = saveBtn.getAttribute("aria-pressed") === "true";
         saveBtn.setAttribute("aria-pressed", String(!pressed));
-        // TODO: integrate with favorites in localStorage or backend
       });
     }
 
@@ -173,8 +161,13 @@ function renderRecipes(recipes) {
 }
 
 // --- set up filters & initial data ---
-document.addEventListener("DOMContentLoaded", () => {
-  // Load or seed recipes
+// We use async here so we can await the ingredient seeding from the JSON file
+document.addEventListener("DOMContentLoaded", async () => {
+  
+  // 1. Seed ingredients from /static/assets/ingredients.json
+  await seedIngredients();
+
+  // 2. Load or seed recipes
   let recipes = store.getAll("recipes");
   if (!recipes.length) {
     SEED_RECIPES.forEach((r) => store.create("recipes", r));
@@ -207,6 +200,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (applyBtn) applyBtn.addEventListener("click", applyFilters);
   if (clearBtn) clearBtn.addEventListener("click", clearFilters);
 
-  // Initial render
+  // 3. Initial render
   renderRecipes(recipes);
 });
