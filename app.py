@@ -1,4 +1,16 @@
-# app.py
+"""
+Author: Ryan Nash
+Date: 30 January 2026
+Project: Tasty Truths
+
+Description:
+    This module serves as the main application entry point for the Tasty Truths
+    web platform. It initializes the Flask application, configures extensions,
+    registers blueprints, and defines core application behavior. The app
+    coordinates routing between recipe, blog, and utility components, manages
+    database connections, and provides shared configuration used across the site.
+"""
+
 from datetime import timedelta
 import argparse
 import random
