@@ -2084,3 +2084,114 @@ body.dark-mode textarea {
 body.dark-mode .theme-toggle ion-icon {
     color: var(--icon-sun); /* Dark mode color */
 }
+/* =========================================================
+   COLLAPSIBLE SEARCH / FILTER
+   ========================================================= */
+/* Assisted by ChatGPT for styling, ensuring it follow page style */
+.recipe-controls-collapsible {
+  margin-bottom: var(--space-4);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  border: 2px solid var(--color-outline);
+  background: var(--color-surface);
+}
+
+/* Summary bar */
+/* This is styling the recipe control summary and spacing it*/
+.recipe-controls-summary {
+  list-style: none;
+  cursor: pointer;
+  padding: var(--space-3);
+  font-weight: 700;
+  font-family: var(--font-display);
+  background: color-mix(in oklab, var(--color-accent) 20%, var(--color-surface));
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--color-primary);
+  user-select: none;
+}
+
+.recipe-controls-summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Arrow rotation */
+.recipe-controls-arrow {
+  transition: transform 0.25s ease;
+}
+
+details[open] .recipe-controls-arrow {
+  transform: rotate(180deg);
+}
+
+/* Inner box */
+.recipe-controls {
+  padding: var(--space-4);
+  background: color-mix(in oklab, var(--color-accent) 12%, var(--color-surface));
+}
+
+/* Grid layout */
+.recipe-controls__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.recipe-controls__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.recipe-controls__field--search {
+  grid-column: 1 / -1;
+}
+
+.recipe-controls__label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.recipe-controls__input,
+.recipe-controls__select {
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--color-outline);
+  background: var(--color-surface);
+}
+
+/* Chips */
+.recipe-controls__chips {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.chip {
+  padding: 6px 10px;
+  border-radius: 99px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 1px solid var(--color-outline);
+  background: var(--color-surface-muted);
+}
+
+.chip input {
+  margin-right: 4px;
+}
+
+/* Note */
+.recipe-controls__note {
+  margin-top: var(--space-3);
+  font-size: 0.85rem;
+  color: var(--color-muted-text);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .recipe-controls__grid {
+    grid-template-columns: 1fr;
+  }
+}
