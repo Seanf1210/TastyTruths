@@ -7,12 +7,12 @@ Protein             Total Protein
 Total Fat           Total Fat Content
 Carbohydrates       Total Carbohydrates
 Fiber               Dietary Fiber
-Sugar.              Total Sugars
+Sugar               Total Sugars
 Sodium              Sodium content
 Saturated Fats      Saturated Fat
 Cholesterol         Cholesterol
 
-__________________________________________________________________________
+______________________________________________________________________________
 
 Units of Measure Table
 
@@ -34,5 +34,4 @@ All nutritional values would be stored per 100 grams of ingredient
 - Used to eep everything consistent with one another
 - Compatible with public nutrition databases
 - Example would be if a ingredient contains 200 kcal per 100g and a recipe uses 150 grams
-    -(200 kcal / 100g) * 150g = 300 kcal
-
+- (200 kcal / 100g) * 150g = 300 kcal
