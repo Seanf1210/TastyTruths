@@ -1,3 +1,5 @@
+<!--Author: Unkown-->
+<!--Modified: Sean Farkas 1/30/2026-->
 {% extends "base.html" %} {% block title %}Tasty Truths — Recipes{% endblock %}
 {% block content %}
 <div class="recipes-page">
@@ -15,6 +17,90 @@
     {% endif %}
     <a href="{{ url_for('random_recipe') }}" class="button">Random recipe</a>
   </div>
+
+<!--Detail to contain collapsible search menu-->
+<details class="recipe-controls-collapsible">
+  <!--Creats clickable title to drop down filter-->
+  <summary class="recipe-controls-summary">
+    <span>Search & Filters</span>
+    <!--Creates an arrow that css will format-->
+    <span class="recipe-controls-arrow">▾</span>
+  </summary>
+
+  <!--Creating a class which contains all controls broken down into clear and another reciper control container-->
+  <div class="recipe-controls">
+
+    <!--Class for the button clear-->
+    <div class="recipe-controls__header">
+      <button class="button button-secondary" type="button" disabled>
+        Clear
+      </button>
+    </div>
+
+    <!--Creating a class to contain controls-->
+    <div class="recipe-controls__grid">
+
+      <!-- SEARCH -->
+      <div class="recipe-controls__field recipe-controls__field--search">
+        <label class="recipe-controls__label">Search</label>
+        <!--Disabling controls until-->
+        <input
+          class="recipe-controls__input"
+          type="search"
+          placeholder="Search by recipe title..."
+          disabled
+        />
+      </div>
+
+      <!-- SORT -->
+      <div class="recipe-controls__field">
+        <label class="recipe-controls__label">Sort</label>
+        <!--Creating the search features-->
+        <select class="recipe-controls__select" disabled>
+          <!--All options to sort by-->
+          <option>A → Z</option>
+          <option>Z → A</option>
+          <option>Newest</option>
+          <option>Highest Rated</option>
+        </select>
+      </div>
+
+      <!-- MAX TIME -->
+      <div class="recipe-controls__field">
+        <label class="recipe-controls__label">Max Time</label>
+        <!--Creating the time sort features-->
+        <select class="recipe-controls__select" disabled>
+          <!--All time sort options-->
+          <option>Any</option>
+          <option>15 min</option>
+          <option>30 min</option>
+          <option>45 min</option>
+          <option>60 min</option>
+        </select>
+      </div>
+
+      <!-- DIETARY -->
+      <div class="recipe-controls__field">
+        <label class="recipe-controls__label">Dietary</label>
+        <div class="recipe-controls__chips">
+          <!--All dietary sort options-->
+          <label class="chip chip--glutenfree"><input type="checkbox" disabled /> Gluten-Free</label>
+          <label class="chip chip--vegan"><input type="checkbox" disabled /> Vegan</label>
+          <label class="chip chip--vegetarian"><input type="checkbox" disabled /> Vegetarian</label>
+          <label class="chip chip--dairyfree"><input type="checkbox" disabled /> Dairy-Free</label>
+          <label class="chip chip--nutfree"><input type="checkbox" disabled /> Nut-Free</label>
+          <label class="chip chip--halal"><input type="checkbox" disabled /> Halal</label>
+        </div>
+      </div>
+
+    </div>
+
+    <p class="recipe-controls__note">
+      Filters are UI-only for now.
+    </p>
+  </div>
+</details>
+
 
   {% if featured_recipes %}
   <section class="featured-recipes">
