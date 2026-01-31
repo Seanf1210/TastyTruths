@@ -8,6 +8,118 @@ from utilities.slug import base_slug, uniquify_slug
 
 ph = PasswordHasher()
 
+ingredient_dietary_tags = db.Table(
+    "ingredient_dietary_tags",
+    db.Column(
+        "ingredient_id",
+        db.Integer,
+        db.ForeignKey("ingredients.id", ondelete="CASCADE"),
+        nullable=False,
+        primary_key=True,
+    ),
+    db.Column(
+        "tag_id",
+        db.Integer,
+        db.ForeignKey("dietary_tags.id", ondelete="CASCADE"),
+        nullable=False,
+        primary_key=True,
+    ),
+    db.UniqueConstraint("ingredient_id", "tag_id", name="uq_ingredient_dietary_tag"),
+)
+
+class DietaryTag(db.Model):
+    __tablename__ = "dietary_tags"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), nullable=False, unique=True, index=True)
+
+    ingredients = db.relationship(
+        "Ingredient",
+        secondary=ingredient_dietary_tags,
+        back_populates="dietary_tags",
+    )
+
+    @staticmethod
+    def normalize_name(name: str) -> str:
+        if not name:
+            return ""
+        return " ".join(name.strip().lower().split())
+
+    @classmethod
+    def get_or_create(cls, name: str):
+        normalized = cls.normalize_name(name)
+        if not normalized:
+            return None
+        existing = cls.query.filter_by(name=normalized).first()
+        if existing:
+            return existing
+        tag = cls(name=normalized)
+        db.session.add(tag)
+        return tag
+
+    def __repr__(self):
+        return f"<DietaryTag {self.name}>"
+
+class Ingredient(db.Model):
+    __tablename__ = "ingredients"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False, index=True)
+
+    dietary_tags = db.relationship(
+        "DietaryTag",
+        secondary=ingredient_dietary_tags,
+        back_populates="ingredients",
+        order_by="DietaryTag.name",
+        lazy="selectin",
+    )
+
+    def set_dietary_tags(self, tag_names):
+        normalized = []
+        seen = set()
+        for raw in tag_names or []:
+            name = DietaryTag.normalize_name(raw)
+            if name and name not in seen:
+                seen.add(name)
+                normalized.append(name)
+
+        if not normalized:
+            self.dietary_tags = []
+            return
+
+        existing = {
+            tag.name: tag
+            for tag in DietaryTag.query.filter(DietaryTag.name.in_(normalized)).all()
+        }
+        tags = []
+        for name in normalized:
+            tag = existing.get(name)
+            if not tag:
+                tag = DietaryTag(name=name)
+                db.session.add(tag)
+                existing[name] = tag
+            tags.append(tag)
+        self.dietary_tags = tags
+
+    def add_dietary_tag(self, name: str):
+        normalized = DietaryTag.normalize_name(name)
+        if not normalized:
+            return
+        if any(tag.name == normalized for tag in self.dietary_tags):
+            return
+        tag = DietaryTag.query.filter_by(name=normalized).first()
+        if not tag:
+            tag = DietaryTag(name=normalized)
+            db.session.add(tag)
+        self.dietary_tags.append(tag)
+
+    def remove_dietary_tag(self, name: str):
+        normalized = DietaryTag.normalize_name(name)
+        if not normalized:
+            return
+        self.dietary_tags = [tag for tag in self.dietary_tags if tag.name != normalized]
+
+    def __repr__(self):
+        return f"<Ingredient {self.name}>"
+
 class Recipe(db.Model):
     __tablename__ = "recipes"
     id = db.Column(db.Integer, primary_key=True)
@@ -55,6 +167,12 @@ class RecipeSlugHistory(db.Model):
     recipe_id = db.Column(db.Integer, db.ForeignKey("recipes.id", ondelete="CASCADE"), nullable=False)
     old_slug = db.Column(db.String(90), index=True, nullable=False)
     changed_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+# --- Normalize dietary tag names ---
+@event.listens_for(DietaryTag, "before_insert")
+@event.listens_for(DietaryTag, "before_update")
+def dietary_tag_before_save(mapper, connection, target: DietaryTag):
+    target.name = DietaryTag.normalize_name(target.name)
 
 # --- Auto-generate blog slug on insert ---
 @event.listens_for(BlogPost, "before_insert")
