@@ -4,9 +4,9 @@ Recipe Filters
 Vegan-Friendly
 Vegitarian
 Gluten-Free
-Dairyv Free
+Dairy Free
 Nut Free
-High protien
+High protein
 Low sugar
 Low Sodium
 Keto-Friendly
@@ -14,11 +14,11 @@ Heart-healthy
 
 Tooltip Text
 Vegan Friendly - Shows vegan friendly recipes
-Vegitarian - shows recipes that exculde meat and seafood
+Vegitarian - shows recipes that exclude meat and seafood
 Gluten Free - shows recipes containing no gluten
 Dairy Free - shows recipes that do not contain milk based ingredients 
 Nut Free - shows recipes that do no contain tree nuts or peanuts
-High protien - shows higest protein recipes based on avaliable nutrition information
+High protein - shows highest protein recipes based on available nutrition information
 Low sugar - shows recipes that have low sugar content or are sugar free
 Low Sodium - shows recipes that have reduced or no sodium in them
 Keto Friendly - Shows recipes that are marked as keto or have low carb ad high fat contents
@@ -31,5 +31,5 @@ Second time with no results
     - Try removing or adjusting selected features for better results.
 Repeated no results 
     - No ingredients match these filter selections
-    - We couldnt find any recipes that match these prefrences
+    - We couldn't find any recipes that match these preferences
     - Try broadening your search for more options
