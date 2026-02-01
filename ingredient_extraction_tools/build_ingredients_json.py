@@ -2,7 +2,7 @@
 """
 Build ingredients.json from USDA FoodData Central CSV exports.
 
-
+Author: Ryan K Nash
 
 Expected files, ensure they are in cwd/sample for now, you can change the directory below
 in DEFAULT_INPUT_DIR:
