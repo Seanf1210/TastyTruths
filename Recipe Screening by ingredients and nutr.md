@@ -1,6 +1,6 @@
 Recipe Screening by ingredients and nutrituion (By Ryan Gilinger)
 
-Nitrution fields (each field stores the following nutritional values)
+Nutrition fields (each field stores the following nutritional values)
 Field Name          Description
 Calories            Total Energy Content
 Protien             Total Protien
