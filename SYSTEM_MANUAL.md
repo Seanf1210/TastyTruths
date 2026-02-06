@@ -30,6 +30,36 @@ These requirements ensure stable performance during concurrent web requests and 
 ---
 
 ## 🚀 Installation / Setup
+Follow these steps to initialize the development environment. It is highly recommended to use a virtual environment to avoid dependency conflicts.
+
+### 1. Create and Activate Virtual Environment
+Choose the command based on your Operating System:
+
+| Platform | Command |
+| :--- | :--- |
+| **macOS / Linux** | `python3 -m venv .venv && source .venv/bin/activate` |
+| **Windows** | `python -m venv .venv` then `.venv\Scripts\activate` |
+
+> **Pro-Tip:** If you use this frequently, you can alias the activation command. Ask the lead dev for an example `.zshrc` or `.bashrc` config.
+
+### 2. Install Dependencies
+Once the virtual environment is active (you should see `(.venv)` in your terminal), run:
+
+```bash
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+### Environment & OS
+.venv/
+.DS_Store
+*.pyc
+__pycache__/
+
+### Database & Instance
+instance/
+*.db
+*.sqlite
+*.sqlite3
 
 ---
 
