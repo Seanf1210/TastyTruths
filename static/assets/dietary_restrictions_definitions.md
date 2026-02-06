@@ -1,7 +1,8 @@
 # Dietary Restrictions Logic & Ingredient Mapping
-# Created by Joaquin on 02-01-2026
+<!--  Created by Joaquin on 02-01-2026
 # Last edited by Joaquin on 02-01-2026
 # Gemini AI was used to assist in the creation of the file
+-->
 
 ## 1. Supported Restrictions
 The following dietary restrictions are supported by the platform. Users can filter recipes based on these tags:
