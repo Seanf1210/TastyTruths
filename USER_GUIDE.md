@@ -16,9 +16,45 @@ Tasty Truths believes that food is universal, and access to learning different m
 
 Lets get started! So you are currently on our homepage. ![Homepage Screenshot](assets/images/userGuide/Homepage.png). Lets navigate to the login page. Once there it should look like this: ![Login Screenshot](assets/images/userGuide/loginPage.png). Now lets click the sign up, it should look like this: ![Sign Up Screenshot](assets/images/userGuide/signupPage.png). This is where you can create your Tasty Truths account. Once logged in your header should look like this: ![login Head Screenshot](assets/images/userGuide/logininHead.png). From here we are going to navigate to the About Us Page. It should look like this: ![AboutUs Screenshot](assets/images/userGuide/aboutusPage.png). This page has all the information about the founders of Tasty Truths. From here we are going to go to our contact page. It should look like this: ![ContactPage Screenshot](assets/images/userGuide/contactPage.png). This page contains all forms of contact for Tasty Truths. Next lets go to the blog page, which will look like this: ![BlogPage Screenshot](assets/images/userGuide/blogPage.png). This page is where users can post blogs about a recipe or any general thoughts they have. Next is the recipe page which looks like this: ![Recipe Page Screenshot](assets/images/userGuide/recipePage.png). This is the heart of our site this is where you can explore and upload recipes. Finally here is a photo of our footer: ![Footer Screenshot](assets/images/userGuide/footerPage.png). This is the same on every page, this contains link to all the mentioned pages, and some social links.
 
-## Core Features
+## Core Features & Examples
 
-## Examples
+Welcome this section we are going to explain our core features which are: Login, Dark Mode, Create a Blog, and Recipe Guides
+### Login In/Sign Up
+    Navigate the the login page. If you have an account you may login, if not click the sign up button.
+![Login Screenshot](assets/images/userGuide/loginPage.png)
+
+    Once at the sign up page, fill out the form, and you will be redirrected to the login page, where you may now login.
+![Sign Up Screenshot](assets/images/userGuide/signupPage.png)
+
+
+### Dark Mode
+    If you click the moon or the sun next to login in your page will enable dark mode and look like below
+![DarkMode Screenshot](assets/images/userGuide/DarkMode.png)
+
+
+### Blog Features
+    Navigate to the Blog Page
+![BlogPage Screenshot](assets/images/userGuide/blogPage.png)
+
+    If Logged in you can click the new post button. And you will see the image below.
+    This allows you to add title, summary, and content. Once you click post it will appear on the blog page.
+![Blog Screenshot](assets/images/userGuide/BlogPost.png)
+
+    
+
+### Recipe Features
+    Navigate to the Recipe Page
+![Recipe Page Screenshot](assets/images/userGuide/recipePage.png)
+
+    If logged in you can click the add button which will open the window below.
+![Recipe Create Screenshot](assets/images/userGuide/RecipeCreate.png)
+
+    This sections allows you to add a title, a photo, instructions, ingredients, prep time, cook time, and estimate cost. Once posted you will have an image like below.
+![Recipe Post Screenshot](assets/images/userGuide/RecipePost.png)
+
 
 ## Screenshots
+
+
+
 
