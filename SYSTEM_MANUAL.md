@@ -40,7 +40,6 @@ Choose the command based on your Operating System:
 | **macOS / Linux** | `python3 -m venv .venv && source .venv/bin/activate` |
 | **Windows** | `python -m venv .venv` then `.venv\Scripts\activate` |
 
-> **Pro-Tip:** If you use this frequently, you can alias the activation command. Ask the lead dev for an example `.zshrc` or `.bashrc` config.
 
 ### 2. Install Dependencies
 Once the virtual environment is active (you should see `(.venv)` in your terminal), run:
