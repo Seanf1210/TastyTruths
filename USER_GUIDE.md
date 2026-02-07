@@ -54,6 +54,8 @@ Welcome this section we are going to explain our core features which are: Login,
 
 
 ## Screenshots
+    Here is a link to all the photos used in this guide.
+[View Documentation Folder](./assets/images/userGuide)
 
 
 
