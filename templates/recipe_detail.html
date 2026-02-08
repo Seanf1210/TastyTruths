@@ -79,6 +79,30 @@
         {% endif %}
       </aside>
 
+      <!-- Nutrition Column -->
+      <aside class="recipe-ingredients-section">
+        <h2>Nutrition (est.)</h2>
+        {% set n = nutrition | default({}) %}
+        <ul class="ingredients-list">
+          <li class="ingredient-item">
+            <span class="ingredient-name">Calories</span>
+            <span class="ingredient-amount">{{ n.calories | default(0) | round }} kcal</span>
+          </li>
+          <li class="ingredient-item">
+            <span class="ingredient-name">Protein</span>
+            <span class="ingredient-amount">{{ n.protein_g | default(0) | round(1) }} g</span>
+          </li>
+          <li class="ingredient-item">
+            <span class="ingredient-name">Carbs</span>
+            <span class="ingredient-amount">{{ n.carbs_g | default(0) | round(1) }} g</span>
+          </li>
+          <li class="ingredient-item">
+            <span class="ingredient-name">Fat</span>
+            <span class="ingredient-amount">{{ n.fat_g | default(0) | round(1) }} g</span>
+          </li>
+        </ul>
+      </aside>
+
       <!-- Instructions Column -->
       <section class="recipe-instructions-section">
         <h2>Instructions</h2>
