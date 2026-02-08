@@ -2,6 +2,10 @@
 """A copy of build_ingredients.py that only extracts non-branded food items.
 
 Author: Ryan K Nash
+
+NOTE: run python generic_only_extractor.py --start 32880 to avoid the disqualified starting rows
+of the files
+
 """
 
 from __future__ import annotations
