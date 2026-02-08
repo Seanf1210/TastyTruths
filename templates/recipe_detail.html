@@ -75,7 +75,14 @@
             {% endfor %}
           </ul>
         {% else %}
-          <p class="no-data">No ingredients listed yet. Add some to get started.</p>
+          {% if ingredient_filters_applied %}
+            <p class="no-data">
+              {{ ingredient_filter_message or "No ingredients match your selected dietary filters." }}
+              <a href="{{ ingredient_filter_clear_url }}">Clear filters</a>
+            </p>
+          {% else %}
+            <p class="no-data">No ingredients listed yet. Add some to get started.</p>
+          {% endif %}
         {% endif %}
       </aside>
 
@@ -86,7 +93,7 @@
         <ul class="ingredients-list">
           <li class="ingredient-item">
             <span class="ingredient-name">Calories</span>
-            <span class="ingredient-amount">{{ n.calories | default(0) | round }} kcal</span>
+            <span class="ingredient-amount">{{ n.calories_kcal | default(0) | round }} kcal</span>
           </li>
           <li class="ingredient-item">
             <span class="ingredient-name">Protein</span>
@@ -101,6 +108,9 @@
             <span class="ingredient-amount">{{ n.fat_g | default(0) | round(1) }} g</span>
           </li>
         </ul>
+        {% if nutrition_note %}
+          <p class="no-data">{{ nutrition_note }}</p>
+        {% endif %}
       </aside>
 
       <!-- Instructions Column -->

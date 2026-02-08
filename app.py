@@ -29,6 +29,8 @@ from services.db import db
 from services.models import Recipe, RecipeSlugHistory, BlogPost, User, Ingredient
 from services.forms import RecipeForm, BlogPostForm
 from services.ingredients import ALLOWED_NUTRIENT_SORT_KEYS, build_ingredient_sort
+from services.nutrition import compute_recipe_macros, load_ingredient_index
+from services.filtering import filter_ingredients_by_dietary_tags
 from utilities.seed_demo import seed_demo_data
 
 ph = PasswordHasher()
@@ -575,7 +577,9 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
                 if isinstance(item, str):
                     name = item.strip()
                     if name:
-                        normalized.append({"name": name, "amount": ""})
+                        normalized.append(
+                            {"name": name, "amount": "", "quantity": None, "unit": None}
+                        )
                     continue
                 if isinstance(item, dict):
                     name = (
@@ -585,26 +589,110 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
                         or ""
                     )
                     name = str(name).strip() if name is not None else ""
-                    amount = _format_amount(
-                        item.get("quantity") or item.get("qty") or item.get("amount"),
-                        item.get("unit") or item.get("units"),
-                    )
+                    quantity = item.get("quantity") or item.get("qty") or item.get("amount")
+                    unit = item.get("unit") or item.get("units")
+                    amount = _format_amount(quantity, unit)
                     if not name and amount:
                         name = amount
                         amount = ""
                     if name:
-                        normalized.append({"name": name, "amount": amount})
+                        normalized.append(
+                            {
+                                "name": name,
+                                "amount": amount,
+                                "quantity": quantity,
+                                "unit": unit,
+                            }
+                        )
                     continue
 
                 name = str(item).strip()
                 if name:
-                    normalized.append({"name": name, "amount": ""})
+                    normalized.append(
+                        {"name": name, "amount": "", "quantity": None, "unit": None}
+                    )
 
             return normalized
 
-        ingredients_list = _normalize_ingredients(r.ingredients)
+        def _attach_dietary_tags(ingredients_list):
+            if not ingredients_list:
+                return ingredients_list
+            names = [
+                str(item.get("name") or "").strip().lower()
+                for item in ingredients_list
+                if isinstance(item, dict) and item.get("name")
+            ]
+            if not names:
+                return ingredients_list
+            unique_names = sorted({name for name in names if name})
+            if not unique_names:
+                return ingredients_list
+            matches = (
+                Ingredient.query.filter(func.lower(Ingredient.name).in_(unique_names))
+                .all()
+            )
+            tag_map = {
+                m.name.strip().lower(): [tag.name for tag in m.dietary_tags]
+                for m in matches
+            }
+            for item in ingredients_list:
+                if not isinstance(item, dict):
+                    continue
+                existing = item.get("dietary_tags")
+                if existing:
+                    continue
+                name = str(item.get("name") or "").strip().lower()
+                if not name:
+                    continue
+                tags = tag_map.get(name)
+                if tags:
+                    item["dietary_tags"] = tags
+            return ingredients_list
 
-        return render_template("recipe_detail.html", recipe=r, ingredients=ingredients_list)
+        ingredients_list = _normalize_ingredients(r.ingredients)
+        ingredients_list = _attach_dietary_tags(ingredients_list)
+        full_ingredients = list(ingredients_list)
+
+        raw_tags = (request.args.get("tags") or "").strip()
+        selected_tags = [tag.strip() for tag in raw_tags.split(",") if tag.strip()]
+        mode = (request.args.get("mode") or "or").strip()
+        filtered_ingredients = filter_ingredients_by_dietary_tags(
+            ingredients_list, selected_tags, mode
+        )
+        filters_applied = bool(selected_tags)
+        empty_filter_message = None
+        if filters_applied and not filtered_ingredients:
+            empty_filter_message = (
+                "No ingredients match your selected dietary filters."
+            )
+        ingredients_list = filtered_ingredients if filters_applied else ingredients_list
+
+        try:
+            ingredient_index = load_ingredient_index()
+        except Exception as exc:
+            print(f"WARNING: Unable to load ingredient nutrition assets: {exc}")
+            ingredient_index = {"by_name": {}, "by_id": {}}
+        nutrition_totals, nutrition_incomplete = compute_recipe_macros(
+            full_ingredients, ingredient_index
+        )
+        nutrition_note = None
+        if nutrition_incomplete and all(
+            value == 0.0 for value in nutrition_totals.values()
+        ):
+            nutrition_note = "Nutrition estimates incomplete (some ingredients missing data)."
+
+        return render_template(
+            "recipe_detail.html",
+            recipe=r,
+            ingredients=ingredients_list,
+            nutrition=nutrition_totals,
+            nutrition_note=nutrition_note,
+            ingredient_filters_applied=filters_applied,
+            ingredient_filter_message=empty_filter_message,
+            ingredient_filter_clear_url=url_for(
+                "recipe_detail", id_slug=f"{r.id}-{r.slug}"
+            ),
+        )
 
     @app.get("/recipes/random")
     def random_recipe():

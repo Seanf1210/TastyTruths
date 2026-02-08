@@ -5,6 +5,7 @@ from typing import Iterable
 
 from services.db import db
 from services.models import BlogPost, Recipe, User
+from services.nutrition import ensure_ingredient_exists_in_assets
 
 
 SENTINEL_RECIPE_SLUG = "demo-spaghetti-bolognese"
@@ -259,7 +260,22 @@ def seed_demo_data() -> bool:
 
     author = _ensure_demo_user()
     db.session.flush()
-    recipes = [Recipe(**row) for row in _recipe_rows()]
+    recipe_rows = list(_recipe_rows())
+    for row in recipe_rows:
+        raw = row.get("ingredients") or ""
+        try:
+            data = json.loads(raw) if raw else []
+        except json.JSONDecodeError:
+            data = []
+        if isinstance(data, list):
+            for item in data:
+                if isinstance(item, dict):
+                    name = item.get("name") or item.get("ingredient")
+                else:
+                    name = item
+                if name:
+                    ensure_ingredient_exists_in_assets(str(name))
+    recipes = [Recipe(**row) for row in recipe_rows]
     blogs = [BlogPost(**row) for row in _blog_rows(author.id)]
 
     db.session.add_all(recipes)

@@ -24,6 +24,11 @@ Low Sodium - shows recipes that have reduced or no sodium in them
 Keto Friendly - Shows recipes that are marked as keto or have low carb ad high fat contents
 Heart healthy - shows recipes that have reduced fat, sodium, and low sugar content
 
+Ingredient Filters (Dietary Tags)
+- AND mode: ingredient must include ALL selected tags.
+- OR mode: ingredient must include AT LEAST ONE selected tag.
+- Ingredients with missing tags do not match any selected filters.
+
 Empty State Text
 First time with no results 
     - No Recipes match the selected filters
