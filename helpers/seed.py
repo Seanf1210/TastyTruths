@@ -4,6 +4,7 @@ Seed script to populate the database with example recipes.
 Run with: python seed.py
 """
 
+import json
 from app import create_app
 from services.db import db
 from services.models import Recipe
@@ -26,6 +27,22 @@ def seed_recipes():
             total_time_minutes=55,
             dietary_tags=["gluten-free", "halal", "vegetarian"],
             image_filename="images/placeholder_quinoa_peppers.jpg",
+            ingredients=json.dumps(
+                [
+                    {"name": "Bell peppers", "quantity": 4},
+                    {"name": "Quinoa", "quantity": 1, "unit": "cup"},
+                    {"name": "Vegetable broth", "quantity": 2, "unit": "cups"},
+                    {"name": "Black beans", "quantity": 1, "unit": "can"},
+                    {"name": "Corn kernels", "quantity": 1, "unit": "cup"},
+                    {"name": "Red onion", "quantity": 1, "unit": "small"},
+                    {"name": "Garlic", "quantity": 2, "unit": "cloves"},
+                    {"name": "Ground cumin", "quantity": 1, "unit": "tsp"},
+                    {"name": "Smoked paprika", "quantity": 1, "unit": "tsp"},
+                    {"name": "Cilantro", "unit": "to taste"},
+                    {"name": "Olive oil", "quantity": "1-2", "unit": "tbsp"},
+                    {"name": "Salt"},
+                ]
+            ),
             content="""
 ## Ingredients
 - 4 bell peppers, tops removed and seeds discarded
@@ -65,6 +82,7 @@ def seed_recipes():
             total_time_minutes=45,
             dietary_tags=["halal"],
             image_filename="images/placeholder_chicken_shawarma.jpg",
+            ingredients="",
             content="""
 ## Ingredients
 - 1.5 lb boneless, skinless chicken thighs, cut into strips

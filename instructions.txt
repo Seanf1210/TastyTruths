@@ -1,4 +1,13 @@
 =========================================================
+BEFORE RUNNING A DEMO
+=========================================================
+flask --app app seed-demo
+
+
+I STILL NEED TO ADD STATIC IMAGES TO THIS, BUT THE OTHER DATA WORKS
+
+
+=========================================================
 CREATE A VIRTUAL ENVIRONMENT
 =========================================================
 MAC:

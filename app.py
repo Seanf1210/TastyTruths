@@ -12,6 +12,7 @@ Description:
 """
 
 from datetime import timedelta
+import json
 import argparse
 import random
 from sqlalchemy import func
@@ -26,6 +27,7 @@ import os
 from services.db import db
 from services.models import Recipe, RecipeSlugHistory, BlogPost, User
 from services.forms import RecipeForm, BlogPostForm
+from utilities.seed_demo import seed_demo_data
 
 ph = PasswordHasher()
 login_manager = LoginManager()
@@ -73,6 +75,15 @@ def create_app(admin_override: bool = False):
     def logout():
         logout_user()
         return redirect(url_for("index"))
+
+    @app.cli.command("seed-demo")
+    def seed_demo_command():
+        """Seed demo data if the sentinel record does not exist."""
+        seeded = seed_demo_data()
+        if seeded:
+            print("Seeded demo data.")
+        else:
+            print("Demo data already present.")
     
     @app.route("/")
     def index():
@@ -519,10 +530,75 @@ def create_app(admin_override: bool = False):
         if id_slug != canonical:
             return redirect(url_for("recipe_detail", id_slug=canonical), code=301)
 
-        # Parse ingredients if stored as newline-separated text
-        ingredients_list = []
-        if r.ingredients:
-            ingredients_list = [line.strip() for line in r.ingredients.split("\n") if line.strip()]
+        def _format_amount(quantity, unit):
+            qty = "" if quantity is None else str(quantity).strip()
+            uom = "" if unit is None else str(unit).strip()
+            if qty and uom:
+                return f"{qty} {uom}"
+            if qty:
+                return qty
+            if uom:
+                return uom
+            return ""
+
+        def _normalize_ingredients(raw):
+            if not raw:
+                return []
+
+            data = raw
+            if isinstance(raw, str):
+                text = raw.strip()
+                if not text:
+                    return []
+                if text.startswith("[") or text.startswith("{"):
+                    try:
+                        data = json.loads(text)
+                    except json.JSONDecodeError:
+                        data = text.splitlines()
+                else:
+                    data = text.splitlines()
+
+            if isinstance(data, dict):
+                data = data.get("ingredients") or data.get("items") or []
+
+            if not isinstance(data, list):
+                data = [data]
+
+            normalized = []
+            for item in data:
+                if item is None:
+                    continue
+                if isinstance(item, str):
+                    name = item.strip()
+                    if name:
+                        normalized.append({"name": name, "amount": ""})
+                    continue
+                if isinstance(item, dict):
+                    name = (
+                        item.get("name")
+                        or item.get("ingredient")
+                        or item.get("title")
+                        or ""
+                    )
+                    name = str(name).strip() if name is not None else ""
+                    amount = _format_amount(
+                        item.get("quantity") or item.get("qty") or item.get("amount"),
+                        item.get("unit") or item.get("units"),
+                    )
+                    if not name and amount:
+                        name = amount
+                        amount = ""
+                    if name:
+                        normalized.append({"name": name, "amount": amount})
+                    continue
+
+                name = str(item).strip()
+                if name:
+                    normalized.append({"name": name, "amount": ""})
+
+            return normalized
+
+        ingredients_list = _normalize_ingredients(r.ingredients)
 
         return render_template("recipe_detail.html", recipe=r, ingredients=ingredients_list)
 
@@ -566,6 +642,8 @@ def create_app(admin_override: bool = False):
     
     with app.app_context():
         db.create_all()
+        if app.debug or app.testing or app.config.get("ENV") in ("development", "testing"):
+            seed_demo_data()
 
     if app.config.get("ADMIN_OVERRIDE"):
         _enable_admin_override()

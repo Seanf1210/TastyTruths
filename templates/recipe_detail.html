@@ -66,11 +66,16 @@
         {% if ingredients %}
           <ul class="ingredients-list">
             {% for ingredient in ingredients %}
-              <li class="ingredient-item">{{ ingredient }}</li>
+              <li class="ingredient-item">
+                <span class="ingredient-name">{{ ingredient.name }}</span>
+                {% if ingredient.amount %}
+                  <span class="ingredient-amount">{{ ingredient.amount }}</span>
+                {% endif %}
+              </li>
             {% endfor %}
           </ul>
         {% else %}
-          <p class="no-data">No ingredients listed.</p>
+          <p class="no-data">No ingredients listed yet. Add some to get started.</p>
         {% endif %}
       </aside>
 
