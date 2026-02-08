@@ -63,6 +63,7 @@ class Ingredient(db.Model):
     __tablename__ = "ingredients"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False, index=True)
+    nutrition_per_100g = db.Column(JSON, nullable=True)
 
     dietary_tags = db.relationship(
         "DietaryTag",

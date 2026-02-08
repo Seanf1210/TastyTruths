@@ -1,6 +1,7 @@
 """
 Author: Ryan Nash
 Date: 30 January 2026
+Revised: 08 February 2026
 Project: Tasty Truths
 
 Description:
@@ -25,8 +26,9 @@ from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.utils import secure_filename
 import os
 from services.db import db
-from services.models import Recipe, RecipeSlugHistory, BlogPost, User
+from services.models import Recipe, RecipeSlugHistory, BlogPost, User, Ingredient
 from services.forms import RecipeForm, BlogPostForm
+from services.ingredients import ALLOWED_NUTRIENT_SORT_KEYS, build_ingredient_sort
 from utilities.seed_demo import seed_demo_data
 
 ph = PasswordHasher()
@@ -39,7 +41,7 @@ class AdminOverrideUser(UserMixin):
         self.id = user_id
         self.username = user_id
 
-def create_app(admin_override: bool = False):
+def create_app(admin_override: bool = False, config_overrides=None, seed_demo: bool = True):
     app = Flask(__name__, static_folder="static", template_folder="templates")
     # --- security & session config ---
     app.config.update(
@@ -53,6 +55,8 @@ def create_app(admin_override: bool = False):
         WTF_CSRF_TIME_LIMIT=None,        # CSRF token lifetime (optional)
         MAX_CONTENT_LENGTH=2 * 1024 * 1024,  # 2MB file upload limit
     )
+    if config_overrides:
+        app.config.update(config_overrides)
     app.config["ADMIN_OVERRIDE"] = bool(admin_override)
 
     # --- init extensions in the right order ---
@@ -625,6 +629,41 @@ def create_app(admin_override: bool = False):
         rows = Recipe.query.order_by(Recipe.created_at.desc()).all()
         return jsonify([{"id": r.id, "title": r.title, "slug": r.slug} for r in rows])
 
+    @app.get("/api/ingredients")
+    def list_ingredients():
+        """List ingredients with optional nutrient sorting (missing values sort to bottom)."""
+        sort_key = (request.args.get("sort_key") or "").strip() or None
+        sort_dir = (request.args.get("sort_dir") or "desc").strip().lower()
+
+        if sort_dir not in ("asc", "desc"):
+            return jsonify({"error": "sort_dir must be 'asc' or 'desc'"}), 400
+
+        if sort_key and sort_key not in ALLOWED_NUTRIENT_SORT_KEYS:
+            allowed = sorted(ALLOWED_NUTRIENT_SORT_KEYS.keys())
+            return (
+                jsonify(
+                    {
+                        "error": f"invalid sort_key '{sort_key}'",
+                        "allowed_keys": allowed,
+                    }
+                ),
+                400,
+            )
+
+        query = Ingredient.query
+        query = build_ingredient_sort(query, sort_key, sort_dir)
+        rows = query.all()
+        return jsonify(
+            [
+                {
+                    "id": row.id,
+                    "name": row.name,
+                    "nutrition_per_100g": row.nutrition_per_100g,
+                }
+                for row in rows
+            ]
+        )
+
     @app.get("/api/whoami")
     def whoami():
         if current_user.is_authenticated:
@@ -642,7 +681,9 @@ def create_app(admin_override: bool = False):
     
     with app.app_context():
         db.create_all()
-        if app.debug or app.testing or app.config.get("ENV") in ("development", "testing"):
+        if seed_demo and (
+            app.debug or app.testing or app.config.get("ENV") in ("development", "testing")
+        ):
             seed_demo_data()
 
     if app.config.get("ADMIN_OVERRIDE"):
