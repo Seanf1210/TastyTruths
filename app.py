@@ -29,7 +29,8 @@ from services.db import db
 from services.models import Recipe, RecipeSlugHistory, BlogPost, User, Ingredient
 from services.forms import RecipeForm, BlogPostForm
 from services.ingredients import ALLOWED_NUTRIENT_SORT_KEYS, build_ingredient_sort
-from services.nutrition import compute_recipe_macros, load_ingredient_index
+from services.ingredient_index import load_ingredients_index, match_ingredient_id, search_suggestions
+from services.nutrition import compute_recipe_macros, ensure_ingredient_exists_in_assets, load_ingredient_index
 from services.filtering import filter_ingredients_by_dietary_tags
 from utilities.seed_demo import seed_demo_data
 
@@ -304,14 +305,49 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
                 file.save(os.path.join(upload_dir, filename))
                 image_filename = f"uploads/recipes/{filename}"
             
-            # Normalize ingredients: split by newline, strip whitespace, filter empty lines
-            ingredients_text = form.ingredients.data or ""
-            ingredients_list = [
-                line.strip() 
-                for line in ingredients_text.split("\n") 
-                if line.strip()
-            ]
-            ingredients_normalized = "\n".join(ingredients_list)
+            ingredient_names = request.form.getlist("ingredient_name[]")
+            ingredient_ids = request.form.getlist("ingredient_id[]")
+            ingredient_qtys = request.form.getlist("ingredient_quantity[]")
+            ingredient_units = request.form.getlist("ingredient_unit[]")
+
+            ingredients_payload = []
+            if ingredient_names:
+                index = load_ingredients_index()
+                for idx, raw_name in enumerate(ingredient_names):
+                    name_raw = (raw_name or "").strip()
+                    if not name_raw:
+                        continue
+                    raw_id = ingredient_ids[idx] if idx < len(ingredient_ids) else ""
+                    ingredient_id = (raw_id or "").strip() or None
+                    if not ingredient_id:
+                        matched = match_ingredient_id(name_raw, index)
+                        if matched:
+                            ingredient_id = matched
+                        else:
+                            ingredient_id = ensure_ingredient_exists_in_assets(name_raw)
+                    quantity = ingredient_qtys[idx] if idx < len(ingredient_qtys) else None
+                    unit = ingredient_units[idx] if idx < len(ingredient_units) else None
+                    ingredients_payload.append(
+                        {
+                            "name": name_raw,
+                            "name_raw": name_raw,
+                            "ingredient_id": ingredient_id,
+                            "quantity": quantity,
+                            "unit": unit,
+                        }
+                    )
+
+            if ingredients_payload:
+                ingredients_normalized = json.dumps(ingredients_payload)
+            else:
+                # Normalize ingredients: split by newline, strip whitespace, filter empty lines
+                ingredients_text = form.ingredients.data or ""
+                ingredients_list = [
+                    line.strip() 
+                    for line in ingredients_text.split("\n") 
+                    if line.strip()
+                ]
+                ingredients_normalized = "\n".join(ingredients_list)
             
             # Create recipe
             recipe = Recipe(
@@ -583,7 +619,8 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
                     continue
                 if isinstance(item, dict):
                     name = (
-                        item.get("name")
+                        item.get("name_raw")
+                        or item.get("name")
                         or item.get("ingredient")
                         or item.get("title")
                         or ""
@@ -602,6 +639,7 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
                                 "amount": amount,
                                 "quantity": quantity,
                                 "unit": unit,
+                                "ingredient_id": item.get("ingredient_id") or item.get("id"),
                             }
                         )
                     continue
@@ -716,6 +754,17 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
     def list_recipes():
         rows = Recipe.query.order_by(Recipe.created_at.desc()).all()
         return jsonify([{"id": r.id, "title": r.title, "slug": r.slug} for r in rows])
+
+    @app.get("/api/ingredients/suggest")
+    def suggest_ingredients():
+        query = (request.args.get("q") or "").strip()
+        try:
+            limit = int(request.args.get("limit") or 8)
+        except ValueError:
+            limit = 8
+        limit = max(1, min(limit, 20))
+        results = search_suggestions(query, limit=limit)
+        return jsonify(results)
 
     @app.get("/api/ingredients")
     def list_ingredients():

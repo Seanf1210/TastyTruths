@@ -36,6 +36,7 @@ def load_ingredient_index(path: Path = ASSETS_INGREDIENTS_PATH) -> Dict[str, Dic
 
     by_name = {}
     by_id = {}
+    by_alias = {}
     for entry in items:
         name_key = normalize_ingredient_name(entry.get("name"))
         if name_key:
@@ -43,24 +44,34 @@ def load_ingredient_index(path: Path = ASSETS_INGREDIENTS_PATH) -> Dict[str, Dic
         entry_id = entry.get("id")
         if entry_id:
             by_id[normalize_ingredient_name(entry_id)] = entry
+        aliases = entry.get("aliases") or entry.get("alias") or []
+        for alias in aliases if isinstance(aliases, list) else []:
+            alias_key = normalize_ingredient_name(alias)
+            if alias_key:
+                by_alias[alias_key] = entry
 
-    return {"items": items, "by_name": by_name, "by_id": by_id, "raw": data}
+    return {"items": items, "by_name": by_name, "by_id": by_id, "by_alias": by_alias, "raw": data}
 
 
-def ensure_ingredient_exists_in_assets(name: str, path: Path = ASSETS_INGREDIENTS_PATH) -> None:
+def ensure_ingredient_exists_in_assets(name: str, path: Path = ASSETS_INGREDIENTS_PATH) -> Optional[str]:
     if not name:
-        return
+        return None
     try:
         index = load_ingredient_index(path)
     except Exception as exc:
         print(f"WARNING: Unable to load ingredients asset: {exc}")
-        return
+        return None
 
     normalized = normalize_ingredient_name(name)
     if not normalized:
-        return
-    if normalized in index["by_name"]:
-        return
+        return None
+    existing = (
+        index["by_name"].get(normalized)
+        or index["by_id"].get(normalized)
+        or index.get("by_alias", {}).get(normalized)
+    )
+    if existing:
+        return existing.get("id")
 
     template = None
     for entry in index["raw"]:
@@ -120,6 +131,8 @@ def ensure_ingredient_exists_in_assets(name: str, path: Path = ASSETS_INGREDIENT
             handle.write("\n")
     except OSError as exc:
         print(f"WARNING: Unable to write ingredients asset: {exc}")
+        return None
+    return new_id
 
 
 def _parse_quantity(value) -> float:
@@ -217,15 +230,21 @@ def compute_recipe_macros(
     missing_data = False
     by_name = ingredient_index.get("by_name", {})
     by_id = ingredient_index.get("by_id", {})
+    by_alias = ingredient_index.get("by_alias", {})
 
     for ingredient in ingredients:
         if not isinstance(ingredient, dict):
             continue
-        name = ingredient.get("name")
-        if not name:
-            continue
-        name_key = normalize_ingredient_name(name)
-        entry = by_name.get(name_key) or by_id.get(name_key)
+        ingredient_id = ingredient.get("ingredient_id") or ingredient.get("id")
+        entry = None
+        if ingredient_id:
+            entry = by_id.get(normalize_ingredient_name(ingredient_id))
+        if entry is None:
+            name = ingredient.get("name") or ingredient.get("name_raw")
+            if not name:
+                continue
+            name_key = normalize_ingredient_name(name)
+            entry = by_name.get(name_key) or by_alias.get(name_key) or by_id.get(name_key)
         if not entry:
             missing_data = True
             continue

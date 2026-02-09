@@ -57,11 +57,39 @@
       <div class="form-group">
         <label for="{{ form.ingredients.id }}">{{ form.ingredients.label }} <span class="required">*</span></label>
         {% if form.ingredients.errors %}
-          {{ form.ingredients(class="form-control form-control-error") }}
+          {{ form.ingredients(class="form-control form-control-error", style="display:none;") }}
           <small class="form-error">{{ form.ingredients.errors[0] }}</small>
         {% else %}
-          {{ form.ingredients(class="form-control") }}
+          {{ form.ingredients(class="form-control", style="display:none;") }}
         {% endif %}
+        <div id="ingredient-list" class="ingredient-list">
+          <div class="ingredient-row">
+            <input
+              type="text"
+              name="ingredient_name[]"
+              class="form-control ingredient-name"
+              placeholder="e.g., Greek yogurt"
+              autocomplete="off"
+            />
+            <input type="hidden" name="ingredient_id[]" class="ingredient-id" />
+            <input
+              type="text"
+              name="ingredient_quantity[]"
+              class="form-control ingredient-qty"
+              placeholder="Qty"
+            />
+            <input
+              type="text"
+              name="ingredient_unit[]"
+              class="form-control ingredient-unit"
+              placeholder="Unit"
+            />
+            <div class="ingredient-suggestions" aria-hidden="true"></div>
+          </div>
+        </div>
+        <button type="button" class="button button-secondary" id="add-ingredient-row">
+          Add ingredient
+        </button>
         <small class="form-hint">{{ form.ingredients.render_kw.placeholder }}</small>
       </div>
 
@@ -107,5 +135,6 @@
   </div>
 </div>
 
+<script src="{{ url_for('static', filename='js/ingredient_typeahead.js') }}"></script>
 {% endblock %}
 
