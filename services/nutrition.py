@@ -9,6 +9,62 @@ ASSETS_INGREDIENTS_PATH = (
 )
 
 
+# Map common user-entered ingredient names to canonical ingredient IDs in assets.
+INGREDIENT_ALIASES = {
+    # Demo Spaghetti Bolognese
+    "spaghetti": "pasta_dry",
+    "ground beef": "ground_beef_85",
+    "onion": "onion_yellow",
+    "garlic": "garlic_raw",
+    "crushed tomatoes": "tomato_raw",
+    "olive oil": "olive_oil",
+    "salt": None,  # intentionally excluded from nutrition
+
+    # Demo Veggie Stir Fry
+    "broccoli": "broccoli",
+    "carrots": "carrot_raw",
+    "bell pepper": None,  # no canonical pepper yet
+    "soy sauce": None,    # needs future canonical entry
+    "ginger": None,       # needs future canonical entry
+
+    # Demo Pancakes
+    "flour": None,        # needs flour canonical
+    "baking powder": None,
+    "milk": "milk_whole",
+    "egg": "egg_large",
+    "butter": "butter_unsalted",
+
+    # Demo Lemon Herb Chicken
+    "chicken thighs": None,  # no thigh canonical yet
+    "lemon": None,
+    "oregano": None,
+
+    # Demo Tomato Soup
+    "tomatoes": "tomato_raw",
+    "cream": None,
+
+    # Demo Garden Salad
+    "mixed greens": None,
+    "cucumber": None,
+    "vinegar": None,
+
+    # Demo Baked Salmon
+    "salmon fillets": "salmon_fillet",
+    "black pepper": None,
+
+    # Demo Veggie Wraps
+    "tortillas": None,
+    "hummus": None,
+    "spinach": "spinach_raw",
+
+    # Demo Berry Parfait
+    "greek yogurt": None,
+    "mixed berries": None,
+    "granola": None,
+}
+
+
+
 def normalize_ingredient_name(name: Optional[str]) -> str:
     if not name:
         return ""
@@ -65,11 +121,34 @@ def ensure_ingredient_exists_in_assets(name: str, path: Path = ASSETS_INGREDIENT
     normalized = normalize_ingredient_name(name)
     if not normalized:
         return None
+
+    canonical_id = INGREDIENT_ALIASES.get(normalized)
+    if canonical_id:
+        canonical_key = normalize_ingredient_name(canonical_id)
+        canonical_entry = (
+            index["by_id"].get(canonical_key)
+            or index["by_name"].get(canonical_key)
+            or index.get("by_alias", {}).get(canonical_key)
+        )
+        if canonical_entry:
+            return canonical_entry.get("id")
+
     existing = (
         index["by_name"].get(normalized)
         or index["by_id"].get(normalized)
         or index.get("by_alias", {}).get(normalized)
     )
+    # If the name maps to an incomplete entry but we have a canonical alias, return the canonical.
+    if existing and existing.get("status") == "incomplete" and canonical_id:
+        canonical_key = normalize_ingredient_name(canonical_id)
+        canonical_entry = (
+            index["by_id"].get(canonical_key)
+            or index["by_name"].get(canonical_key)
+            or index.get("by_alias", {}).get(canonical_key)
+        )
+        if canonical_entry:
+            return canonical_entry.get("id")
+
     if existing:
         return existing.get("id")
 
@@ -181,6 +260,7 @@ def convert_to_grams(
         "ounce": 28.3495,
         "ounces": 28.3495,
         "lb": 453.592,
+        "lbs": 453.592,
         "pound": 453.592,
         "pounds": 453.592,
     }
@@ -189,6 +269,7 @@ def convert_to_grams(
 
     entry = ingredient_entry or {}
     grams_per_unit = None
+    issue = None
     if unit_norm in ("cup", "cups"):
         grams_per_unit = entry.get("grams_per_cup")
     elif unit_norm in ("tbsp", "tablespoon", "tablespoons"):
@@ -206,9 +287,50 @@ def convert_to_grams(
     elif not unit_norm:
         grams_per_unit = entry.get("grams_per_unit")
 
+    def _fallback_conversion() -> Optional[float]:
+        nonlocal issue
+        if qty <= 0 or unit_norm in ("", "to taste", "taste"):
+            return None
+
+        name_text = (entry.get("id") or entry.get("name") or "").lower()
+        powderish = any(word in name_text for word in ("flour", "powder", "oat", "oats", "meal"))
+        liquidish = any(word in name_text for word in ("milk", "oil", "water", "broth", "stock"))
+
+        if unit_norm in ("tbsp", "tablespoon", "tablespoons"):
+            issue = "fallback_conversion"
+            return 13.5  # approx tbsp of oil/water
+        if unit_norm in ("tsp", "teaspoon", "teaspoons"):
+            issue = "fallback_conversion"
+            return 4.5  # approx tsp
+        if unit_norm in ("cup", "cups"):
+            issue = "fallback_conversion"
+            return 120.0 if powderish else 240.0  # flour-ish vs liquid-ish cup
+        if unit_norm in ("clove", "cloves"):
+            issue = "fallback_conversion"
+            return 3.0  # garlic clove
+        if unit_norm in ("small", "smallish"):
+            if "onion" in name_text:
+                issue = "fallback_conversion"
+                return 70.0
+            if "carrot" in name_text:
+                issue = "fallback_conversion"
+                return 50.0
+        if unit_norm in ("medium",):
+            if "carrot" in name_text:
+                issue = "fallback_conversion"
+                return 61.0
+        return None
+
     if grams_per_unit:
         try:
-            return qty * float(grams_per_unit), None
+            return qty * float(grams_per_unit), issue
+        except (TypeError, ValueError):
+            return 0.0, "missing_conversion"
+
+    fallback = _fallback_conversion()
+    if fallback:
+        try:
+            return qty * float(fallback), issue or "fallback_conversion"
         except (TypeError, ValueError):
             return 0.0, "missing_conversion"
 
@@ -216,7 +338,12 @@ def convert_to_grams(
 
 
 def compute_recipe_macros(
-    ingredients: Iterable[Dict], ingredient_index: Dict[str, Dict]
+    ingredients: Iterable[Dict],
+    ingredient_index: Dict[str, Dict],
+    *,
+    debug: bool = False,
+    recipe_name: Optional[str] = None,
+    collect_stats: bool = False,
 ) -> Tuple[Dict[str, float], bool]:
     totals = {
         "calories_kcal": 0.0,
@@ -225,28 +352,83 @@ def compute_recipe_macros(
         "fat_g": 0.0,
     }
     if not ingredients:
-        return totals, False
+        return (totals, False, {"missing_ingredients": 0, "skipped_unknown_units": 0, "lines": []}) if collect_stats else (totals, False)
 
     missing_data = False
     by_name = ingredient_index.get("by_name", {})
     by_id = ingredient_index.get("by_id", {})
     by_alias = ingredient_index.get("by_alias", {})
 
+    stats = {"missing_ingredients": 0, "skipped_unknown_units": 0, "lines": []}
+    recipe_label = recipe_name or "<unnamed recipe>"
+    debug_lines: List[str] = []
+
     for ingredient in ingredients:
         if not isinstance(ingredient, dict):
             continue
         ingredient_id = ingredient.get("ingredient_id") or ingredient.get("id")
         entry = None
+        lookup_key_used = None
         if ingredient_id:
-            entry = by_id.get(normalize_ingredient_name(ingredient_id))
+            lookup_key_used = normalize_ingredient_name(ingredient_id)
+            entry = by_id.get(lookup_key_used)
         if entry is None:
             name = ingredient.get("name") or ingredient.get("name_raw")
             if not name:
                 continue
             name_key = normalize_ingredient_name(name)
-            entry = by_name.get(name_key) or by_alias.get(name_key) or by_id.get(name_key)
+            lookup_key_used = name_key
+
+            # Canonicalize using INGREDIENT_ALIASES first
+            canonical_id = INGREDIENT_ALIASES.get(name_key)
+            if canonical_id:
+                canonical_key = normalize_ingredient_name(canonical_id)
+                entry = (
+                    by_id.get(canonical_key)
+                    or by_name.get(canonical_key)
+                    or by_alias.get(canonical_key)
+                )
+                lookup_key_used = canonical_key
+
+            if entry is None:
+                entry = by_name.get(name_key) or by_alias.get(name_key) or by_id.get(name_key)
         if not entry:
             missing_data = True
+            stats["missing_ingredients"] += 1
+            stats["lines"].append(
+                {
+                    "raw_name": ingredient.get("name") or ingredient.get("name_raw"),
+                    "raw_quantity": ingredient.get("quantity"),
+                    "raw_unit": ingredient.get("unit"),
+                    "normalized_key": lookup_key_used,
+                    "matched_id": None,
+                    "matched_name": None,
+                    "status": None,
+                    "grams": 0.0,
+                    "issue": "missing_ingredient",
+                    "macros": None,
+                }
+            )
+            continue
+
+        # Skip auto-created or otherwise incomplete ingredients to avoid skewing totals.
+        if entry.get("status") == "incomplete":
+            missing_data = True
+            stats["missing_ingredients"] += 1
+            stats["lines"].append(
+                {
+                    "raw_name": ingredient.get("name") or ingredient.get("name_raw"),
+                    "raw_quantity": ingredient.get("quantity"),
+                    "raw_unit": ingredient.get("unit"),
+                    "normalized_key": lookup_key_used,
+                    "matched_id": entry.get("id"),
+                    "matched_name": entry.get("name"),
+                    "status": entry.get("status"),
+                    "grams": 0.0,
+                    "issue": "incomplete",
+                    "macros": None,
+                }
+            )
             continue
 
         grams, issue = convert_to_grams(
@@ -257,19 +439,131 @@ def compute_recipe_macros(
         if grams == 0.0:
             if issue != "missing_quantity":
                 missing_data = True
+            if issue == "missing_conversion":
+                stats["skipped_unknown_units"] += 1
+            stats["lines"].append(
+                {
+                    "raw_name": ingredient.get("name") or ingredient.get("name_raw"),
+                    "raw_quantity": ingredient.get("quantity"),
+                    "raw_unit": ingredient.get("unit"),
+                    "normalized_key": lookup_key_used,
+                    "matched_id": entry.get("id"),
+                    "matched_name": entry.get("name"),
+                    "status": entry.get("status"),
+                    "grams": grams,
+                    "issue": issue or "missing_quantity",
+                    "macros": None,
+                }
+            )
             continue
 
         nutrition = entry.get("nutrition_per_gram")
         if not isinstance(nutrition, dict):
             missing_data = True
+            stats["missing_ingredients"] += 1
+            stats["lines"].append(
+                {
+                    "raw_name": ingredient.get("name") or ingredient.get("name_raw"),
+                    "raw_quantity": ingredient.get("quantity"),
+                    "raw_unit": ingredient.get("unit"),
+                    "normalized_key": lookup_key_used,
+                    "matched_id": entry.get("id"),
+                    "matched_name": entry.get("name"),
+                    "status": entry.get("status"),
+                    "grams": grams,
+                    "issue": "missing_nutrition",
+                    "macros": None,
+                }
+            )
+            continue
+
+        # If nutrition values are all zero, treat as missing to avoid misleading totals.
+        nutrition_values = [nutrition.get(k, 0.0) for k in ("calories", "protein_g", "fat_g", "carbs_g")]
+        if all((v is None or float(v) == 0.0) for v in nutrition_values):
+            missing_data = True
+            stats["missing_ingredients"] += 1
+            stats["lines"].append(
+                {
+                    "raw_name": ingredient.get("name") or ingredient.get("name_raw"),
+                    "raw_quantity": ingredient.get("quantity"),
+                    "raw_unit": ingredient.get("unit"),
+                    "normalized_key": lookup_key_used,
+                    "matched_id": entry.get("id"),
+                    "matched_name": entry.get("name"),
+                    "status": entry.get("status"),
+                    "grams": grams,
+                    "issue": "zero_nutrition",
+                    "macros": None,
+                }
+            )
             continue
 
         try:
-            totals["calories_kcal"] += grams * float(nutrition.get("calories", 0.0) or 0.0)
-            totals["protein_g"] += grams * float(nutrition.get("protein_g", 0.0) or 0.0)
-            totals["carbs_g"] += grams * float(nutrition.get("carbs_g", 0.0) or 0.0)
-            totals["fat_g"] += grams * float(nutrition.get("fat_g", 0.0) or 0.0)
+            line_macros = {
+                "calories_kcal": grams * float(nutrition.get("calories", 0.0) or 0.0),
+                "protein_g": grams * float(nutrition.get("protein_g", 0.0) or 0.0),
+                "carbs_g": grams * float(nutrition.get("carbs_g", 0.0) or 0.0),
+                "fat_g": grams * float(nutrition.get("fat_g", 0.0) or 0.0),
+            }
+
+            totals["calories_kcal"] += line_macros["calories_kcal"]
+            totals["protein_g"] += line_macros["protein_g"]
+            totals["carbs_g"] += line_macros["carbs_g"]
+            totals["fat_g"] += line_macros["fat_g"]
+
+            stats["lines"].append(
+                {
+                    "raw_name": ingredient.get("name") or ingredient.get("name_raw"),
+                    "raw_quantity": ingredient.get("quantity"),
+                    "raw_unit": ingredient.get("unit"),
+                    "normalized_key": lookup_key_used,
+                    "matched_id": entry.get("id"),
+                    "matched_name": entry.get("name"),
+                    "status": entry.get("status"),
+                    "grams": grams,
+                    "issue": issue,
+                    "macros": line_macros,
+                }
+            )
         except (TypeError, ValueError):
             missing_data = True
+            stats["missing_ingredients"] += 1
+            stats["lines"].append(
+                {
+                    "raw_name": ingredient.get("name") or ingredient.get("name_raw"),
+                    "raw_quantity": ingredient.get("quantity"),
+                    "raw_unit": ingredient.get("unit"),
+                    "normalized_key": lookup_key_used,
+                    "matched_id": entry.get("id"),
+                    "matched_name": entry.get("name"),
+                    "status": entry.get("status"),
+                    "grams": grams,
+                    "issue": "type_error",
+                    "macros": None,
+                }
+            )
+
+    if debug:
+        debug_lines.append(f"\n[NUTRITION DEBUG] Recipe: {recipe_label}")
+        for line in stats["lines"]:
+            debug_lines.append(
+                "  - "
+                f"raw='{line.get('raw_name')}' qty={line.get('raw_quantity')} unit={line.get('raw_unit')} | "
+                f"lookup='{line.get('normalized_key')}' | matched_id={line.get('matched_id')} matched_name='{line.get('matched_name')}' "
+                f"status={line.get('status')} | grams={round(line.get('grams') or 0.0, 3)} "
+                f"issue={line.get('issue')} | "
+                f"macros={line.get('macros') or '{}'}"
+            )
+        debug_lines.append(
+            f"  Totals: calories={round(totals['calories_kcal'], 2)} kcal, "
+            f"protein={round(totals['protein_g'], 2)} g, carbs={round(totals['carbs_g'], 2)} g, fat={round(totals['fat_g'], 2)} g"
+        )
+        debug_lines.append(
+            f"  Missing items: {stats['missing_ingredients']}, Skipped unknown units: {stats['skipped_unknown_units']}"
+        )
+        print("\n".join(debug_lines))
+
+    if collect_stats:
+        return totals, missing_data, stats
 
     return totals, missing_data

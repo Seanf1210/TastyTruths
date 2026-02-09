@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from typing import Iterable
 
 from services.db import db
@@ -24,11 +25,16 @@ def _ensure_demo_user() -> User:
 
 
 def _recipe_rows() -> Iterable[dict]:
+    def _seed_image(title: str) -> str:
+        slug = re.sub(r"[^a-z0-9]+", "_", title.strip().lower()).strip("_")
+        return f"assets/images/seed/{slug}.jpg"
+
     return [
         {
             "title": "Demo Spaghetti Bolognese",
             "description": "Classic red-sauce pasta with a rich, slow-simmered meat sauce.",
             "cuisine": "Italian",
+            "image_filename": _seed_image("Demo Spaghetti Bolognese"),
             "prep_time_minutes": 20,
             "cook_time_minutes": 60,
             "ingredients": json.dumps(
@@ -48,6 +54,7 @@ def _recipe_rows() -> Iterable[dict]:
             "title": "Demo Veggie Stir Fry",
             "description": "Fast weeknight stir fry with crisp veggies and a light soy-ginger sauce.",
             "cuisine": "Asian",
+            "image_filename": _seed_image("Demo Veggie Stir Fry"),
             "prep_time_minutes": 15,
             "cook_time_minutes": 10,
             "ingredients": json.dumps(
@@ -65,6 +72,7 @@ def _recipe_rows() -> Iterable[dict]:
             "title": "Demo Pancakes",
             "description": "Fluffy breakfast pancakes with maple syrup.",
             "cuisine": "American",
+            "image_filename": _seed_image("Demo Pancakes"),
             "prep_time_minutes": 10,
             "cook_time_minutes": 15,
             "ingredients": json.dumps(
@@ -82,6 +90,7 @@ def _recipe_rows() -> Iterable[dict]:
             "title": "Demo Lemon Herb Chicken",
             "description": "Juicy chicken thighs with lemon, garlic, and herbs.",
             "cuisine": "Mediterranean",
+            "image_filename": _seed_image("Demo Lemon Herb Chicken"),
             "prep_time_minutes": 15,
             "cook_time_minutes": 30,
             "ingredients": json.dumps(
@@ -99,6 +108,7 @@ def _recipe_rows() -> Iterable[dict]:
             "title": "Demo Tomato Soup",
             "description": "Creamy tomato soup served with toasted bread.",
             "cuisine": "American",
+            "image_filename": _seed_image("Demo Tomato Soup"),
             "prep_time_minutes": 10,
             "cook_time_minutes": 25,
             "ingredients": json.dumps(
@@ -115,6 +125,7 @@ def _recipe_rows() -> Iterable[dict]:
             "title": "Demo Garden Salad",
             "description": "Fresh greens with a simple vinaigrette.",
             "cuisine": "American",
+            "image_filename": _seed_image("Demo Garden Salad"),
             "prep_time_minutes": 10,
             "cook_time_minutes": 0,
             "ingredients": json.dumps(
@@ -132,6 +143,7 @@ def _recipe_rows() -> Iterable[dict]:
             "title": "Demo Baked Salmon",
             "description": "Simple oven-baked salmon with lemon pepper.",
             "cuisine": "Seafood",
+            "image_filename": _seed_image("Demo Baked Salmon"),
             "prep_time_minutes": 10,
             "cook_time_minutes": 15,
             "ingredients": json.dumps(
@@ -148,6 +160,7 @@ def _recipe_rows() -> Iterable[dict]:
             "title": "Demo Veggie Wraps",
             "description": "Crunchy veggie wraps with hummus.",
             "cuisine": "Vegetarian",
+            "image_filename": _seed_image("Demo Veggie Wraps"),
             "prep_time_minutes": 15,
             "cook_time_minutes": 0,
             "ingredients": json.dumps(
@@ -164,6 +177,7 @@ def _recipe_rows() -> Iterable[dict]:
             "title": "Demo Berry Parfait",
             "description": "Layered yogurt parfait with berries and granola.",
             "cuisine": "Breakfast",
+            "image_filename": _seed_image("Demo Berry Parfait"),
             "prep_time_minutes": 10,
             "cook_time_minutes": 0,
             "ingredients": json.dumps(
@@ -179,6 +193,7 @@ def _recipe_rows() -> Iterable[dict]:
             "title": "Demo Mystery Stew",
             "description": "A placeholder recipe to demonstrate empty ingredients.",
             "cuisine": "Demo",
+            "image_filename": _seed_image("Demo Mystery Stew"),
             "prep_time_minutes": 5,
             "cook_time_minutes": 5,
             "ingredients": "",

@@ -30,6 +30,10 @@ def test_convert_to_grams_with_weight_units():
     assert issue is None
     assert round(grams, 4) == 113.398
 
+    grams, issue = convert_to_grams(1, "lb", {})
+    assert issue is None
+    assert round(grams, 3) == 453.592
+
 
 def test_convert_to_grams_with_entry_units():
     grams, issue = convert_to_grams(2, "cups", {"grams_per_cup": 120})

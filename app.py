@@ -16,6 +16,7 @@ from datetime import timedelta
 import json
 import argparse
 import random
+import sys
 from sqlalchemy import func
 from flask import Flask, request, jsonify, redirect, url_for, redirect, render_template, flash, g
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
@@ -30,7 +31,13 @@ from services.models import Recipe, RecipeSlugHistory, BlogPost, User, Ingredien
 from services.forms import RecipeForm, BlogPostForm
 from services.ingredients import ALLOWED_NUTRIENT_SORT_KEYS, build_ingredient_sort
 from services.ingredient_index import load_ingredients_index, match_ingredient_id, search_suggestions
-from services.nutrition import compute_recipe_macros, ensure_ingredient_exists_in_assets, load_ingredient_index
+from services.nutrition import (
+    compute_recipe_macros,
+    ensure_ingredient_exists_in_assets,
+    load_ingredient_index,
+    INGREDIENT_ALIASES,
+    normalize_ingredient_name,
+)
 from services.filtering import filter_ingredients_by_dietary_tags
 from utilities.seed_demo import seed_demo_data
 
@@ -91,6 +98,152 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
             print("Seeded demo data.")
         else:
             print("Demo data already present.")
+
+    @app.cli.command("nutrition-check")
+    def nutrition_check_command():
+        """Self-check: compute nutrition for all recipes and print a summary table."""
+        try:
+            ingredient_index = load_ingredient_index()
+        except Exception as exc:
+            print(f"ERROR: Unable to load ingredients asset: {exc}")
+            sys.exit(1)
+
+        recipes = Recipe.query.order_by(Recipe.id).all()
+        if not recipes:
+            print("No recipes in database.")
+            sys.exit(0)
+
+        def _format_amount(quantity, unit):
+            qty = "" if quantity is None else str(quantity).strip()
+            uom = "" if unit is None else str(unit).strip()
+            if qty and uom:
+                return f"{qty} {uom}"
+            if qty:
+                return qty
+            if uom:
+                return uom
+            return ""
+
+        def _normalize_ingredients(raw):
+            if not raw:
+                return []
+
+            data = raw
+            if isinstance(raw, str):
+                text = raw.strip()
+                if not text:
+                    return []
+                if text.startswith("[") or text.startswith("{"):
+                    try:
+                        data = json.loads(text)
+                    except json.JSONDecodeError:
+                        data = text.splitlines()
+                else:
+                    data = text.splitlines()
+
+            if isinstance(data, dict):
+                data = data.get("ingredients") or data.get("items") or []
+
+            if not isinstance(data, list):
+                data = [data]
+
+            normalized = []
+            for item in data:
+                if item is None:
+                    continue
+                if isinstance(item, str):
+                    name = item.strip()
+                    if name:
+                        normalized.append(
+                            {"name": name, "amount": "", "quantity": None, "unit": None}
+                        )
+                    continue
+                if isinstance(item, dict):
+                    name = (
+                        item.get("name_raw")
+                        or item.get("name")
+                        or item.get("ingredient")
+                        or item.get("title")
+                        or ""
+                    )
+                    name = str(name).strip() if name is not None else ""
+                    quantity = item.get("quantity") or item.get("qty") or item.get("amount")
+                    unit = item.get("unit") or item.get("units")
+                    amount = _format_amount(quantity, unit)
+                    if not name and amount:
+                        name = amount
+                        amount = ""
+                    if name:
+                        normalized.append(
+                            {
+                                "name": name,
+                                "amount": amount,
+                                "quantity": quantity,
+                                "unit": unit,
+                                "ingredient_id": item.get("ingredient_id") or item.get("id"),
+                            }
+                        )
+                    continue
+
+                name = str(item).strip()
+                if name:
+                    normalized.append(
+                        {"name": name, "amount": "", "quantity": None, "unit": None}
+                    )
+
+            return normalized
+
+        all_zero = True
+        print("recipe_title | calories | protein_g | fat_g | carbs_g | missing_ingredient_count | skipped_unknown_unit_count | incomplete_count | missing_conversion_count | missing_nutrition_count | zero_nutrition_count")
+        for recipe in recipes:
+            ingredients = _normalize_ingredients(recipe.ingredients)
+            totals, incomplete, stats = compute_recipe_macros(
+                ingredients,
+                ingredient_index,
+                collect_stats=True,
+                debug=app.debug,
+                recipe_name=recipe.title,
+            )
+            from collections import Counter
+            issue_counts = Counter(line.get("issue") for line in stats.get("lines", []) if line.get("issue"))
+            if any(value != 0.0 for value in totals.values()):
+                all_zero = False
+            print(
+                f"{recipe.title} | {round(totals['calories_kcal'], 1)} | {round(totals['protein_g'], 2)} | "
+                f"{round(totals['fat_g'], 2)} | {round(totals['carbs_g'], 2)} | "
+                f"{stats.get('missing_ingredients', 0)} | {stats.get('skipped_unknown_units', 0)} | "
+                f"{issue_counts.get('incomplete', 0)} | {issue_counts.get('missing_conversion', 0)} | "
+                f"{issue_counts.get('missing_nutrition', 0)} | {issue_counts.get('zero_nutrition', 0)}"
+            )
+
+            # Print first few offending lines
+            problematic = [line for line in stats.get("lines", []) if line.get("issue")]
+            for line in problematic[:10]:
+                print(
+                    f"  - {line.get('raw_name')} qty={line.get('raw_quantity')} unit={line.get('raw_unit')} "
+                    f"lookup={line.get('normalized_key')} matched={line.get('matched_id')} "
+                    f"status={line.get('status')} grams={line.get('grams')} issue={line.get('issue')}"
+                )
+
+        if all_zero:
+            print("All recipes have zero macro totals — nutrition likely not wired correctly.")
+            sys.exit(1)
+
+        # Duplicate audit: incomplete entries whose names match alias keys
+        alias_keys = set(INGREDIENT_ALIASES.keys())
+        dupes = []
+        for entry in ingredient_index.get("raw", []):
+            if not isinstance(entry, dict):
+                continue
+            if entry.get("status") != "incomplete":
+                continue
+            name_key = normalize_ingredient_name(entry.get("name"))
+            if name_key in alias_keys:
+                dupes.append(entry.get("name"))
+        if dupes:
+            print("WARNING: Incomplete duplicates matching aliases:", ", ".join(sorted(set(dupes))))
+
+        sys.exit(0)
     
     @app.route("/")
     def index():
@@ -176,6 +329,83 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
     def recipes():
         # Fetch featured recipes (first 3 or random)
         featured_recipes = Recipe.query.order_by(Recipe.created_at.desc()).limit(3).all()
+
+        try:
+            ingredient_index = load_ingredient_index()
+        except Exception as exc:
+            print(f"WARNING: Unable to load ingredient nutrition assets: {exc}")
+            ingredient_index = {"by_name": {}, "by_id": {}, "by_alias": {}}
+
+        def _normalize_ingredients(raw):
+            if not raw:
+                return []
+            data = raw
+            if isinstance(raw, str):
+                text = raw.strip()
+                if not text:
+                    return []
+                if text.startswith("[") or text.startswith("{"):
+                    try:
+                        data = json.loads(text)
+                    except json.JSONDecodeError:
+                        data = text.splitlines()
+                else:
+                    data = text.splitlines()
+            if isinstance(data, dict):
+                data = data.get("ingredients") or data.get("items") or []
+            if not isinstance(data, list):
+                data = [data]
+            normalized = []
+            for item in data:
+                if item is None:
+                    continue
+                if isinstance(item, str):
+                    name = item.strip()
+                    if name:
+                        normalized.append({"name": name, "amount": "", "quantity": None, "unit": None})
+                    continue
+                if isinstance(item, dict):
+                    name = (
+                        item.get("name_raw")
+                        or item.get("name")
+                        or item.get("ingredient")
+                        or item.get("title")
+                        or ""
+                    )
+                    name = str(name).strip() if name is not None else ""
+                    quantity = item.get("quantity") or item.get("qty") or item.get("amount")
+                    unit = item.get("unit") or item.get("units")
+                    amount = f"{quantity} {unit}".strip() if quantity or unit else ""
+                    if not name and amount:
+                        name = amount
+                        amount = ""
+                    if name:
+                        normalized.append(
+                            {
+                                "name": name,
+                                "amount": amount,
+                                "quantity": quantity,
+                                "unit": unit,
+                                "ingredient_id": item.get("ingredient_id") or item.get("id"),
+                            }
+                        )
+                    continue
+                name = str(item).strip()
+                if name:
+                    normalized.append({"name": name, "amount": "", "quantity": None, "unit": None})
+            return normalized
+
+        for recipe in featured_recipes:
+            ingredients = _normalize_ingredients(recipe.ingredients)
+            totals, _, _ = compute_recipe_macros(
+                ingredients,
+                ingredient_index,
+                collect_stats=True,
+                debug=app.debug,
+                recipe_name=recipe.title,
+            )
+            recipe.nutrition_totals = totals
+
         return render_template("recipes.html", featured_recipes=featured_recipes)
 
     @app.route("/blog")
@@ -711,7 +941,10 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
             print(f"WARNING: Unable to load ingredient nutrition assets: {exc}")
             ingredient_index = {"by_name": {}, "by_id": {}}
         nutrition_totals, nutrition_incomplete = compute_recipe_macros(
-            full_ingredients, ingredient_index
+            full_ingredients,
+            ingredient_index,
+            debug=app.debug,
+            recipe_name=r.title,
         )
         nutrition_note = None
         if nutrition_incomplete and all(

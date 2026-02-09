@@ -48,6 +48,15 @@
         {% endif %}
       </div>
 
+      {% if recipe.nutrition_totals %}
+      <div class="recipe-card-macros">
+        <span>{{ recipe.nutrition_totals.calories_kcal|round|int }} kcal</span>
+        <span>P {{ recipe.nutrition_totals.protein_g|round(1) }}g</span>
+        <span>C {{ recipe.nutrition_totals.carbs_g|round(1) }}g</span>
+        <span>F {{ recipe.nutrition_totals.fat_g|round(1) }}g</span>
+      </div>
+      {% endif %}
+
       <a href="{{ url_for('recipe_detail', id_slug=recipe.id ~ '-' ~ recipe.slug) }}" class="recipe-card-link">
         View Recipe
       </a>
