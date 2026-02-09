@@ -1,11 +1,9 @@
 =========================================================
 BEFORE RUNNING A DEMO
 =========================================================
+remove current site.db first - rm instance/site.db       
+
 flask --app app seed-demo
-
-
-I STILL NEED TO ADD STATIC IMAGES TO THIS, BUT THE OTHER DATA WORKS
-
 
 =========================================================
 CREATE A VIRTUAL ENVIRONMENT
