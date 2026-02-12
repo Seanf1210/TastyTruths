@@ -1,0 +1,32 @@
+#Author: Sean Farkas, Created 02/12/2026
+
+Tasty Truths
+Nutritional Compuation Rules
+
+1. Rule for Compuation
+    -If ingredient includes quanity and unit, the total nutrition for the recipe will be calculate by summing each ingredient's adjusted nutritional value.
+
+    Formulas:
+    Individual Value-(Nutrition per unit) * User Entered quanity 
+
+    Total Recipe Value- Sum of all indiviual ingredients
+
+2. Strategy For Missing Values
+    -Option A: The system will use a default value for missing quantity, and display it is an estimated value
+
+    -Option B: Will neglect the missing ingredient value and display to the user that total calorie count is not complete.
+
+    Both of these ensure user knows the full compuation without attempting to hide any unknown values, or non completed totals
+
+3. Servings
+    Will first determine the recipe total itself, and then compute per serving
+
+    So Per Serving Count = Recipe Total / Number of Servings
+
+    If servings not listed:
+    -Will assume the recipe is treated as one whole serving.
+
+4. Results
+    -System will display The total Calorie/Nutrition Count
+    -Will also display per servings if avaiable
+
