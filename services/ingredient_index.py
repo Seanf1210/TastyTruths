@@ -5,7 +5,7 @@ from typing import Dict, List, Optional, Tuple
 
 
 ASSETS_INGREDIENTS_PATH = (
-    Path(__file__).resolve().parents[1] / "assets" / "ingredients.json"
+    Path(__file__).resolve().parents[1] / "static" / "assets" / "ingredients.json"
 )
 
 _CACHE = {

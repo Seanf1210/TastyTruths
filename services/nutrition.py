@@ -4,8 +4,9 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple
 
 
+# Central location for ingredient asset file (used by Flask static files)
 ASSETS_INGREDIENTS_PATH = (
-    Path(__file__).resolve().parents[1] / "assets" / "ingredients.json"
+    Path(__file__).resolve().parents[1] / "static" / "assets" / "ingredients.json"
 )
 
 

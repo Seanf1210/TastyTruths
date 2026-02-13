@@ -1,204 +1,672 @@
-
 [
-{
+  {
     "_comment": "Created by Joaquin on 01-30-2026",
     "_comment2": "Last modified by Joaquin on 01-30-2026",
     "_comment3": "Gemini AI assisted in the creation of this file."
-},
-
-{
+  },
+  {
     "id": "chicken_breast_raw",
     "name": "Chicken Breast, Raw",
     "category": "meat",
-    "dietary_restrictions": ["not_vegan", "not_vegetarian", "gluten_free", "halal", "kosher"],
+    "dietary_restrictions": [
+      "not_vegan",
+      "not_vegetarian",
+      "gluten_free",
+      "halal",
+      "kosher"
+    ],
     "nutrition_per_gram": {
-        "calories": 1.65,
-        "protein_g": 0.31,
-        "fat_g": 0.036,
-        "carbs_g": 0.0
+      "calories": 1.65,
+      "protein_g": 0.31,
+      "fat_g": 0.036,
+      "carbs_g": 0.0
     },
     "notes": "Lean protein staple; high in protein with minimal fat."
-},
-{
+  },
+  {
     "id": "salmon_fillet",
     "name": "Salmon Fillet",
     "category": "fish",
-    "dietary_restrictions": ["not_vegan", "not_vegetarian", "gluten_free", "pescatarian"],
+    "dietary_restrictions": [
+      "not_vegan",
+      "not_vegetarian",
+      "gluten_free",
+      "pescatarian"
+    ],
     "nutrition_per_gram": {
-        "calories": 2.08,
-        "protein_g": 0.20,
-        "fat_g": 0.13,
-        "carbs_g": 0.0
+      "calories": 2.08,
+      "protein_g": 0.2,
+      "fat_g": 0.13,
+      "carbs_g": 0.0
     },
     "notes": "Rich in Omega-3 fatty acids."
-},
-{
+  },
+  {
     "id": "tofu_firm",
     "name": "Tofu, Firm",
     "category": "plant_protein",
-    "dietary_restrictions": ["vegan", "vegetarian", "gluten_free", "halal", "kosher"],
+    "dietary_restrictions": [
+      "vegan",
+      "vegetarian",
+      "gluten_free",
+      "halal",
+      "kosher"
+    ],
     "nutrition_per_gram": {
-        "calories": 1.44,
-        "protein_g": 0.17,
-        "fat_g": 0.08,
-        "carbs_g": 0.03
+      "calories": 1.44,
+      "protein_g": 0.17,
+      "fat_g": 0.08,
+      "carbs_g": 0.03
     },
     "notes": "Versatile plant-based protein."
-},
-{
+  },
+  {
     "id": "egg_large",
     "name": "Egg, Large",
     "category": "egg",
-    "dietary_restrictions": ["not_vegan", "vegetarian", "gluten_free", "halal", "kosher"],
+    "dietary_restrictions": [
+      "not_vegan",
+      "vegetarian",
+      "gluten_free",
+      "halal",
+      "kosher"
+    ],
     "nutrition_per_gram": {
-        "calories": 1.55,
-        "protein_g": 0.13,
-        "fat_g": 0.11,
-        "carbs_g": 0.011
+      "calories": 1.55,
+      "protein_g": 0.13,
+      "fat_g": 0.11,
+      "carbs_g": 0.011
     },
     "notes": "Standard large chicken egg."
-},
-{
+  },
+  {
     "id": "lentils_boiled",
     "name": "Lentils, Boiled",
     "category": "legume",
-    "dietary_restrictions": ["vegan", "vegetarian", "gluten_free", "high_fiber"],
+    "dietary_restrictions": [
+      "vegan",
+      "vegetarian",
+      "gluten_free",
+      "high_fiber"
+    ],
     "nutrition_per_gram": {
-        "calories": 1.16,
-        "protein_g": 0.09,
-        "fat_g": 0.004,
-        "carbs_g": 0.20
+      "calories": 1.16,
+      "protein_g": 0.09,
+      "fat_g": 0.004,
+      "carbs_g": 0.2
     },
     "notes": "High fiber legume."
-},
-{
+  },
+  {
     "id": "brown_rice",
     "name": "Brown Rice",
     "category": "grain",
-    "dietary_restrictions": ["vegan", "vegetarian", "gluten_free", "whole_grain"],
+    "dietary_restrictions": [
+      "vegan",
+      "vegetarian",
+      "gluten_free",
+      "whole_grain"
+    ],
     "nutrition_per_gram": {
-        "calories": 1.11,
-        "protein_g": 0.026,
-        "fat_g": 0.009,
-        "carbs_g": 0.23
+      "calories": 1.11,
+      "protein_g": 0.026,
+      "fat_g": 0.009,
+      "carbs_g": 0.23
     },
     "notes": "Whole grain rice."
-},
-{
+  },
+  {
     "id": "quinoa_cooked",
     "name": "Quinoa, Cooked",
     "category": "grain",
-    "dietary_restrictions": ["vegan", "vegetarian", "gluten_free"],
+    "dietary_restrictions": [
+      "vegan",
+      "vegetarian",
+      "gluten_free"
+    ],
     "nutrition_per_gram": {
-        "calories": 1.20,
-        "protein_g": 0.044,
-        "fat_g": 0.019,
-        "carbs_g": 0.21
+      "calories": 1.2,
+      "protein_g": 0.044,
+      "fat_g": 0.019,
+      "carbs_g": 0.21
     },
     "notes": "Complete plant-based protein grain."
-},
-{
+  },
+  {
     "id": "sweet_potato",
     "name": "Sweet Potato",
     "category": "vegetable",
-    "dietary_restrictions": ["vegan", "vegetarian", "gluten_free", "paleo"],
+    "dietary_restrictions": [
+      "vegan",
+      "vegetarian",
+      "gluten_free",
+      "paleo"
+    ],
     "nutrition_per_gram": {
-        "calories": 0.86,
-        "protein_g": 0.016,
-        "fat_g": 0.001,
-        "carbs_g": 0.20
+      "calories": 0.86,
+      "protein_g": 0.016,
+      "fat_g": 0.001,
+      "carbs_g": 0.2
     },
     "notes": "Nutrient-dense complex carbohydrate."
-},
-{
+  },
+  {
     "id": "oats_rolled",
     "name": "Oats, Rolled",
     "category": "grain",
-    "dietary_restrictions": ["vegan", "vegetarian", "whole_grain"],
+    "dietary_restrictions": [
+      "vegan",
+      "vegetarian",
+      "whole_grain"
+    ],
     "nutrition_per_gram": {
-        "calories": 3.89,
-        "protein_g": 0.169,
-        "fat_g": 0.069,
-        "carbs_g": 0.66
+      "calories": 3.89,
+      "protein_g": 0.169,
+      "fat_g": 0.069,
+      "carbs_g": 0.66
     },
     "notes": "High fiber breakfast staple."
-},
-{
+  },
+  {
     "id": "spinach_raw",
     "name": "Spinach, Raw",
     "category": "vegetable",
-    "dietary_restrictions": ["vegan", "vegetarian", "gluten_free", "keto", "paleo"],
+    "dietary_restrictions": [
+      "vegan",
+      "vegetarian",
+      "gluten_free",
+      "keto",
+      "paleo"
+    ],
     "nutrition_per_gram": {
-        "calories": 0.23,
-        "protein_g": 0.029,
-        "fat_g": 0.004,
-        "carbs_g": 0.036
+      "calories": 0.23,
+      "protein_g": 0.029,
+      "fat_g": 0.004,
+      "carbs_g": 0.036
     },
     "notes": "Leafy green high in iron."
-},
-{
+  },
+  {
     "id": "broccoli",
     "name": "Broccoli",
     "category": "vegetable",
-    "dietary_restrictions": ["vegan", "vegetarian", "gluten_free", "keto"],
+    "dietary_restrictions": [
+      "vegan",
+      "vegetarian",
+      "gluten_free",
+      "keto"
+    ],
     "nutrition_per_gram": {
-        "calories": 0.34,
-        "protein_g": 0.028,
-        "fat_g": 0.004,
-        "carbs_g": 0.07
+      "calories": 0.34,
+      "protein_g": 0.028,
+      "fat_g": 0.004,
+      "carbs_g": 0.07
     },
     "notes": "Cruciferous vegetable."
-},
-{
+  },
+  {
     "id": "avocado",
     "name": "Avocado",
     "category": "fruit",
-    "dietary_restrictions": ["vegan", "vegetarian", "gluten_free", "keto", "paleo"],
+    "dietary_restrictions": [
+      "vegan",
+      "vegetarian",
+      "gluten_free",
+      "keto",
+      "paleo"
+    ],
     "nutrition_per_gram": {
-        "calories": 1.60,
-        "protein_g": 0.02,
-        "fat_g": 0.15,
-        "carbs_g": 0.09
+      "calories": 1.6,
+      "protein_g": 0.02,
+      "fat_g": 0.15,
+      "carbs_g": 0.09
     },
     "notes": "High in healthy monounsaturated fats."
-},
-{
+  },
+  {
     "id": "olive_oil",
     "name": "Olive Oil",
     "category": "oil",
-    "dietary_restrictions": ["vegan", "vegetarian", "gluten_free", "keto", "paleo"],
+    "dietary_restrictions": [
+      "vegan",
+      "vegetarian",
+      "gluten_free",
+      "keto",
+      "paleo"
+    ],
     "nutrition_per_gram": {
-        "calories": 8.84,
-        "protein_g": 0.0,
-        "fat_g": 1.0,
-        "carbs_g": 0.0
+      "calories": 8.84,
+      "protein_g": 0.0,
+      "fat_g": 1.0,
+      "carbs_g": 0.0
     },
     "notes": "Heart-healthy cooking oil."
-},
-{
+  },
+  {
     "id": "almonds",
     "name": "Almonds",
     "category": "nut",
-    "dietary_restrictions": ["vegan", "vegetarian", "gluten_free", "keto"],
+    "dietary_restrictions": [
+      "vegan",
+      "vegetarian",
+      "gluten_free",
+      "keto"
+    ],
     "nutrition_per_gram": {
-        "calories": 5.79,
-        "protein_g": 0.21,
-        "fat_g": 0.50,
-        "carbs_g": 0.22
+      "calories": 5.79,
+      "protein_g": 0.21,
+      "fat_g": 0.5,
+      "carbs_g": 0.22
     },
     "notes": "Nutrient-dense nut; high in vitamin E."
-},
-{
+  },
+  {
     "id": "greek_yogurt_plain",
     "name": "Greek Yogurt, Plain",
     "category": "dairy",
-    "dietary_restrictions": ["not_vegan", "vegetarian", "gluten_free"],
+    "dietary_restrictions": [
+      "not_vegan",
+      "vegetarian",
+      "gluten_free"
+    ],
     "nutrition_per_gram": {
-        "calories": 0.59,
-        "protein_g": 0.10,
-        "fat_g": 0.004,
-        "carbs_g": 0.036
+      "calories": 0.59,
+      "protein_g": 0.1,
+      "fat_g": 0.004,
+      "carbs_g": 0.036
     },
     "notes": "High protein dairy product."
-}
+  },
+  {
+    "id": "spaghetti",
+    "name": "Spaghetti",
+    "category": "",
+    "dietary_restrictions": [],
+    "nutrition_per_gram": {
+      "calories": 0.0,
+      "protein_g": 0.0,
+      "fat_g": 0.0,
+      "carbs_g": 0.0
+    },
+    "notes": "",
+    "status": "incomplete"
+  },
+  {
+    "id": "ground_beef",
+    "name": "Ground beef",
+    "category": "",
+    "dietary_restrictions": [],
+    "nutrition_per_gram": {
+      "calories": 0.0,
+      "protein_g": 0.0,
+      "fat_g": 0.0,
+      "carbs_g": 0.0
+    },
+    "notes": "",
+    "status": "incomplete"
+  },
+  {
+    "id": "onion",
+    "name": "Onion",
+    "category": "",
+    "dietary_restrictions": [],
+    "nutrition_per_gram": {
+      "calories": 0.0,
+      "protein_g": 0.0,
+      "fat_g": 0.0,
+      "carbs_g": 0.0
+    },
+    "notes": "",
+    "status": "incomplete"
+  },
+  {
+    "id": "garlic",
+    "name": "Garlic",
+    "category": "",
+    "dietary_restrictions": [],
+    "nutrition_per_gram": {
+      "calories": 0.0,
+      "protein_g": 0.0,
+      "fat_g": 0.0,
+      "carbs_g": 0.0
+    },
+    "notes": "",
+    "status": "incomplete"
+  },
+  {
+    "id": "crushed_tomatoes",
+    "name": "Crushed tomatoes",
+    "category": "",
+    "dietary_restrictions": [],
+    "nutrition_per_gram": {
+      "calories": 0.0,
+      "protein_g": 0.0,
+      "fat_g": 0.0,
+      "carbs_g": 0.0
+    },
+    "notes": "",
+    "status": "incomplete"
+  },
+  {
+    "id": "salt",
+    "name": "Salt",
+    "category": "",
+    "dietary_restrictions": [],
+    "nutrition_per_gram": {
+      "calories": 0.0,
+      "protein_g": 0.0,
+      "fat_g": 0.0,
+      "carbs_g": 0.0
+    },
+    "notes": "",
+    "status": "incomplete"
+  },
+  {
+    "id": "carrots",
+    "name": "Carrots",
+    "category": "",
+    "dietary_restrictions": [],
+    "nutrition_per_gram": {
+      "calories": 0.0,
+      "protein_g": 0.0,
+      "fat_g": 0.0,
+      "carbs_g": 0.0
+    },
+    "notes": "",
+    "status": "incomplete"
+  },
+  {
+    "id": "bell_pepper",
+    "name": "Bell pepper",
+    "category": "",
+    "dietary_restrictions": [],
+    "nutrition_per_gram": {
+      "calories": 0.0,
+      "protein_g": 0.0,
+      "fat_g": 0.0,
+      "carbs_g": 0.0
+    },
+    "notes": "",
+    "status": "incomplete"
+  },
+  {
+    "id": "soy_sauce",
+    "name": "Soy sauce",
+    "category": "",
+    "dietary_restrictions": [],
+    "nutrition_per_gram": {
+      "calories": 0.0,
+      "protein_g": 0.0,
+      "fat_g": 0.0,
+      "carbs_g": 0.0
+    },
+    "notes": "",
+    "status": "incomplete"
+  },
+  {
+    "id": "ginger",
+    "name": "Ginger",
+    "category": "",
+    "dietary_restrictions": [],
+    "nutrition_per_gram": {
+      "calories": 0.0,
+      "protein_g": 0.0,
+      "fat_g": 0.0,
+      "carbs_g": 0.0
+    },
+    "notes": "",
+    "status": "incomplete"
+  },
+  {
+    "id": "flour",
+    "name": "Flour",
+    "category": "",
+    "dietary_restrictions": [],
+    "nutrition_per_gram": {
+      "calories": 0.0,
+      "protein_g": 0.0,
+      "fat_g": 0.0,
+      "carbs_g": 0.0
+    },
+    "notes": "",
+    "status": "incomplete"
+  },
+  {
+    "id": "baking_powder",
+    "name": "Baking powder",
+    "category": "",
+    "dietary_restrictions": [],
+    "nutrition_per_gram": {
+      "calories": 0.0,
+      "protein_g": 0.0,
+      "fat_g": 0.0,
+      "carbs_g": 0.0
+    },
+    "notes": "",
+    "status": "incomplete"
+  },
+  {
+    "id": "milk",
+    "name": "Milk",
+    "category": "",
+    "dietary_restrictions": [],
+    "nutrition_per_gram": {
+      "calories": 0.0,
+      "protein_g": 0.0,
+      "fat_g": 0.0,
+      "carbs_g": 0.0
+    },
+    "notes": "",
+    "status": "incomplete"
+  },
+  {
+    "id": "butter",
+    "name": "Butter",
+    "category": "",
+    "dietary_restrictions": [],
+    "nutrition_per_gram": {
+      "calories": 0.0,
+      "protein_g": 0.0,
+      "fat_g": 0.0,
+      "carbs_g": 0.0
+    },
+    "notes": "",
+    "status": "incomplete"
+  },
+  {
+    "id": "chicken_thighs",
+    "name": "Chicken thighs",
+    "category": "",
+    "dietary_restrictions": [],
+    "nutrition_per_gram": {
+      "calories": 0.0,
+      "protein_g": 0.0,
+      "fat_g": 0.0,
+      "carbs_g": 0.0
+    },
+    "notes": "",
+    "status": "incomplete"
+  },
+  {
+    "id": "lemon",
+    "name": "Lemon",
+    "category": "",
+    "dietary_restrictions": [],
+    "nutrition_per_gram": {
+      "calories": 0.0,
+      "protein_g": 0.0,
+      "fat_g": 0.0,
+      "carbs_g": 0.0
+    },
+    "notes": "",
+    "status": "incomplete"
+  },
+  {
+    "id": "oregano",
+    "name": "Oregano",
+    "category": "",
+    "dietary_restrictions": [],
+    "nutrition_per_gram": {
+      "calories": 0.0,
+      "protein_g": 0.0,
+      "fat_g": 0.0,
+      "carbs_g": 0.0
+    },
+    "notes": "",
+    "status": "incomplete"
+  },
+  {
+    "id": "tomatoes",
+    "name": "Tomatoes",
+    "category": "",
+    "dietary_restrictions": [],
+    "nutrition_per_gram": {
+      "calories": 0.0,
+      "protein_g": 0.0,
+      "fat_g": 0.0,
+      "carbs_g": 0.0
+    },
+    "notes": "",
+    "status": "incomplete"
+  },
+  {
+    "id": "cream",
+    "name": "Cream",
+    "category": "",
+    "dietary_restrictions": [],
+    "nutrition_per_gram": {
+      "calories": 0.0,
+      "protein_g": 0.0,
+      "fat_g": 0.0,
+      "carbs_g": 0.0
+    },
+    "notes": "",
+    "status": "incomplete"
+  },
+  {
+    "id": "mixed_greens",
+    "name": "Mixed greens",
+    "category": "",
+    "dietary_restrictions": [],
+    "nutrition_per_gram": {
+      "calories": 0.0,
+      "protein_g": 0.0,
+      "fat_g": 0.0,
+      "carbs_g": 0.0
+    },
+    "notes": "",
+    "status": "incomplete"
+  },
+  {
+    "id": "cucumber",
+    "name": "Cucumber",
+    "category": "",
+    "dietary_restrictions": [],
+    "nutrition_per_gram": {
+      "calories": 0.0,
+      "protein_g": 0.0,
+      "fat_g": 0.0,
+      "carbs_g": 0.0
+    },
+    "notes": "",
+    "status": "incomplete"
+  },
+  {
+    "id": "vinegar",
+    "name": "Vinegar",
+    "category": "",
+    "dietary_restrictions": [],
+    "nutrition_per_gram": {
+      "calories": 0.0,
+      "protein_g": 0.0,
+      "fat_g": 0.0,
+      "carbs_g": 0.0
+    },
+    "notes": "",
+    "status": "incomplete"
+  },
+  {
+    "id": "black_pepper",
+    "name": "Black pepper",
+    "category": "",
+    "dietary_restrictions": [],
+    "nutrition_per_gram": {
+      "calories": 0.0,
+      "protein_g": 0.0,
+      "fat_g": 0.0,
+      "carbs_g": 0.0
+    },
+    "notes": "",
+    "status": "incomplete"
+  },
+  {
+    "id": "tortillas",
+    "name": "Tortillas",
+    "category": "",
+    "dietary_restrictions": [],
+    "nutrition_per_gram": {
+      "calories": 0.0,
+      "protein_g": 0.0,
+      "fat_g": 0.0,
+      "carbs_g": 0.0
+    },
+    "notes": "",
+    "status": "incomplete"
+  },
+  {
+    "id": "hummus",
+    "name": "Hummus",
+    "category": "",
+    "dietary_restrictions": [],
+    "nutrition_per_gram": {
+      "calories": 0.0,
+      "protein_g": 0.0,
+      "fat_g": 0.0,
+      "carbs_g": 0.0
+    },
+    "notes": "",
+    "status": "incomplete"
+  },
+  {
+    "id": "greek_yogurt",
+    "name": "Greek yogurt",
+    "category": "",
+    "dietary_restrictions": [],
+    "nutrition_per_gram": {
+      "calories": 0.0,
+      "protein_g": 0.0,
+      "fat_g": 0.0,
+      "carbs_g": 0.0
+    },
+    "notes": "",
+    "status": "incomplete"
+  },
+  {
+    "id": "mixed_berries",
+    "name": "Mixed berries",
+    "category": "",
+    "dietary_restrictions": [],
+    "nutrition_per_gram": {
+      "calories": 0.0,
+      "protein_g": 0.0,
+      "fat_g": 0.0,
+      "carbs_g": 0.0
+    },
+    "notes": "",
+    "status": "incomplete"
+  },
+  {
+    "id": "granola",
+    "name": "Granola",
+    "category": "",
+    "dietary_restrictions": [],
+    "nutrition_per_gram": {
+      "calories": 0.0,
+      "protein_g": 0.0,
+      "fat_g": 0.0,
+      "carbs_g": 0.0
+    },
+    "notes": "",
+    "status": "incomplete"
+  }
 ]
