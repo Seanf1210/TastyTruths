@@ -23,8 +23,10 @@ INGREDIENT_ALIASES = {
 
     # Demo Veggie Stir Fry
     "broccoli": "broccoli",
+    "carrot": "carrots",
     "carrots": "carrots",
     "bell pepper": "bell_pepper",
+    "bell peppers": "bell_pepper",
     "soy sauce": "soy_sauce",
     "ginger": "ginger",
 
@@ -33,6 +35,7 @@ INGREDIENT_ALIASES = {
     "baking powder": "baking_powder",
     "milk": "milk",
     "egg": "egg_large",
+    "eggs": "egg_large",
     "butter": "butter",
 
     # Demo Lemon Herb Chicken
@@ -47,7 +50,9 @@ INGREDIENT_ALIASES = {
     # Demo Garden Salad
     "mixed greens": "mixed_greens",
     "cucumber": "cucumber",
+    "cucumbers": "cucumber",
     "vinegar": "vinegar",
+    "tomato": "tomatoes",
 
     # Demo Baked Salmon
     "salmon fillets": "salmon_fillet",
@@ -61,6 +66,7 @@ INGREDIENT_ALIASES = {
     # Demo Berry Parfait
     "greek yogurt": "greek_yogurt",
     "mixed berries": "mixed_berries",
+    "berries": "mixed_berries",
     "granola": "granola",
 }
 

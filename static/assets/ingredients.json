@@ -211,7 +211,8 @@
       "fat_g": 0.004,
       "carbs_g": 0.07
     },
-    "notes": "Cruciferous vegetable."
+    "notes": "Cruciferous vegetable.",
+    "grams_per_cup": 91
   },
   {
     "id": "avocado",
@@ -327,7 +328,8 @@
       "fat_g": 0.001,
       "carbs_g": 0.093
     },
-    "notes": ""
+    "notes": "",
+    "grams_per_unit": 70
   },
   {
     "id": "garlic",
@@ -340,7 +342,8 @@
       "fat_g": 0.005,
       "carbs_g": 0.331
     },
-    "notes": ""
+    "notes": "",
+    "grams_per_unit": 3
   },
   {
     "id": "crushed_tomatoes",
@@ -380,7 +383,8 @@
       "carbs_g": 0.096
     },
     "notes": "",
-    "grams_per_cup": 128
+    "grams_per_cup": 128,
+    "grams_per_unit": 61
   },
   {
     "id": "bell_pepper",
