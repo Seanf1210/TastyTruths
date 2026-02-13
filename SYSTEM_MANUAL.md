@@ -63,8 +63,25 @@ instance/
 ---
 
 ## 🔍 Troubleshooting / Error Messages
+The following table covers common issues encountered during setup or maintenance.
 
+| Error Message | Likely Cause | Solution |
+| :--- | :--- | :--- |
+| `sqlalchemy.exc.OperationalError: no such table...` | Missing DB tables. | Run `flask db upgrade`. |
+| `alembic.util.exc.CommandError` | Migration/DB mismatch. | Delete local `.db` and run `flask db upgrade`. |
+| `ModuleNotFoundError: No module named '_cffi_backend'` | Broken C-bindings. | Reinstall: `pip install --force-reinstall argon2-cffi-bindings`. |
+| `RuntimeError: The session is unavailable...` | Missing Secret Key. | Ensure `SECRET_KEY` is defined in `.env` or config. |
+| `jinja2.exceptions.TemplateNotFound` | Incorrect file path. | Verify HTML files are in the `/templates` folder. |
+
+### 🛠 Critical Fixes
+* **Missing Build Tools:** On Linux, if `pip install` fails, run `sudo apt install build-essential python3-dev`.
+* **Environment Check:** Always ensure the prompt shows `(.venv)` before running commands. If not, run the activation command from the Setup section.
 ---
 
 
 ## 📞 Support / Contact
+For critical system failures or architecture questions:
+* **Lead Developer:** Ryan Nash, rkn37@drexel.edu
+* **Front End developer:** Sean Farkas, smf428@drexel.edu
+* **Back End developer:** Joaquin Descotte, jud25@drexel.edu
+* **Quality Control:** Ryan Gilinger, rg993@drexel.edu
