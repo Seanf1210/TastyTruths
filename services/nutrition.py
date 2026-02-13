@@ -13,55 +13,55 @@ ASSETS_INGREDIENTS_PATH = (
 # Map common user-entered ingredient names to canonical ingredient IDs in assets.
 INGREDIENT_ALIASES = {
     # Demo Spaghetti Bolognese
-    "spaghetti": "pasta_dry",
-    "ground beef": "ground_beef_85",
-    "onion": "onion_yellow",
-    "garlic": "garlic_raw",
-    "crushed tomatoes": "tomato_raw",
+    "spaghetti": "spaghetti",
+    "ground beef": "ground_beef",
+    "onion": "onion",
+    "garlic": "garlic",
+    "crushed tomatoes": "crushed_tomatoes",
     "olive oil": "olive_oil",
     "salt": None,  # intentionally excluded from nutrition
 
     # Demo Veggie Stir Fry
     "broccoli": "broccoli",
-    "carrots": "carrot_raw",
-    "bell pepper": None,  # no canonical pepper yet
-    "soy sauce": None,    # needs future canonical entry
-    "ginger": None,       # needs future canonical entry
+    "carrots": "carrots",
+    "bell pepper": "bell_pepper",
+    "soy sauce": "soy_sauce",
+    "ginger": "ginger",
 
     # Demo Pancakes
-    "flour": None,        # needs flour canonical
-    "baking powder": None,
-    "milk": "milk_whole",
+    "flour": "flour",
+    "baking powder": "baking_powder",
+    "milk": "milk",
     "egg": "egg_large",
-    "butter": "butter_unsalted",
+    "butter": "butter",
 
     # Demo Lemon Herb Chicken
-    "chicken thighs": None,  # no thigh canonical yet
-    "lemon": None,
-    "oregano": None,
+    "chicken thighs": "chicken_thighs",
+    "lemon": "lemon",
+    "oregano": "oregano",
 
     # Demo Tomato Soup
-    "tomatoes": "tomato_raw",
-    "cream": None,
+    "tomatoes": "tomatoes",
+    "cream": "cream",
 
     # Demo Garden Salad
-    "mixed greens": None,
-    "cucumber": None,
-    "vinegar": None,
+    "mixed greens": "mixed_greens",
+    "cucumber": "cucumber",
+    "vinegar": "vinegar",
 
     # Demo Baked Salmon
     "salmon fillets": "salmon_fillet",
-    "black pepper": None,
+    "black pepper": "black_pepper",
 
     # Demo Veggie Wraps
-    "tortillas": None,
-    "hummus": None,
+    "tortillas": "tortillas",
+    "hummus": "hummus",
     "spinach": "spinach_raw",
 
     # Demo Berry Parfait
-    "greek yogurt": None,
-    "mixed berries": None,
-    "granola": None,
+    "greek yogurt": "greek_yogurt",
+    "mixed berries": "mixed_berries",
+    "granola": "granola",
 }
 
 
