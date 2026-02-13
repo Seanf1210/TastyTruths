@@ -80,3 +80,8 @@ The following table covers common issues encountered during setup or maintenance
 
 
 ## 📞 Support / Contact
+For critical system failures or architecture questions:
+* **Lead Developer:** Ryan Nash, rkn37@drexel.edu
+* **Front End developer:** Sean Farkas, smf428@drexel.edu
+* **Back End developer:** Joaquin Descotte, jud25@drexel.edu
+* **Quality Control:** Ryan Gilinger, rg993@drexel.edu
