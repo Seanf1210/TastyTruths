@@ -512,6 +512,10 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
     def contact():
         return render_template("contact.html")
     
+    @app.route("/profile_page")
+    def profile_page():
+        return render_template("profile_page.html")
+    
     @app.route("/recipes/create", methods=["GET", "POST"])
     @login_required
     def create_recipe_page():

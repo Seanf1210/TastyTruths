@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Tasty Truths — Profile{% endblock %}
+{% block content %}
+<div class="profile-page container">
+    <section class="profile-header">
+        <div class="profile-picture-area">
+            <img src="{{ url_for('static', filename='assets/images/account_circle.png') }}" alt="Profile Picture" class="profile-pic">
+            <h1>{{ current_user.username if current_user.is_authenticated else "Guest Chef" }}</h1>
+        </div>
+    </section>
+
+    <div class="profile-grid">
+        <section class="profile-bio-area">
+            <h2>Bio</h2>
+            <div class="bio-content">
+                <p>Welcome to my profile! I'm a chef who loves sharing real recipes with the community. PLACEHOLDER</p>
+            </div>
+        </section>
+
+        <section class="profile-experience-area">
+            <h2>Experience</h2>
+            <div class="experience-content">
+                <p>Years of home cooking experience, specializing in student-friendly meals. PLACEHOLDER</p>
+            </div>
+        </section>
+    </div>
+</div>
+
+
+{% endblock %}
