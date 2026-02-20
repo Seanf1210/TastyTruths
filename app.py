@@ -986,7 +986,25 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
     @app.get("/api/recipes")
     def list_recipes():
         rows = Recipe.query.order_by(Recipe.created_at.desc()).all()
-        return jsonify([{"id": r.id, "title": r.title, "slug": r.slug} for r in rows])
+        return jsonify(
+            [
+                {
+                    "id": r.id,
+                    "title": r.title,
+                    "slug": r.slug,
+                    "description": r.description or "",
+                    "cuisine": r.cuisine or "",
+                    "prep_time_minutes": r.prep_time_minutes,
+                    "cook_time_minutes": r.cook_time_minutes,
+                    "total_time_minutes": r.total_time_minutes,
+                    "ingredients": r.ingredients or "",
+                    "dietary_tags": r.dietary_tags or [],
+                    "image_filename": r.image_filename or "",
+                    "created_at": r.created_at.isoformat() if r.created_at else None,
+                }
+                for r in rows
+            ]
+        )
 
     @app.get("/api/ingredients/suggest")
     def suggest_ingredients():

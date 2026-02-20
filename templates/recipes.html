@@ -28,11 +28,14 @@
   </summary>
 
   <!--Creating a class which contains all controls broken down into clear and another reciper control container-->
-  <div class="recipe-controls">
+  <form id="recipe-filter-form" class="recipe-controls">
 
     <!--Class for the button clear-->
     <div class="recipe-controls__header">
-      <button class="button button-secondary" type="button" disabled>
+      <button id="apply-filters" class="button button-primary" type="submit">
+        Apply
+      </button>
+      <button id="clear-filters" class="button button-secondary" type="button">
         Clear
       </button>
     </div>
@@ -45,38 +48,91 @@
         <label class="recipe-controls__label">Search</label>
         <!--Disabling controls until-->
         <input
+          id="filter-search"
           class="recipe-controls__input"
           type="search"
           placeholder="Search by recipe title..."
-          disabled
         />
+      </div>
+
+      <!-- CUISINE -->
+      <div class="recipe-controls__field">
+        <label for="filter-cuisine" class="recipe-controls__label">Cuisine</label>
+        <select id="filter-cuisine" class="recipe-controls__select">
+          <option value="">Any</option>
+        </select>
       </div>
 
       <!-- SORT -->
       <div class="recipe-controls__field">
-        <label class="recipe-controls__label">Sort</label>
+        <label for="filter-sort" class="recipe-controls__label">Sort</label>
         <!--Creating the search features-->
-        <select class="recipe-controls__select" disabled>
+        <select id="filter-sort" class="recipe-controls__select">
           <!--All options to sort by-->
-          <option>A → Z</option>
-          <option>Z → A</option>
-          <option>Newest</option>
-          <option>Highest Rated</option>
+          <option value="newest">Newest</option>
+          <option value="az">A → Z</option>
+          <option value="za">Z → A</option>
         </select>
+      </div>
+
+      <!-- MAX PREP -->
+      <div class="recipe-controls__field">
+        <label for="filter-max-prep" class="recipe-controls__label">Max Prep (min)</label>
+        <input
+          id="filter-max-prep"
+          class="recipe-controls__input"
+          type="number"
+          min="0"
+          placeholder="Any"
+        />
       </div>
 
       <!-- MAX TIME -->
       <div class="recipe-controls__field">
-        <label class="recipe-controls__label">Max Time</label>
+        <label for="filter-max-total" class="recipe-controls__label">Max Total (min)</label>
+        <input
+          id="filter-max-total"
+          class="recipe-controls__input"
+          type="number"
+          min="0"
+          placeholder="Any"
+        />
+      </div>
+
+      <!-- QUICK TOTAL PICK -->
+      <div class="recipe-controls__field">
+        <label for="filter-max-time" class="recipe-controls__label">Quick Pick</label>
         <!--Creating the time sort features-->
-        <select class="recipe-controls__select" disabled>
+        <select id="filter-max-time" class="recipe-controls__select">
           <!--All time sort options-->
-          <option>Any</option>
-          <option>15 min</option>
-          <option>30 min</option>
-          <option>45 min</option>
-          <option>60 min</option>
+          <option value="">Any</option>
+          <option value="15">15 min</option>
+          <option value="30">30 min</option>
+          <option value="45">45 min</option>
+          <option value="60">60 min</option>
         </select>
+      </div>
+
+      <!-- INCLUDED INGREDIENTS -->
+      <div class="recipe-controls__field">
+        <label for="filter-include-ingredients" class="recipe-controls__label">Include Ingredients</label>
+        <input
+          id="filter-include-ingredients"
+          class="recipe-controls__input"
+          type="text"
+          placeholder="e.g., garlic, onion"
+        />
+      </div>
+
+      <!-- EXCLUDED INGREDIENTS -->
+      <div class="recipe-controls__field">
+        <label for="filter-exclude-ingredients" class="recipe-controls__label">Exclude Ingredients</label>
+        <input
+          id="filter-exclude-ingredients"
+          class="recipe-controls__input"
+          type="text"
+          placeholder="e.g., peanuts, dairy"
+        />
       </div>
 
       <!-- DIETARY -->
@@ -84,33 +140,33 @@
         <label class="recipe-controls__label">Dietary</label>
         <div class="recipe-controls__chips">
           <!--All dietary sort options-->
-          <label class="chip chip--glutenfree"><input type="checkbox" disabled /> Gluten-Free</label>
-          <label class="chip chip--vegan"><input type="checkbox" disabled /> Vegan</label>
-          <label class="chip chip--vegetarian"><input type="checkbox" disabled /> Vegetarian</label>
-          <label class="chip chip--dairyfree"><input type="checkbox" disabled /> Dairy-Free</label>
-          <label class="chip chip--nutfree"><input type="checkbox" disabled /> Nut-Free</label>
-          <label class="chip chip--halal"><input type="checkbox" disabled /> Halal</label>
+          <label class="chip chip--glutenfree"><input type="checkbox" value="gluten-free" /> Gluten-Free</label>
+          <label class="chip chip--vegan"><input type="checkbox" value="vegan" /> Vegan</label>
+          <label class="chip chip--vegetarian"><input type="checkbox" value="vegetarian" /> Vegetarian</label>
+          <label class="chip chip--dairyfree"><input type="checkbox" value="dairy-free" /> Dairy-Free</label>
+          <label class="chip chip--nutfree"><input type="checkbox" value="nut-free" /> Nut-Free</label>
+          <label class="chip chip--halal"><input type="checkbox" value="halal" /> Halal</label>
         </div>
       </div>
 
     </div>
 
     <p class="recipe-controls__note">
-      Filters are UI-only for now.
+      Use Apply to update both preview cards and the full recipe list.
     </p>
-  </div>
+  </form>
 </details>
 
 
-  {% if featured_recipes %}
-  <section class="featured-recipes">
+  <section id="featured-recipes-section" class="featured-recipes">
     <h3>Featured Recipes</h3>
-    <div class="recipe-grid">
+    <div id="preview-recipe-grid" class="recipe-grid">
+      {% if featured_recipes %}
       {% for recipe in featured_recipes %} {% include
       'partials/_recipe_card.html' %} {% endfor %}
+      {% endif %}
     </div>
   </section>
-  {% endif %}
 
   <!-- List -->
   <div id="recipe-list">
@@ -119,87 +175,331 @@
 </div>
 
 <script>
-  // Fetch and render recipe list
-  async function loadRecipes() {
-    const listEl = document.getElementById("recipe-list");
-    listEl.innerHTML = "<p>Loading recipes...</p>";
+  const PLACEHOLDER_IMAGE = "{{ url_for('static', filename='assets/images/placeholder_recipe.png') }}";
+  let allRecipes = [];
 
-    try {
-      const res = await fetch("/api/recipes");
-      if (!res.ok) {
-        listEl.innerHTML = "<p>Failed to load recipes.</p>";
-        return;
-      }
-      const data = await res.json();
-      if (!data.length) {
-        listEl.innerHTML = "<p>No recipes yet. Be the first to add one!</p>";
-        return;
-      }
-
-      const ul = document.createElement("ul");
-      data.forEach((r) => {
-        const li = document.createElement("li");
-        const a = document.createElement("a");
-        a.href = `/recipes/${r.id}-${r.slug}`;
-        a.textContent = r.title;
-        li.appendChild(a);
-        ul.appendChild(li);
-      });
-      listEl.innerHTML = "";
-      listEl.appendChild(ul);
-    } catch (err) {
-      console.error(err);
-      listEl.innerHTML = "<p>Error loading recipes.</p>";
-    }
+  function escapeHtml(value) {
+    return String(value ?? "").replace(/[&<>"']/g, (char) => (
+      { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]
+    ));
   }
 
-  // Handle add-recipe form
-  async function handleNewRecipe(event) {
-    event.preventDefault();
-    const msgEl = document.getElementById("recipe-form-message");
-    msgEl.textContent = "Saving...";
+  function parseIngredientTokens(value) {
+    return String(value || "")
+      .toLowerCase()
+      .split(/[\n,]+/)
+      .map((token) => token.trim())
+      .filter(Boolean);
+  }
 
-    const title = document.getElementById("title").value.trim();
-    const content = document.getElementById("content").value.trim();
+  function normalizeRecipe(recipe) {
+    if (!recipe || recipe._normalized) {
+      return recipe;
+    }
 
-    if (!title || !content) {
-      msgEl.textContent = "Title and content are required.";
+    const parsedIngredients = [];
+    const rawIngredients = recipe.ingredients;
+    if (Array.isArray(rawIngredients)) {
+      rawIngredients.forEach((item) => parsedIngredients.push(item));
+    } else if (typeof rawIngredients === "string" && rawIngredients.trim()) {
+      const trimmed = rawIngredients.trim();
+      if (trimmed.startsWith("[") || trimmed.startsWith("{")) {
+        try {
+          const parsed = JSON.parse(trimmed);
+          if (Array.isArray(parsed)) {
+            parsed.forEach((item) => parsedIngredients.push(item));
+          }
+        } catch (err) {
+          // Fall back to line-based parsing when JSON is invalid.
+        }
+      }
+      if (!parsedIngredients.length) {
+        trimmed.split("\n").forEach((line) => parsedIngredients.push(line));
+      }
+    }
+
+    recipe._ingredientNames = parsedIngredients
+      .map((item) => {
+        if (typeof item === "string") return item;
+        if (item && typeof item === "object") return item.name || item.ingredient || "";
+        return "";
+      })
+      .map((name) => String(name).trim().toLowerCase())
+      .filter(Boolean);
+
+    recipe._dietaryTags = Array.isArray(recipe.dietary_tags)
+      ? recipe.dietary_tags.map((tag) => String(tag).trim().toLowerCase()).filter(Boolean)
+      : [];
+
+    const prep = Number(recipe.prep_time_minutes);
+    const cook = Number(recipe.cook_time_minutes);
+    if (Number.isFinite(Number(recipe.total_time_minutes))) {
+      recipe._totalMinutes = Number(recipe.total_time_minutes);
+    } else if (Number.isFinite(prep) || Number.isFinite(cook)) {
+      recipe._totalMinutes = (Number.isFinite(prep) ? prep : 0) + (Number.isFinite(cook) ? cook : 0);
+    } else {
+      recipe._totalMinutes = null;
+    }
+
+    recipe._normalized = true;
+    return recipe;
+  }
+
+  function gatherFilters() {
+    const cuisineEl = document.getElementById("filter-cuisine");
+    const searchEl = document.getElementById("filter-search");
+    const maxPrepEl = document.getElementById("filter-max-prep");
+    const maxTotalEl = document.getElementById("filter-max-total");
+    const quickMaxTotalEl = document.getElementById("filter-max-time");
+    const includeIngredientsEl = document.getElementById("filter-include-ingredients");
+    const excludeIngredientsEl = document.getElementById("filter-exclude-ingredients");
+    const sortEl = document.getElementById("filter-sort");
+    const dietaryChecked = Array.from(
+      document.querySelectorAll(".recipe-controls__chips input[type='checkbox']:checked")
+    ).map((input) => String(input.value || "").trim().toLowerCase()).filter(Boolean);
+
+    const parsedMaxPrep = Number(maxPrepEl?.value);
+    const parsedMaxTotal = Number(maxTotalEl?.value);
+    const parsedQuickMaxTotal = Number(quickMaxTotalEl?.value);
+
+    return {
+      cuisine: String(cuisineEl?.value || "").trim(),
+      search: String(searchEl?.value || "").trim().toLowerCase(),
+      maxPrepMinutes: Number.isFinite(parsedMaxPrep) && parsedMaxPrep >= 0 ? parsedMaxPrep : null,
+      maxTotalMinutes: Number.isFinite(parsedMaxTotal) && parsedMaxTotal >= 0 ? parsedMaxTotal : null,
+      quickMaxTotalMinutes:
+        Number.isFinite(parsedQuickMaxTotal) && parsedQuickMaxTotal >= 0 ? parsedQuickMaxTotal : null,
+      includedIngredients: parseIngredientTokens(includeIngredientsEl?.value),
+      excludedIngredients: parseIngredientTokens(excludeIngredientsEl?.value),
+      dietaryTags: dietaryChecked,
+      sortBy: String(sortEl?.value || "newest"),
+    };
+  }
+
+  function recipeMatchesFilters(recipe, filters) {
+    if (!recipe || !filters) return false;
+
+    const title = String(recipe.title || "").toLowerCase();
+    const description = String(recipe.description || "").toLowerCase();
+    const cuisine = String(recipe.cuisine || "").trim();
+    const prepMinutes = Number(recipe.prep_time_minutes);
+    const totalMinutes = recipe._totalMinutes;
+    const ingredientNames = recipe._ingredientNames || [];
+    const dietaryTags = recipe._dietaryTags || [];
+
+    if (filters.search && !(`${title} ${description}`.includes(filters.search))) {
+      return false;
+    }
+
+    if (filters.cuisine && cuisine !== filters.cuisine) {
+      return false;
+    }
+
+    if (filters.maxPrepMinutes !== null) {
+      if (!Number.isFinite(prepMinutes) || prepMinutes > filters.maxPrepMinutes) {
+        return false;
+      }
+    }
+
+    const maxTotalConstraint = filters.maxTotalMinutes !== null
+      ? filters.maxTotalMinutes
+      : filters.quickMaxTotalMinutes;
+    if (maxTotalConstraint !== null) {
+      if (!Number.isFinite(totalMinutes) || totalMinutes > maxTotalConstraint) {
+        return false;
+      }
+    }
+
+    if (filters.includedIngredients.length) {
+      const includesAll = filters.includedIngredients.every((needle) =>
+        ingredientNames.some((name) => name.includes(needle))
+      );
+      if (!includesAll) return false;
+    }
+
+    if (filters.excludedIngredients.length) {
+      const includesExcluded = filters.excludedIngredients.some((needle) =>
+        ingredientNames.some((name) => name.includes(needle))
+      );
+      if (includesExcluded) return false;
+    }
+
+    if (filters.dietaryTags.length) {
+      const hasAllDietaryTags = filters.dietaryTags.every((tag) => dietaryTags.includes(tag));
+      if (!hasAllDietaryTags) return false;
+    }
+
+    return true;
+  }
+
+  function filterRecipes(recipes, filters) {
+    const normalized = (recipes || []).map((recipe) => normalizeRecipe(recipe));
+    const filtered = normalized.filter((recipe) => recipeMatchesFilters(recipe, filters));
+
+    if (filters.sortBy === "az") {
+      filtered.sort((a, b) => String(a.title || "").localeCompare(String(b.title || "")));
+    } else if (filters.sortBy === "za") {
+      filtered.sort((a, b) => String(b.title || "").localeCompare(String(a.title || "")));
+    } else {
+      filtered.sort((a, b) => {
+        const aDate = Date.parse(a.created_at || "") || 0;
+        const bDate = Date.parse(b.created_at || "") || 0;
+        return bDate - aDate;
+      });
+    }
+    return filtered;
+  }
+
+  function resolveRecipeImageSrc(recipe) {
+    const fileName = String(recipe?.image_filename || "").trim();
+    if (!fileName) return PLACEHOLDER_IMAGE;
+    if (/^https?:\/\//i.test(fileName)) return fileName;
+    if (fileName.startsWith("/")) return fileName;
+    return `/static/${fileName}`;
+  }
+
+  function renderRecipes(recipes) {
+    const listEl = document.getElementById("recipe-list");
+    if (!listEl) return;
+
+    listEl.innerHTML = "";
+    if (!recipes.length) {
+      listEl.innerHTML = "<p>No recipes match your filters.</p>";
       return;
     }
 
-    try {
-      const res = await fetch("/api/recipes", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ title, content }),
+    const ul = document.createElement("ul");
+    recipes.forEach((recipe) => {
+      const li = document.createElement("li");
+      const totalText = Number.isFinite(recipe._totalMinutes) ? ` • ${recipe._totalMinutes} min total` : "";
+      li.innerHTML = `
+        <a href="/recipes/${recipe.id}-${recipe.slug}">${escapeHtml(recipe.title || "Untitled Recipe")}</a>
+        ${recipe.cuisine ? `<span> • ${escapeHtml(recipe.cuisine)}</span>` : ""}
+        ${totalText ? `<span>${escapeHtml(totalText)}</span>` : ""}
+        ${recipe.description ? `<p>${escapeHtml(recipe.description)}</p>` : ""}
+      `;
+      ul.appendChild(li);
+    });
+    listEl.appendChild(ul);
+  }
+
+  function renderPreviewRecipes(recipes) {
+    const sectionEl = document.getElementById("featured-recipes-section");
+    const gridEl = document.getElementById("preview-recipe-grid");
+    if (!sectionEl || !gridEl) return;
+
+    gridEl.innerHTML = "";
+    if (!recipes.length) {
+      sectionEl.style.display = "none";
+      return;
+    }
+    sectionEl.style.display = "";
+
+    recipes.slice(0, 3).forEach((recipe) => {
+      const article = document.createElement("article");
+      article.className = "recipe-card";
+      article.innerHTML = `
+        <div class="recipe-card-image">
+          <img src="${escapeHtml(resolveRecipeImageSrc(recipe))}" alt="${escapeHtml(recipe.title || "Recipe image")}" />
+        </div>
+        <div class="recipe-card-content">
+          <h3 class="recipe-card-title">${escapeHtml(recipe.title || "Untitled Recipe")}</h3>
+          <p class="recipe-card-description">${escapeHtml((recipe.description || "No description available.").slice(0, 120))}</p>
+          <div class="recipe-card-meta">
+            ${recipe.cuisine ? `<span class="recipe-cuisine">${escapeHtml(recipe.cuisine)}</span>` : ""}
+            ${Number.isFinite(recipe._totalMinutes) ? `<span class="recipe-time">⏱ ${recipe._totalMinutes}m total</span>` : ""}
+          </div>
+          <div class="recipe-card-footer">
+            <a href="/recipes/${recipe.id}-${recipe.slug}" class="recipe-card-link">View Recipe</a>
+          </div>
+        </div>
+      `;
+      gridEl.appendChild(article);
+    });
+  }
+
+  function populateCuisineOptions(recipes) {
+    const cuisineSelect = document.getElementById("filter-cuisine");
+    if (!cuisineSelect) return;
+
+    const currentValue = cuisineSelect.value;
+    const cuisineSet = new Set();
+    (recipes || []).forEach((recipe) => {
+      const cuisine = String(recipe.cuisine || "").trim();
+      if (cuisine) cuisineSet.add(cuisine);
+    });
+
+    cuisineSelect.innerHTML = '<option value="">Any</option>';
+    Array.from(cuisineSet)
+      .sort((a, b) => a.localeCompare(b))
+      .forEach((cuisine) => {
+        const option = document.createElement("option");
+        option.value = cuisine;
+        option.textContent = cuisine;
+        cuisineSelect.appendChild(option);
       });
 
-      if (res.status === 401) {
-        msgEl.textContent = "You must be logged in to add recipes.";
+    if (currentValue) cuisineSelect.value = currentValue;
+  }
+
+  function applyFiltersAndRender() {
+    const filters = gatherFilters();
+    const filtered = filterRecipes(allRecipes, filters);
+    renderPreviewRecipes(filtered);
+    renderRecipes(filtered);
+  }
+
+  async function initRecipePage() {
+    const listEl = document.getElementById("recipe-list");
+    if (listEl) listEl.innerHTML = "<p>Loading recipes...</p>";
+
+    try {
+      const response = await fetch("/api/recipes");
+      if (!response.ok) {
+        if (listEl) listEl.innerHTML = "<p>Failed to load recipes.</p>";
+        renderPreviewRecipes([]);
         return;
       }
 
-      if (!res.ok) {
-        msgEl.textContent = "Failed to save recipe.";
-        return;
-      }
-
-      document.getElementById("new-recipe-form").reset();
-      msgEl.textContent = "Recipe saved!";
-      loadRecipes(); // reload list
-    } catch (err) {
-      console.error(err);
-      msgEl.textContent = "Error saving recipe.";
+      const data = await response.json();
+      allRecipes = Array.isArray(data) ? data.map((recipe) => normalizeRecipe(recipe)) : [];
+      populateCuisineOptions(allRecipes);
+      renderPreviewRecipes(allRecipes);
+      renderRecipes(allRecipes);
+    } catch (error) {
+      console.error(error);
+      if (listEl) listEl.innerHTML = "<p>Error loading recipes.</p>";
+      renderPreviewRecipes([]);
     }
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    loadRecipes();
-    document
-      .getElementById("new-recipe-form")
-      .addEventListener("submit", handleNewRecipe);
+    const formEl = document.getElementById("recipe-filter-form");
+    const applyBtn = document.getElementById("apply-filters");
+    const clearBtn = document.getElementById("clear-filters");
+
+    if (formEl) {
+      formEl.addEventListener("submit", (event) => {
+        event.preventDefault();
+        applyFiltersAndRender();
+      });
+    }
+
+    if (applyBtn) {
+      applyBtn.addEventListener("click", (event) => {
+        event.preventDefault();
+        applyFiltersAndRender();
+      });
+    }
+
+    if (clearBtn && formEl) {
+      clearBtn.addEventListener("click", () => {
+        formEl.reset();
+        applyFiltersAndRender();
+      });
+    }
+
+    initRecipePage();
   });
 </script>
 {% endblock %}
