@@ -5,6 +5,26 @@
     "_comment3": "Gemini AI assisted in the creation of this file."
   },
   {
+    "id": "water",
+    "name": "Water",
+    "category": "liquid",
+    "dietary_restrictions": [
+      "gluten_free",
+      "vegan",
+      "vegetarian",
+      "dairy_free",
+      "nut_free",
+      "halal"
+    ],
+    "nutrition_per_gram": {
+      "calories": 0.0,
+      "protein_g": 0.0,
+      "fat_g": 0.0,
+      "carbs_g": 0.0
+    },
+    "notes": "Universal base ingredient."
+  },
+  {
     "id": "chicken_breast_raw",
     "name": "Chicken Breast, Raw",
     "category": "meat",
@@ -404,7 +424,14 @@
     "id": "soy_sauce",
     "name": "Soy sauce",
     "category": "",
-    "dietary_restrictions": [],
+    "dietary_restrictions": [
+      "not_gluten_free",
+      "vegan",
+      "vegetarian",
+      "dairy_free",
+      "nut_free",
+      "halal"
+    ],
     "nutrition_per_gram": {
       "calories": 0.53,
       "protein_g": 0.08,

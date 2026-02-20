@@ -176,12 +176,56 @@
 
 <script>
   const PLACEHOLDER_IMAGE = "{{ url_for('static', filename='assets/images/placeholder_recipe.png') }}";
-  let allRecipes = [];
+  const DEBUG = false;
+  let masterRecipes = Object.freeze([]);
+  const normalizedRecipeCache = new Map();
+  const recipeDietCache = new Map();
+  const canonicalIngredientsById = new Map();
+  const ingredientAliasToId = new Map();
+  const DIETARY_KEYS = ["gluten_free", "vegan", "vegetarian", "dairy_free", "nut_free", "halal"];
+  const DIETARY_FILTER_VALUE_MAP = {
+    "gluten-free": "gluten_free",
+    vegan: "vegan",
+    vegetarian: "vegetarian",
+    "dairy-free": "dairy_free",
+    "nut-free": "nut_free",
+    halal: "halal",
+  };
+  const CANONICAL_DIET_OVERRIDES = {
+    water: {
+      name: "Water",
+      diet: {
+        gluten_free: true,
+        vegan: true,
+        vegetarian: true,
+        dairy_free: true,
+        nut_free: true,
+        halal: true,
+      },
+    },
+    soy_sauce: {
+      name: "Soy sauce",
+      diet: {
+        gluten_free: false,
+        vegan: true,
+        vegetarian: true,
+        dairy_free: true,
+        nut_free: true,
+        halal: true,
+      },
+    },
+  };
 
   function escapeHtml(value) {
     return String(value ?? "").replace(/[&<>"']/g, (char) => (
       { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]
     ));
+  }
+
+  function debugLog(...args) {
+    if (DEBUG) {
+      console.log("[recipes-debug]", ...args);
+    }
   }
 
   function parseIngredientTokens(value) {
@@ -192,9 +236,221 @@
       .filter(Boolean);
   }
 
+  function parseOptionalNumber(rawValue) {
+    const text = String(rawValue ?? "").trim();
+    if (!text) return null;
+    const parsed = Number(text);
+    if (!Number.isFinite(parsed) || parsed < 0) return null;
+    return parsed;
+  }
+
+  function normalizeIngredientKey(value) {
+    return String(value || "")
+      .toLowerCase()
+      .trim()
+      .replace(/[.,]/g, "")
+      .replace(/\s+/g, " ");
+  }
+
+  function toSnakeCase(value) {
+    return normalizeIngredientKey(value).replace(/[\s-]+/g, "_");
+  }
+
+  function normalizeDietFilterValue(value) {
+    const raw = String(value || "").trim().toLowerCase();
+    return DIETARY_FILTER_VALUE_MAP[raw] || toSnakeCase(raw);
+  }
+
+  function mapRestrictionsToDietFlags(restrictionsRaw) {
+    const restrictions = Array.isArray(restrictionsRaw)
+      ? restrictionsRaw.map((value) => toSnakeCase(value)).filter(Boolean)
+      : [];
+    const has = (key) => restrictions.includes(key);
+    const flags = {
+      gluten_free: null,
+      vegan: null,
+      vegetarian: null,
+      dairy_free: null,
+      nut_free: null,
+      halal: null,
+    };
+
+    if (has("gluten_free")) flags.gluten_free = true;
+    if (has("not_gluten_free") || has("contains_gluten")) flags.gluten_free = false;
+    if (has("vegan")) flags.vegan = true;
+    if (has("not_vegan")) flags.vegan = false;
+    if (has("vegetarian")) flags.vegetarian = true;
+    if (has("not_vegetarian")) flags.vegetarian = false;
+    if (has("dairy_free")) flags.dairy_free = true;
+    if (has("not_dairy_free") || has("contains_dairy")) flags.dairy_free = false;
+    if (has("nut_free")) flags.nut_free = true;
+    if (has("not_nut_free") || has("contains_nuts") || has("contains_tree_nuts") || has("contains_peanuts")) {
+      flags.nut_free = false;
+    }
+    if (has("halal")) flags.halal = true;
+    if (has("not_halal") || has("haram")) flags.halal = false;
+    return flags;
+  }
+
+  function addIngredientAlias(alias, canonicalId) {
+    const key = normalizeIngredientKey(alias);
+    if (!key || !canonicalId) return;
+    ingredientAliasToId.set(key, canonicalId);
+    if (key.endsWith("s")) {
+      ingredientAliasToId.set(key.slice(0, -1), canonicalId);
+    } else {
+      ingredientAliasToId.set(`${key}s`, canonicalId);
+    }
+  }
+
+  function buildCanonicalIngredientMaps(ingredientsPayload) {
+    canonicalIngredientsById.clear();
+    ingredientAliasToId.clear();
+
+    (Array.isArray(ingredientsPayload) ? ingredientsPayload : [])
+      .filter((entry) => entry && typeof entry === "object")
+      .forEach((entry) => {
+        const id = toSnakeCase(entry.id || entry.name || "");
+        if (!id) return;
+        const canonical = {
+          id,
+          name: String(entry.name || id),
+          diet: mapRestrictionsToDietFlags(entry.dietary_restrictions),
+        };
+        canonicalIngredientsById.set(id, canonical);
+        addIngredientAlias(id, id);
+        addIngredientAlias(entry.name || id, id);
+        const aliases = Array.isArray(entry.aliases)
+          ? entry.aliases
+          : (Array.isArray(entry.alias) ? entry.alias : []);
+        aliases.forEach((alias) => addIngredientAlias(alias, id));
+      });
+
+    Object.entries(CANONICAL_DIET_OVERRIDES).forEach(([idRaw, override]) => {
+      const id = toSnakeCase(idRaw);
+      const existing = canonicalIngredientsById.get(id);
+      canonicalIngredientsById.set(id, {
+        id,
+        name: override.name || existing?.name || id,
+        diet: { ...(existing?.diet || {}), ...(override.diet || {}) },
+      });
+      addIngredientAlias(id, id);
+      addIngredientAlias(override.name || id, id);
+    });
+
+    debugLog("ingredient-map-ready", {
+      canonicalCount: canonicalIngredientsById.size,
+      aliasCount: ingredientAliasToId.size,
+      hasWater: canonicalIngredientsById.has("water"),
+    });
+  }
+
+  function resolveIngredientId(ingredientNameOrObj) {
+    if (!ingredientNameOrObj) return null;
+    if (typeof ingredientNameOrObj === "object") {
+      const maybeId = ingredientNameOrObj.id || ingredientNameOrObj.ingredient_id || ingredientNameOrObj.canonical_id;
+      if (maybeId) {
+        const normalizedId = toSnakeCase(maybeId);
+        if (canonicalIngredientsById.has(normalizedId)) return normalizedId;
+      }
+      const maybeName = ingredientNameOrObj.name || ingredientNameOrObj.ingredient || ingredientNameOrObj.value;
+      return resolveIngredientId(maybeName);
+    }
+
+    const key = normalizeIngredientKey(ingredientNameOrObj);
+    if (!key) return null;
+    const direct = ingredientAliasToId.get(key);
+    if (direct) return direct;
+    return ingredientAliasToId.get(toSnakeCase(key)) || null;
+  }
+
+  function getIngredientDiet(canonicalId) {
+    if (!canonicalId) return null;
+    const entry = canonicalIngredientsById.get(toSnakeCase(canonicalId));
+    if (!entry || !entry.diet) return null;
+    return entry.diet;
+  }
+
+  function computeRecipeDiet(recipe) {
+    /*
+      Root cause fixed (dietary):
+      checkbox filters previously relied on recipe-level dietary tags, which were often empty/stale.
+      We now compute dietary compliance from canonical ingredient tags per recipe and cache it.
+    */
+    const cacheKey = recipe?.id ?? recipe?.slug ?? recipe?.title;
+    if (!recipe || !cacheKey) {
+      return {
+        gluten_free: false,
+        vegan: false,
+        vegetarian: false,
+        dairy_free: false,
+        nut_free: false,
+        halal: false,
+        has_unknown: true,
+        unknown_by_key: Object.fromEntries(DIETARY_KEYS.map((key) => [key, true])),
+      };
+    }
+    if (recipeDietCache.has(cacheKey)) {
+      return recipeDietCache.get(cacheKey);
+    }
+
+    const profile = {
+      gluten_free: true,
+      vegan: true,
+      vegetarian: true,
+      dairy_free: true,
+      nut_free: true,
+      halal: true,
+      has_unknown: false,
+      unknown_by_key: Object.fromEntries(DIETARY_KEYS.map((key) => [key, false])),
+    };
+
+    const ingredientItems = Array.isArray(recipe._parsedIngredients) && recipe._parsedIngredients.length
+      ? recipe._parsedIngredients
+      : (recipe._ingredientNames || []);
+
+    ingredientItems.forEach((ingredientItem) => {
+      const canonicalId = resolveIngredientId(ingredientItem);
+      const ingredientDiet = getIngredientDiet(canonicalId);
+      if (!canonicalId || !ingredientDiet) {
+        profile.has_unknown = true;
+        DIETARY_KEYS.forEach((key) => {
+          profile.unknown_by_key[key] = true;
+        });
+        return;
+      }
+
+      DIETARY_KEYS.forEach((key) => {
+        if (ingredientDiet[key] === true) return;
+        if (ingredientDiet[key] === false) {
+          profile[key] = false;
+          return;
+        }
+        profile.has_unknown = true;
+        profile.unknown_by_key[key] = true;
+      });
+    });
+
+    recipeDietCache.set(cacheKey, profile);
+    return profile;
+  }
+
+  function recipeMatchesDietaryFilters(recipeDiet, selectedDietary) {
+    if (!selectedDietary.length) return true;
+    return selectedDietary.every((dietKey) => {
+      const key = normalizeDietFilterValue(dietKey);
+      if (!DIETARY_KEYS.includes(key)) return true;
+      if (recipeDiet.unknown_by_key?.[key]) return false;
+      return recipeDiet[key] === true;
+    });
+  }
+
   function normalizeRecipe(recipe) {
-    if (!recipe || recipe._normalized) {
-      return recipe;
+    if (!recipe || typeof recipe !== "object") return null;
+
+    const cacheKey = recipe.id ?? recipe.slug ?? JSON.stringify(recipe);
+    if (normalizedRecipeCache.has(cacheKey)) {
+      return normalizedRecipeCache.get(cacheKey);
     }
 
     const parsedIngredients = [];
@@ -218,7 +474,7 @@
       }
     }
 
-    recipe._ingredientNames = parsedIngredients
+    const ingredientNames = parsedIngredients
       .map((item) => {
         if (typeof item === "string") return item;
         if (item && typeof item === "object") return item.name || item.ingredient || "";
@@ -227,22 +483,23 @@
       .map((name) => String(name).trim().toLowerCase())
       .filter(Boolean);
 
-    recipe._dietaryTags = Array.isArray(recipe.dietary_tags)
-      ? recipe.dietary_tags.map((tag) => String(tag).trim().toLowerCase()).filter(Boolean)
-      : [];
-
     const prep = Number(recipe.prep_time_minutes);
     const cook = Number(recipe.cook_time_minutes);
+    let totalMinutes = null;
     if (Number.isFinite(Number(recipe.total_time_minutes))) {
-      recipe._totalMinutes = Number(recipe.total_time_minutes);
+      totalMinutes = Number(recipe.total_time_minutes);
     } else if (Number.isFinite(prep) || Number.isFinite(cook)) {
-      recipe._totalMinutes = (Number.isFinite(prep) ? prep : 0) + (Number.isFinite(cook) ? cook : 0);
-    } else {
-      recipe._totalMinutes = null;
+      totalMinutes = (Number.isFinite(prep) ? prep : 0) + (Number.isFinite(cook) ? cook : 0);
     }
 
-    recipe._normalized = true;
-    return recipe;
+    const normalized = Object.freeze({
+      ...recipe,
+      _parsedIngredients: parsedIngredients.slice(),
+      _ingredientNames: ingredientNames,
+      _totalMinutes: totalMinutes,
+    });
+    normalizedRecipeCache.set(cacheKey, normalized);
+    return normalized;
   }
 
   function gatherFilters() {
@@ -256,19 +513,24 @@
     const sortEl = document.getElementById("filter-sort");
     const dietaryChecked = Array.from(
       document.querySelectorAll(".recipe-controls__chips input[type='checkbox']:checked")
-    ).map((input) => String(input.value || "").trim().toLowerCase()).filter(Boolean);
+    ).map((input) => normalizeDietFilterValue(input.value)).filter((value) => DIETARY_KEYS.includes(value));
 
-    const parsedMaxPrep = Number(maxPrepEl?.value);
-    const parsedMaxTotal = Number(maxTotalEl?.value);
-    const parsedQuickMaxTotal = Number(quickMaxTotalEl?.value);
+    /*
+      Root cause fixed:
+      we previously used Number(input.value), and Number("") is 0.
+      That unintentionally activated max-time constraints even when fields were blank,
+      causing nearly all recipes to fail and making the UI look permanently empty.
+    */
+    const parsedMaxPrep = parseOptionalNumber(maxPrepEl?.value);
+    const parsedMaxTotal = parseOptionalNumber(maxTotalEl?.value);
+    const parsedQuickMaxTotal = parseOptionalNumber(quickMaxTotalEl?.value);
 
     return {
       cuisine: String(cuisineEl?.value || "").trim(),
       search: String(searchEl?.value || "").trim().toLowerCase(),
-      maxPrepMinutes: Number.isFinite(parsedMaxPrep) && parsedMaxPrep >= 0 ? parsedMaxPrep : null,
-      maxTotalMinutes: Number.isFinite(parsedMaxTotal) && parsedMaxTotal >= 0 ? parsedMaxTotal : null,
-      quickMaxTotalMinutes:
-        Number.isFinite(parsedQuickMaxTotal) && parsedQuickMaxTotal >= 0 ? parsedQuickMaxTotal : null,
+      maxPrepMinutes: parsedMaxPrep,
+      maxTotalMinutes: parsedMaxTotal,
+      quickMaxTotalMinutes: parsedQuickMaxTotal,
       includedIngredients: parseIngredientTokens(includeIngredientsEl?.value),
       excludedIngredients: parseIngredientTokens(excludeIngredientsEl?.value),
       dietaryTags: dietaryChecked,
@@ -276,8 +538,17 @@
     };
   }
 
-  function recipeMatchesFilters(recipe, filters) {
-    if (!recipe || !filters) return false;
+  function getEffectiveMaxTotal(filters) {
+    if (filters.maxTotalMinutes !== null && filters.quickMaxTotalMinutes !== null) {
+      return Math.min(filters.maxTotalMinutes, filters.quickMaxTotalMinutes);
+    }
+    if (filters.maxTotalMinutes !== null) return filters.maxTotalMinutes;
+    if (filters.quickMaxTotalMinutes !== null) return filters.quickMaxTotalMinutes;
+    return null;
+  }
+
+  function getRecipeFailureReason(recipe, filters) {
+    if (!recipe || !filters) return "invalid";
 
     const title = String(recipe.title || "").toLowerCase();
     const description = String(recipe.description || "").toLowerCase();
@@ -285,28 +556,26 @@
     const prepMinutes = Number(recipe.prep_time_minutes);
     const totalMinutes = recipe._totalMinutes;
     const ingredientNames = recipe._ingredientNames || [];
-    const dietaryTags = recipe._dietaryTags || [];
+    const recipeDiet = computeRecipeDiet(recipe);
 
     if (filters.search && !(`${title} ${description}`.includes(filters.search))) {
-      return false;
+      return "search";
     }
 
     if (filters.cuisine && cuisine !== filters.cuisine) {
-      return false;
+      return "cuisine";
     }
 
     if (filters.maxPrepMinutes !== null) {
       if (!Number.isFinite(prepMinutes) || prepMinutes > filters.maxPrepMinutes) {
-        return false;
+        return "maxPrepMinutes";
       }
     }
 
-    const maxTotalConstraint = filters.maxTotalMinutes !== null
-      ? filters.maxTotalMinutes
-      : filters.quickMaxTotalMinutes;
+    const maxTotalConstraint = getEffectiveMaxTotal(filters);
     if (maxTotalConstraint !== null) {
       if (!Number.isFinite(totalMinutes) || totalMinutes > maxTotalConstraint) {
-        return false;
+        return "maxTotalMinutes";
       }
     }
 
@@ -314,27 +583,102 @@
       const includesAll = filters.includedIngredients.every((needle) =>
         ingredientNames.some((name) => name.includes(needle))
       );
-      if (!includesAll) return false;
+      if (!includesAll) return "includedIngredients";
     }
 
     if (filters.excludedIngredients.length) {
       const includesExcluded = filters.excludedIngredients.some((needle) =>
         ingredientNames.some((name) => name.includes(needle))
       );
-      if (includesExcluded) return false;
+      if (includesExcluded) return "excludedIngredients";
     }
 
     if (filters.dietaryTags.length) {
-      const hasAllDietaryTags = filters.dietaryTags.every((tag) => dietaryTags.includes(tag));
-      if (!hasAllDietaryTags) return false;
+      if (!recipeMatchesDietaryFilters(recipeDiet, filters.dietaryTags)) {
+        debugLog("dietary-fail", {
+          recipeId: recipe.id,
+          title: recipe.title,
+          selectedDietary: filters.dietaryTags,
+          recipeDiet,
+        });
+        return "dietaryTags";
+      }
     }
 
-    return true;
+    return null;
+  }
+
+  function recipeMatchesFilters(recipe, filters) {
+    try {
+      return getRecipeFailureReason(recipe, filters) === null;
+    } catch (error) {
+      debugLog("Predicate error", { recipeId: recipe?.id, title: recipe?.title, error: String(error) });
+      return false;
+    }
   }
 
   function filterRecipes(recipes, filters) {
-    const normalized = (recipes || []).map((recipe) => normalizeRecipe(recipe));
-    const filtered = normalized.filter((recipe) => recipeMatchesFilters(recipe, filters));
+    const base = Array.isArray(recipes) ? [...recipes] : [];
+    const effectiveFilters = { ...filters };
+
+    debugLog("filter-start", {
+      totalRecipes: base.length,
+      filters,
+      effectiveFilters,
+      masterFrozen: Object.isFrozen(masterRecipes),
+    });
+
+    // Per-criterion diagnostics to prove where recipes are eliminated.
+    let staged = [...base];
+    if (effectiveFilters.search) {
+      staged = staged.filter((recipe) => getRecipeFailureReason(recipe, { ...effectiveFilters, cuisine: "", maxPrepMinutes: null, maxTotalMinutes: null, quickMaxTotalMinutes: null, includedIngredients: [], excludedIngredients: [], dietaryTags: [] }) === null);
+      debugLog("after-search", staged.length);
+    }
+    if (effectiveFilters.cuisine) {
+      staged = staged.filter((recipe) => String(recipe.cuisine || "").trim() === effectiveFilters.cuisine);
+      debugLog("after-cuisine", staged.length);
+    }
+    if (effectiveFilters.maxPrepMinutes !== null) {
+      staged = staged.filter((recipe) => Number.isFinite(Number(recipe.prep_time_minutes)) && Number(recipe.prep_time_minutes) <= effectiveFilters.maxPrepMinutes);
+      debugLog("after-max-prep", staged.length);
+    }
+    const maxTotalConstraint = getEffectiveMaxTotal(effectiveFilters);
+    if (maxTotalConstraint !== null) {
+      staged = staged.filter((recipe) => Number.isFinite(recipe._totalMinutes) && recipe._totalMinutes <= maxTotalConstraint);
+      debugLog("after-max-total", staged.length);
+    }
+    if (effectiveFilters.includedIngredients.length) {
+      staged = staged.filter((recipe) =>
+        effectiveFilters.includedIngredients.every((needle) => (recipe._ingredientNames || []).some((name) => name.includes(needle)))
+      );
+      debugLog("after-include-ingredients", staged.length);
+    }
+    if (effectiveFilters.excludedIngredients.length) {
+      staged = staged.filter((recipe) =>
+        !effectiveFilters.excludedIngredients.some((needle) => (recipe._ingredientNames || []).some((name) => name.includes(needle)))
+      );
+      debugLog("after-exclude-ingredients", staged.length);
+    }
+    if (effectiveFilters.dietaryTags.length) {
+      staged = staged.filter((recipe) =>
+        recipeMatchesDietaryFilters(computeRecipeDiet(recipe), effectiveFilters.dietaryTags)
+      );
+      debugLog("after-dietary-tags", staged.length);
+    }
+
+    const mysteryStew = base.find((recipe) => String(recipe.title || "").toLowerCase().includes("mystery stew"));
+    if (mysteryStew) {
+      debugLog("mystery-stew", {
+        id: mysteryStew.id,
+        reason: getRecipeFailureReason(mysteryStew, effectiveFilters),
+        dietProfile: computeRecipeDiet(mysteryStew),
+        selectedDietary: effectiveFilters.dietaryTags,
+        ingredients: mysteryStew._ingredientNames,
+      });
+    }
+
+    const filtered = base.filter((recipe) => recipeMatchesFilters(recipe, effectiveFilters));
+    debugLog("filter-end", { filteredCount: filtered.length, masterCount: base.length });
 
     if (filters.sortBy === "az") {
       filtered.sort((a, b) => String(a.title || "").localeCompare(String(b.title || "")));
@@ -444,7 +788,7 @@
 
   function applyFiltersAndRender() {
     const filters = gatherFilters();
-    const filtered = filterRecipes(allRecipes, filters);
+    const filtered = filterRecipes(masterRecipes, filters);
     renderPreviewRecipes(filtered);
     renderRecipes(filtered);
   }
@@ -452,20 +796,32 @@
   async function initRecipePage() {
     const listEl = document.getElementById("recipe-list");
     if (listEl) listEl.innerHTML = "<p>Loading recipes...</p>";
+    normalizedRecipeCache.clear();
+    recipeDietCache.clear();
 
     try {
-      const response = await fetch("/api/recipes");
-      if (!response.ok) {
+      const [recipesResponse, ingredientsResponse] = await Promise.all([
+        fetch("/api/recipes"),
+        fetch("/static/assets/ingredients.json"),
+      ]);
+      if (!recipesResponse.ok) {
         if (listEl) listEl.innerHTML = "<p>Failed to load recipes.</p>";
         renderPreviewRecipes([]);
         return;
       }
 
-      const data = await response.json();
-      allRecipes = Array.isArray(data) ? data.map((recipe) => normalizeRecipe(recipe)) : [];
-      populateCuisineOptions(allRecipes);
-      renderPreviewRecipes(allRecipes);
-      renderRecipes(allRecipes);
+      const ingredientsPayload = ingredientsResponse.ok ? await ingredientsResponse.json() : [];
+      buildCanonicalIngredientMaps(ingredientsPayload);
+
+      const data = await recipesResponse.json();
+      const normalized = Array.isArray(data)
+        ? data.map((recipe) => normalizeRecipe(recipe)).filter(Boolean)
+        : [];
+      masterRecipes = Object.freeze(normalized.slice());
+      debugLog("init", { loadedCount: masterRecipes.length, frozen: Object.isFrozen(masterRecipes) });
+      populateCuisineOptions(masterRecipes);
+      renderPreviewRecipes(masterRecipes);
+      renderRecipes(masterRecipes);
     } catch (error) {
       console.error(error);
       if (listEl) listEl.innerHTML = "<p>Error loading recipes.</p>";
@@ -475,18 +831,10 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     const formEl = document.getElementById("recipe-filter-form");
-    const applyBtn = document.getElementById("apply-filters");
     const clearBtn = document.getElementById("clear-filters");
 
     if (formEl) {
       formEl.addEventListener("submit", (event) => {
-        event.preventDefault();
-        applyFiltersAndRender();
-      });
-    }
-
-    if (applyBtn) {
-      applyBtn.addEventListener("click", (event) => {
         event.preventDefault();
         applyFiltersAndRender();
       });
