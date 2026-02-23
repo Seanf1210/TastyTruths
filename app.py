@@ -46,6 +46,17 @@ login_manager = LoginManager()
 csrf = CSRFProtect()
 migrate = Migrate()
 
+COMMON_DIETARY_RESTRICTIONS = [
+    "vegan",
+    "vegetarian",
+    "gluten-free",
+    "dairy-free",
+    "nut-free",
+    "halal",
+    "kosher",
+    "pescatarian",
+]
+
 class AdminOverrideUser(UserMixin):
     def __init__(self, user_id: str = "admin-override"):
         self.id = user_id
@@ -514,7 +525,52 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
     
     @app.route("/profile_page")
     def profile_page():
-        return render_template("profile_page.html")
+        profile_user = current_user if current_user.is_authenticated else None
+        user_recipes = []
+        dietary_restrictions = []
+        if profile_user:
+            user_recipes = (
+                Recipe.query.filter_by(author_id=profile_user.id)
+                .order_by(Recipe.created_at.desc())
+                .all()
+            )
+            dietary_restrictions = list(profile_user.dietary_restrictions or [])
+        return render_template(
+            "profile_page.html",
+            profile_user=profile_user,
+            user_recipes=user_recipes,
+            dietary_restrictions=dietary_restrictions,
+            common_dietary_restrictions=COMMON_DIETARY_RESTRICTIONS,
+        )
+
+    @app.post("/profile_page/dietary_restrictions")
+    @login_required
+    def update_profile_dietary_restrictions():
+        raw_json = (request.form.get("dietary_restrictions_json") or "").strip()
+        values = None
+        if raw_json:
+            try:
+                values = json.loads(raw_json)
+            except json.JSONDecodeError:
+                flash("Dietary restrictions payload is invalid.", "error")
+                return redirect(url_for("profile_page"))
+        else:
+            values = request.form.getlist("dietary_restrictions")
+
+        normalized, error = User.normalize_dietary_restrictions(values)
+        if error:
+            flash(error, "error")
+            return redirect(url_for("profile_page"))
+
+        current_user.dietary_restrictions = normalized
+        try:
+            db.session.commit()
+            flash("Dietary restrictions saved.", "success")
+        except SQLAlchemyError as exc:
+            db.session.rollback()
+            print(f"ERROR saving dietary restrictions: {exc}")
+            flash("Unable to save dietary restrictions right now.", "error")
+        return redirect(url_for("profile_page"))
     
     @app.route("/recipes/create", methods=["GET", "POST"])
     @login_required
@@ -683,6 +739,37 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
     # ---- util: JSON & basic validation ----
     def _json():
         return request.get_json(force=True) or {}
+
+    @app.get("/api/users/<int:user_id>/dietary-restrictions")
+    @login_required
+    def get_user_dietary_restrictions(user_id: int):
+        if current_user.id != user_id:
+            return jsonify({"error": "forbidden"}), 403
+        return jsonify({"dietary_restrictions": current_user.dietary_restrictions or []})
+
+    @csrf.exempt
+    @app.put("/api/users/<int:user_id>/dietary-restrictions")
+    @login_required
+    def update_user_dietary_restrictions(user_id: int):
+        if current_user.id != user_id:
+            return jsonify({"error": "forbidden"}), 403
+
+        data = request.get_json(silent=True) or {}
+        normalized, error = User.normalize_dietary_restrictions(
+            data.get("dietary_restrictions")
+        )
+        if error:
+            return jsonify({"error": error}), 400
+
+        current_user.dietary_restrictions = normalized
+        try:
+            db.session.commit()
+        except SQLAlchemyError as exc:
+            db.session.rollback()
+            print(f"ERROR saving dietary restrictions: {exc}")
+            return jsonify({"error": "unable to save dietary restrictions"}), 500
+
+        return jsonify({"ok": True, "dietary_restrictions": normalized})
 
     # ---- public: CSRF token for JS (double submit header pattern) ----
     @app.get("/api/auth/csrf-token")

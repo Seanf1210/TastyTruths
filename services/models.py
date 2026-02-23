@@ -206,6 +206,9 @@ def recipe_before_update(mapper, connection, target: Recipe):
 
 class User(db.Model, UserMixin):
     __tablename__ = "users"
+    MAX_DIETARY_RESTRICTIONS = 20
+    MAX_DIETARY_RESTRICTION_LENGTH = 32
+
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
@@ -214,6 +217,7 @@ class User(db.Model, UserMixin):
     last_name = db.Column(db.String(100), nullable=True)
     date_of_birth = db.Column(db.Date, nullable=True)
     gender = db.Column(db.String(20), nullable=True)
+    dietary_restrictions = db.Column(JSON, nullable=False, default=list)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     blog_posts = db.relationship("BlogPost", back_populates="author", cascade="all, delete-orphan")
 
@@ -227,6 +231,37 @@ class User(db.Model, UserMixin):
             return hasher.verify(self.password_hash, raw_password)
         except Exception:
             return False
+
+    @classmethod
+    def normalize_dietary_restrictions(cls, values):
+        if values is None:
+            values = []
+        if not isinstance(values, list):
+            return None, "Dietary restrictions must be a list of strings."
+
+        normalized = []
+        seen = set()
+        for value in values:
+            if not isinstance(value, str):
+                return None, "Each dietary restriction must be text."
+            cleaned = " ".join(value.strip().lower().split())
+            if not cleaned:
+                return None, "Dietary restrictions cannot include empty values."
+            if len(cleaned) > cls.MAX_DIETARY_RESTRICTION_LENGTH:
+                return (
+                    None,
+                    f"Each dietary restriction must be {cls.MAX_DIETARY_RESTRICTION_LENGTH} characters or fewer.",
+                )
+            if cleaned not in seen:
+                seen.add(cleaned)
+                normalized.append(cleaned)
+
+        if len(normalized) > cls.MAX_DIETARY_RESTRICTIONS:
+            return (
+                None,
+                f"You can save up to {cls.MAX_DIETARY_RESTRICTIONS} dietary restrictions.",
+            )
+        return normalized, None
 
     def __repr__(self):
         return f"<User {self.username}>"

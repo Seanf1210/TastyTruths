@@ -1,0 +1,95 @@
+from sqlalchemy.pool import StaticPool
+
+from app import create_app
+from services.db import db
+from services.models import Recipe, User
+
+
+def _create_user(username: str) -> User:
+    user = User(username=username, password_hash="placeholder")
+    db.session.add(user)
+    db.session.flush()
+    return user
+
+
+def _create_recipe(title: str, author_id: int | None) -> Recipe:
+    recipe = Recipe(title=title, author_id=author_id, content=f"{title} content")
+    db.session.add(recipe)
+    db.session.flush()
+    return recipe
+
+
+def _login(client, user_id: int) -> None:
+    with client.session_transaction() as session:
+        session["_user_id"] = str(user_id)
+        session["_fresh"] = True
+
+
+def test_profile_shows_only_authenticated_users_recipes():
+    app = create_app(
+        config_overrides={
+            "TESTING": True,
+            "SQLALCHEMY_DATABASE_URI": "sqlite://",
+            "SQLALCHEMY_ENGINE_OPTIONS": {
+                "connect_args": {"check_same_thread": False},
+                "poolclass": StaticPool,
+            },
+        },
+        seed_demo=False,
+    )
+    client = app.test_client()
+
+    with app.app_context():
+        user_a = _create_user("chef_a")
+        user_b = _create_user("chef_b")
+        mine = _create_recipe("My Recipe", user_a.id)
+        _create_recipe("Other User Recipe", user_b.id)
+        _create_recipe("No Author Recipe", None)
+        db.session.commit()
+        expected_href = f'/recipes/{mine.id}-{mine.slug}'
+
+    _login(client, user_a.id)
+    response = client.get("/profile_page")
+    body = response.data.decode("utf-8")
+
+    assert response.status_code == 200
+    assert "User-created recipes" in body
+    assert "My Recipe" in body
+    assert "Other User Recipe" not in body
+    assert "No Author Recipe" not in body
+    assert expected_href in body
+
+    with app.app_context():
+        db.session.remove()
+        db.drop_all()
+
+
+def test_profile_empty_state_when_no_user_recipes():
+    app = create_app(
+        config_overrides={
+            "TESTING": True,
+            "SQLALCHEMY_DATABASE_URI": "sqlite://",
+            "SQLALCHEMY_ENGINE_OPTIONS": {
+                "connect_args": {"check_same_thread": False},
+                "poolclass": StaticPool,
+            },
+        },
+        seed_demo=False,
+    )
+    client = app.test_client()
+
+    with app.app_context():
+        user = _create_user("chef_empty")
+        db.session.commit()
+
+    _login(client, user.id)
+    response = client.get("/profile_page")
+    body = response.data.decode("utf-8")
+
+    assert response.status_code == 200
+    assert "User-created recipes" in body
+    assert "This user has not created any recipes yet." in body
+
+    with app.app_context():
+        db.session.remove()
+        db.drop_all()
