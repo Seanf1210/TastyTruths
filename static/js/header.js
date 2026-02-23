@@ -7,13 +7,13 @@
   // --- helpers (scoped to this file) ---
   function escapeHtml(str) {
     return String(str).replace(/[&<>"']/g, (c) =>
-      ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#039;",
-      }[c])
+    ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;",
+    }[c])
     );
   }
 
@@ -94,11 +94,13 @@
   function renderLoggedIn(bar, profileUrl, user, onLogout) {
     const label = user.username || user.name || user.email || "your account";
     bar.innerHTML = `
-      <span class="auth-status" data-status="logged-in">
-        Logged in as
-        <a class="auth-user" href="${profileUrl}">${escapeHtml(label)}</a>
-      </span>
-      <button type="button" class="auth-logout">Log out</button>
+      <div class="auth-buttons-stack">
+        <a class="button profile-btn" href="${profileUrl}">
+          <ion-icon name="person-circle-outline"></ion-icon>
+          ${escapeHtml(label)}
+        </a>
+        <button type="button" class="button auth-logout">Log out</button>
+      </div>
     `;
     const btn = bar.querySelector(".auth-logout");
     if (btn) {
