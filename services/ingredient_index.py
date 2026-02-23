@@ -29,7 +29,10 @@ def _load_raw(path: Path) -> List[dict]:
     return [entry for entry in data if isinstance(entry, dict) and entry.get("name")]
 
 
-def load_ingredients_index(path: Path = ASSETS_INGREDIENTS_PATH) -> Dict[str, Dict]:
+def load_ingredients_index(path: Optional[Path] = None) -> Dict[str, Dict]:
+    if path is None:
+        # Resolve lazily so tests can monkeypatch ASSETS_INGREDIENTS_PATH.
+        path = ASSETS_INGREDIENTS_PATH
     mtime = path.stat().st_mtime if path.exists() else None
     if _CACHE["index"] is not None and _CACHE["mtime"] == mtime:
         return _CACHE["index"]

@@ -18,7 +18,7 @@ import argparse
 import random
 import sys
 from sqlalchemy import func
-from flask import Flask, request, jsonify, redirect, url_for, redirect, render_template, flash, g
+from flask import Flask, request, jsonify, redirect, url_for, redirect, render_template, flash, g, session, has_request_context
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect, generate_csrf
@@ -58,9 +58,56 @@ COMMON_DIETARY_RESTRICTIONS = [
 ]
 
 class AdminOverrideUser(UserMixin):
-    def __init__(self, user_id: str = "admin-override"):
-        self.id = user_id
-        self.username = user_id
+    SESSION_DIETARY_KEY = "admin_override_dietary_restrictions"
+
+    def __init__(self, user_id: str = "admin-override", proxied_user=None, dietary_restrictions=None):
+        self._proxied_user = proxied_user
+        self._dietary_restrictions = []
+
+        if proxied_user is not None:
+            self.id = proxied_user.id
+            self.username = proxied_user.username
+        else:
+            self.id = user_id
+            self.username = user_id
+            if dietary_restrictions is not None:
+                self.dietary_restrictions = dietary_restrictions
+
+    @staticmethod
+    def _normalize_restrictions(values):
+        if values is None:
+            return []
+        if isinstance(values, tuple):
+            values = list(values)
+        normalized, error = User.normalize_dietary_restrictions(values)
+        if error:
+            return []
+        return list(normalized or [])
+
+    @property
+    def dietary_restrictions(self):
+        if self._proxied_user is not None:
+            return list(self._proxied_user.dietary_restrictions or [])
+
+        if has_request_context():
+            normalized = self._normalize_restrictions(
+                session.get(self.SESSION_DIETARY_KEY, self._dietary_restrictions)
+            )
+            self._dietary_restrictions = normalized
+            # Admin override users are non-persistent; restrictions are session-only.
+            session[self.SESSION_DIETARY_KEY] = list(normalized)
+        return list(self._dietary_restrictions)
+
+    @dietary_restrictions.setter
+    def dietary_restrictions(self, values):
+        normalized = self._normalize_restrictions(values)
+        if self._proxied_user is not None:
+            self._proxied_user.dietary_restrictions = normalized
+            return
+        self._dietary_restrictions = normalized
+        if has_request_context():
+            # Admin override users are non-persistent; restrictions are session-only.
+            session[self.SESSION_DIETARY_KEY] = list(normalized)
 
 def create_app(admin_override: bool = False, config_overrides=None, seed_demo: bool = True):
     app = Flask(__name__, static_folder="static", template_folder="templates")
@@ -75,6 +122,9 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
         PERMANENT_SESSION_LIFETIME=timedelta(hours=8),
         WTF_CSRF_TIME_LIMIT=None,        # CSRF token lifetime (optional)
         MAX_CONTENT_LENGTH=2 * 1024 * 1024,  # 2MB file upload limit
+        # Keep attributes available after commit for request/test flows that
+        # access ids outside the original app context.
+        SQLALCHEMY_SESSION_OPTIONS={"expire_on_commit": False},
     )
     if config_overrides:
         app.config.update(config_overrides)
@@ -93,7 +143,9 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
         @app.before_request
         def _admin_override_user():
             # DEVELOPMENT ONLY — NEVER ENABLE IN PRODUCTION
-            g._login_user = AdminOverrideUser()
+            g._login_user = AdminOverrideUser(
+                dietary_restrictions=session.get(AdminOverrideUser.SESSION_DIETARY_KEY, [])
+            )
     
     @app.route("/logout")
     @login_required
