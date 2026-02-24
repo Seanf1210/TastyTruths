@@ -8,6 +8,26 @@ flask --app app seed-demo
 If an update breaks the database run:
 
 flask db upgrade
+
+
+NOTE:
+The admin login option will not function as a logged in admin
+for purposes of testing deleting posts.
+=========================================================
+DEMO USERNAMES
+=========================================================
+Admin
+username: demo_admin
+password: demo-admin
+
+Mod
+username:demo_moderator
+password:demo-moderator
+
+Standard
+username:demo_user
+password:demo-user
+
 =========================================================
 CREATE A VIRTUAL ENVIRONMENT
 =========================================================

@@ -11,7 +11,7 @@ from services.nutrition import ensure_ingredient_exists_in_assets
 
 SENTINEL_RECIPE_SLUG = "demo-spaghetti-bolognese"
 SENTINEL_BLOG_SLUG = "demo-welcome"
-DEMO_USERNAME = "demo_author"
+DEMO_USERNAME = "demo_user"
 
 
 def _ensure_demo_user() -> User:
@@ -19,7 +19,7 @@ def _ensure_demo_user() -> User:
     if user:
         return user
     user = User(username=DEMO_USERNAME, email="demo@example.com", role="normal")
-    user.set_password("demo-password")
+    user.set_password("demo-user")
     db.session.add(user)
     return user
 
