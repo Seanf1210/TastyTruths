@@ -17,6 +17,7 @@ import json
 import argparse
 import random
 import sys
+from functools import wraps
 from sqlalchemy import func
 from flask import Flask, request, jsonify, redirect, url_for, redirect, render_template, flash, g, session, has_request_context
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
@@ -45,6 +46,51 @@ ph = PasswordHasher()
 login_manager = LoginManager()
 csrf = CSRFProtect()
 migrate = Migrate()
+
+
+# ---- role helpers & decorators ----
+
+ALLOWED_ROLES = {"normal", "moderator", "admin"}
+
+
+def is_admin(user) -> bool:
+    return bool(user) and getattr(user, "role", "normal") == "admin"
+
+
+def is_staff(user) -> bool:
+    role = getattr(user, "role", "normal") or "normal"
+    return role in {"moderator", "admin"}
+
+
+def _forbidden_response(message: str = "You do not have permission to perform this action."):
+    if request.accept_mimetypes.accept_json and not request.accept_mimetypes.accept_html:
+        return jsonify({"error": "forbidden"}), 403
+    flash(message, "error")
+    return (render_template("403.html"), 403) if hasattr(sys.modules.get(__name__), "render_template") else (message, 403)
+
+
+def require_admin(view_func):
+    @wraps(view_func)
+    def wrapped(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return login_manager.unauthorized()
+        if not is_admin(current_user):
+            return _forbidden_response()
+        return view_func(*args, **kwargs)
+
+    return wrapped
+
+
+def require_staff(view_func):
+    @wraps(view_func)
+    def wrapped(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return login_manager.unauthorized()
+        if not is_staff(current_user):
+            return _forbidden_response()
+        return view_func(*args, **kwargs)
+
+    return wrapped
 
 COMMON_DIETARY_RESTRICTIONS = [
     "vegan",
@@ -551,11 +597,12 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
 
     @app.post("/blog/<slug>/delete")
     @login_required
+    @require_staff
     def blog_delete(slug: str):
         post = BlogPost.query.filter_by(slug=slug).first()
         if not post:
             return render_template("404.html"), 404
-        if post.user_id != current_user.id:
+        if not is_staff(current_user) and post.user_id != current_user.id:
             flash("You do not have permission to delete this post.", "error")
             return redirect(url_for("blog_post", slug=post.slug))
 
@@ -594,6 +641,24 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
             dietary_restrictions=dietary_restrictions,
             common_dietary_restrictions=COMMON_DIETARY_RESTRICTIONS,
         )
+
+    @app.post("/users/<int:user_id>/delete")
+    @login_required
+    @require_admin
+    def delete_account(user_id: int):
+        user = db.session.get(User, user_id)
+        if not user:
+            return render_template("404.html"), 404
+        try:
+            db.session.delete(user)
+            db.session.commit()
+            flash("User account deleted.", "success")
+        except SQLAlchemyError as exc:
+            db.session.rollback()
+            print(f"ERROR deleting user: {exc}")
+            flash("Unable to delete user right now.", "error")
+            return redirect(url_for("profile_page"))
+        return redirect(url_for("index"))
 
     @app.post("/profile_page/dietary_restrictions")
     @login_required
@@ -754,7 +819,8 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
                     email=email or None,
                     first_name=first_name or None,
                     last_name=last_name or None,
-                    gender=gender or None
+                    gender=gender or None,
+                    role="normal",
                 )
                 
                 # Handle date of birth
@@ -844,7 +910,7 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
         if User.query.filter_by(username=username).first():
             return jsonify({"error": "username already registered"}), 409
 
-        u = User(username=username)
+        u = User(username=username, role="normal")
         u.set_password(password, ph)
         db.session.add(u)
         db.session.commit()
@@ -920,6 +986,24 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
             return jsonify({"error": "server error saving recipe", "detail": str(e)}), 500
 
         return jsonify({"id": r.id, "slug": r.slug, "title": r.title}), 201
+
+    @app.post("/recipes/<int:recipe_id>/delete")
+    @login_required
+    @require_staff
+    def delete_recipe(recipe_id: int):
+        recipe = db.session.get(Recipe, recipe_id)
+        if not recipe:
+            return render_template("404.html"), 404
+        try:
+            db.session.delete(recipe)
+            db.session.commit()
+            flash("Recipe deleted.", "success")
+        except SQLAlchemyError as exc:
+            db.session.rollback()
+            print(f"ERROR deleting recipe: {exc}")
+            flash("Unable to delete recipe right now.", "error")
+            return redirect(url_for("recipe_detail", id_slug=f"{recipe.id}-{recipe.slug}"))
+        return redirect(url_for("recipes"))
 
     # Canonical detail URL: /recipes/<id>-<slug>
     @app.get("/recipes/<id_slug>")

@@ -17,6 +17,12 @@
             <img src="{{ url_for('static', filename='assets/images/account_circle.png') }}" alt="Profile Picture" class="profile-pic">
             <h1>{{ profile_user.username if profile_user else "Guest Chef" }}</h1>
         </div>
+        {% if current_user.is_authenticated and current_user.role == 'admin' and profile_user %}
+        <form class="profile-admin-actions" method="post" action="{{ url_for('delete_account', user_id=profile_user.id) }}" onsubmit="return confirm('Delete this user account?');">
+            {{ csrf_token() }}
+            <button type="submit" class="button button-danger">Delete Account</button>
+        </form>
+        {% endif %}
     </section>
 
     <div class="profile-grid">

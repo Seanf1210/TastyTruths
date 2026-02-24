@@ -18,10 +18,30 @@ def _ensure_demo_user() -> User:
     user = User.query.filter_by(username=DEMO_USERNAME).first()
     if user:
         return user
-    user = User(username=DEMO_USERNAME, email="demo@example.com")
+    user = User(username=DEMO_USERNAME, email="demo@example.com", role="normal")
     user.set_password("demo-password")
     db.session.add(user)
     return user
+
+
+def _ensure_staff_users() -> tuple[User, User]:
+    admin = User.query.filter_by(username="demo_admin").first()
+    if not admin:
+        admin = User(username="demo_admin", email="admin@example.com", role="admin")
+        admin.set_password("demo-admin")
+        db.session.add(admin)
+
+    moderator = User.query.filter_by(username="demo_moderator").first()
+    if not moderator:
+        moderator = User(
+            username="demo_moderator",
+            email="moderator@example.com",
+            role="moderator",
+        )
+        moderator.set_password("demo-moderator")
+        db.session.add(moderator)
+
+    return admin, moderator
 
 
 def _recipe_rows() -> Iterable[dict]:
@@ -274,6 +294,7 @@ def seed_demo_data() -> bool:
         return False
 
     author = _ensure_demo_user()
+    _ensure_staff_users()
     db.session.flush()
     recipe_rows = list(_recipe_rows())
     for row in recipe_rows:

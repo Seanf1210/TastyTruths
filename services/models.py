@@ -218,8 +218,23 @@ class User(db.Model, UserMixin):
     date_of_birth = db.Column(db.Date, nullable=True)
     gender = db.Column(db.String(20), nullable=True)
     dietary_restrictions = db.Column(JSON, nullable=False, default=list)
+    role = db.Column(
+        db.String(20),
+        nullable=False,
+        default="normal",
+        server_default="normal",
+        doc="User access level: normal|moderator|admin",
+    )
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     blog_posts = db.relationship("BlogPost", back_populates="author", cascade="all, delete-orphan")
+
+    @property
+    def is_admin(self) -> bool:
+        return (self.role or "normal") == "admin"
+
+    @property
+    def is_staff(self) -> bool:
+        return (self.role or "normal") in {"moderator", "admin"}
 
     def set_password(self, raw_password, hasher=ph):
         """Hash and store the password."""

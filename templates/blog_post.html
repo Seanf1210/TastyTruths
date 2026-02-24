@@ -28,17 +28,19 @@
     <div class="blog-actions">
       <a class="button" href="{{ url_for('random_blog') }}">Random Blog</a>
     </div>
-    {% if current_user.is_authenticated and post.user_id == current_user.id %}
+    {% if current_user.is_authenticated and (post.user_id == current_user.id or current_user.role in ['moderator', 'admin']) %}
     <div class="blog-owner-actions">
       <a class="blog-read-more" href="{{ url_for('blog_edit', slug=post.slug) }}">
         Edit
       </a>
-      <form method="post" action="{{ url_for('blog_delete', slug=post.slug) }}">
+      {% if current_user.role in ['moderator', 'admin'] %}
+      <form method="post" action="{{ url_for('blog_delete', slug=post.slug) }}" onsubmit="return confirm('Delete this post?');">
         {{ csrf_token() }}
         <button class="blog-read-more blog-delete" type="submit">
           Delete
         </button>
       </form>
+      {% endif %}
     </div>
     {% endif %}
   </header>

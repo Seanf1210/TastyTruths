@@ -130,6 +130,12 @@
     <div class="recipe-actions">
       <a href="{{ url_for('recipes') }}" class="button button-secondary">← Back to Recipes</a>
       <a href="{{ url_for('random_recipe') }}" class="button">Random Recipe</a>
+      {% if current_user.is_authenticated and current_user.role in ['moderator', 'admin'] %}
+      <form method="post" action="{{ url_for('delete_recipe', recipe_id=recipe.id) }}" style="display:inline" onsubmit="return confirm('Delete this recipe?');">
+        {{ csrf_token() }}
+        <button type="submit" class="button button-danger">Delete Recipe</button>
+      </form>
+      {% endif %}
     </div>
   </article>
 </div>

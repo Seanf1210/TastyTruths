@@ -17,8 +17,11 @@ depends_on = None
 
 
 def upgrade():
-    with op.batch_alter_table("ingredients", schema=None) as batch_op:
-        batch_op.add_column(sa.Column("nutrition_per_100g", sa.JSON(), nullable=True))
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    columns = {col["name"] for col in inspector.get_columns("ingredients")}
+    if "nutrition_per_100g" not in columns:
+        op.add_column("ingredients", sa.Column("nutrition_per_100g", sa.JSON(), nullable=True))
 
 
 def downgrade():

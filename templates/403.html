@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Forbidden — Tasty Truths{% endblock %}
+{% block content %}
+<div class="container" style="padding: 2rem 1rem;">
+  <h1>Forbidden</h1>
+  <p>You do not have permission to perform this action.</p>
+  <a class="button" href="{{ url_for('index') }}">Return home</a>
+</div>
+{% endblock %}
