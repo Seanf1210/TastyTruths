@@ -5,6 +5,9 @@ remove current site.db first - rm instance/site.db
 
 flask --app app seed-demo
 
+If an update breaks the database run:
+
+flask db upgrade
 =========================================================
 CREATE A VIRTUAL ENVIRONMENT
 =========================================================
