@@ -14,11 +14,22 @@ SENTINEL_BLOG_SLUG = "demo-welcome"
 DEMO_USERNAME = "demo_user"
 
 
+def _default_bio_for_role(role: str) -> str:
+    return f"I am a {role}"
+
+
 def _ensure_demo_user() -> User:
     user = User.query.filter_by(username=DEMO_USERNAME).first()
     if user:
+        if not (user.bio or "").strip():
+            user.bio = _default_bio_for_role("user")
         return user
-    user = User(username=DEMO_USERNAME, email="demo@example.com", role="normal")
+    user = User(
+        username=DEMO_USERNAME,
+        email="demo@example.com",
+        role="normal",
+        bio=_default_bio_for_role("user"),
+    )
     user.set_password("demo-user")
     db.session.add(user)
     return user
@@ -26,17 +37,29 @@ def _ensure_demo_user() -> User:
 
 def _ensure_staff_users() -> tuple[User, User]:
     admin = User.query.filter_by(username="demo_admin").first()
-    if not admin:
-        admin = User(username="demo_admin", email="admin@example.com", role="admin")
+    if admin:
+        if not (admin.bio or "").strip():
+            admin.bio = _default_bio_for_role("admin")
+    else:
+        admin = User(
+            username="demo_admin",
+            email="admin@example.com",
+            role="admin",
+            bio=_default_bio_for_role("admin"),
+        )
         admin.set_password("demo-admin")
         db.session.add(admin)
 
     moderator = User.query.filter_by(username="demo_moderator").first()
-    if not moderator:
+    if moderator:
+        if not (moderator.bio or "").strip():
+            moderator.bio = _default_bio_for_role("moderator")
+    else:
         moderator = User(
             username="demo_moderator",
             email="moderator@example.com",
             role="moderator",
+            bio=_default_bio_for_role("moderator"),
         )
         moderator.set_password("demo-moderator")
         db.session.add(moderator)
