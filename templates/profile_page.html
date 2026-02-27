@@ -29,7 +29,21 @@
         <section class="profile-bio-area">
             <h2>Bio</h2>
             <div class="bio-content">
-                <p>Welcome to my profile! I'm a chef who loves sharing real recipes with the community. PLACEHOLDER</p>
+                <p>{{ profile_user.bio if profile_user and profile_user.bio else "No bio yet." }}</p>
+                {% if current_user.is_authenticated and profile_user and current_user.id == profile_user.id %}
+                <form method="post" action="{{ url_for('update_profile_bio') }}" class="profile-bio-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <textarea
+                        name="bio"
+                        rows="4"
+                        maxlength="500"
+                        placeholder="Write your bio here..."
+                    >{{ profile_user.bio or "" }}</textarea>
+
+                    <button type="submit" class="button">Save Bio</button>
+                </form>
+                {% endif %}
             </div>
         </section>
 
