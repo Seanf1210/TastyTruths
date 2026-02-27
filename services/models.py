@@ -217,6 +217,7 @@ class User(db.Model, UserMixin):
     last_name = db.Column(db.String(100), nullable=True)
     date_of_birth = db.Column(db.Date, nullable=True)
     gender = db.Column(db.String(20), nullable=True)
+    bio = db.Column(db.Text, nullable=True, default="")
     dietary_restrictions = db.Column(JSON, nullable=False, default=list)
     role = db.Column(
         db.String(20),

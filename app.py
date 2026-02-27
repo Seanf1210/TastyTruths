@@ -689,6 +689,29 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
             flash("Unable to save dietary restrictions right now.", "error")
         return redirect(url_for("profile_page"))
     
+    @app.post("/profile_page/bio")
+    @login_required
+    def update_profile_bio():
+        """Handles updating the user's bio from the profile page."""
+        bio = (request.form.get("bio") or "").strip()
+
+        # Optional limit (matches your textarea maxlength) to prevent database bloat
+        if len(bio) > 500:
+            flash("Bio is too long (max 500 characters).", "error")
+            return redirect(url_for("profile_page"))
+
+        current_user.bio = bio
+
+        try:
+            db.session.commit()
+            flash("Bio saved.", "success")
+        except SQLAlchemyError as exc:
+            db.session.rollback()
+            print(f"ERROR saving bio: {exc}")
+            flash("Unable to save bio right now.", "error")
+
+        return redirect(url_for("profile_page"))
+    
     @app.route("/recipes/create", methods=["GET", "POST"])
     @login_required
     def create_recipe_page():
