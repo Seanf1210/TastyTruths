@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}{{ profile_user.username }} - Profile{% endblock %}
+{% block content %}
+<div class="profile-page container">
+  <section class="profile-header">
+    <div class="profile-picture-area">
+      <img src="{{ avatar_url }}" alt="{{ profile_user.username }} profile picture" class="profile-pic">
+      <h1>{{ profile_user.username }}</h1>
+      {% if can_edit_profile %}
+      <a href="{{ url_for('edit_public_profile', username=profile_user.username) }}" class="button">Edit Profile</a>
+      {% endif %}
+    </div>
+  </section>
+
+  <div class="profile-grid">
+    <section class="profile-bio-area">
+      <h2>Bio</h2>
+      <div class="bio-content">
+        <p>{{ profile_user.bio if profile_user.bio else "No bio yet." }}</p>
+      </div>
+    </section>
+
+    <section class="profile-experience-area">
+      <h2>Experiences</h2>
+      <div class="experience-content">
+        {% if experiences %}
+        <ul>
+          {% for experience in experiences %}
+          <li>{{ experience }}</li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="no-data">No experiences listed.</p>
+        {% endif %}
+      </div>
+    </section>
+  </div>
+</div>
+{% endblock %}

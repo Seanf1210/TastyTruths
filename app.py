@@ -621,6 +621,130 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
     @app.route("/contact")
     def contact():
         return render_template("contact.html")
+
+    @app.get("/profile/<username>")
+    def public_profile(username: str):
+        def _normalize_experiences_for_display(raw_experiences):
+            data = raw_experiences or []
+            if isinstance(data, str):
+                try:
+                    data = json.loads(data)
+                except json.JSONDecodeError:
+                    data = [line.strip() for line in data.splitlines() if line.strip()]
+            if not isinstance(data, list):
+                return []
+            return [str(item).strip() for item in data if str(item).strip()]
+
+        def _avatar_url_for_user(user: User) -> str:
+            profile_image_path = (user.profile_image_path or "").strip()
+            if profile_image_path.startswith("http://") or profile_image_path.startswith("https://"):
+                return profile_image_path
+            if profile_image_path:
+                return url_for("static", filename=profile_image_path)
+            return url_for("static", filename="assets/images/account_circle.png")
+
+        normalized_username = (username or "").strip().lower()
+        if not normalized_username:
+            return render_template("404.html"), 404
+
+        profile_user = User.query.filter(
+            func.lower(User.username) == normalized_username
+        ).first()
+        if not profile_user:
+            return render_template("404.html"), 404
+
+        experiences = _normalize_experiences_for_display(profile_user.experiences)
+        avatar_url = _avatar_url_for_user(profile_user)
+        can_edit_profile = (
+            current_user.is_authenticated
+            and (current_user.username or "").strip().lower() == normalized_username
+        )
+
+        return render_template(
+            "profile_public.html",
+            profile_user=profile_user,
+            experiences=experiences,
+            avatar_url=avatar_url,
+            can_edit_profile=can_edit_profile,
+        )
+
+    @app.route("/profile/<username>/edit", methods=["GET", "POST"])
+    @login_required
+    def edit_public_profile(username: str):
+        requested_username = (username or "").strip().lower()
+        current_username = (current_user.username or "").strip().lower()
+        if requested_username != current_username:
+            return _forbidden_response()
+
+        profile_user = User.query.filter(
+            func.lower(User.username) == requested_username
+        ).first()
+        if not profile_user:
+            return render_template("404.html"), 404
+
+        def _normalize_experiences_for_storage(text_value: str):
+            max_items = 20
+            max_item_length = 120
+            lines = [line.strip() for line in (text_value or "").splitlines() if line.strip()]
+            deduped = []
+            seen = set()
+            for line in lines:
+                normalized = " ".join(line.split())
+                if not normalized:
+                    continue
+                if len(normalized) > max_item_length:
+                    return None, f"Each experience must be {max_item_length} characters or fewer."
+                lowered = normalized.lower()
+                if lowered in seen:
+                    continue
+                seen.add(lowered)
+                deduped.append(normalized)
+            if len(deduped) > max_items:
+                return None, f"You can list up to {max_items} experiences."
+            return deduped, None
+
+        if request.method == "POST":
+            bio = (request.form.get("bio") or "").strip()
+            profile_image_path = (request.form.get("profile_image_path") or "").strip()
+            experiences_text = request.form.get("experiences_text") or ""
+
+            if len(bio) > 500:
+                flash("Bio is too long (max 500 characters).", "error")
+                return redirect(url_for("edit_public_profile", username=profile_user.username))
+            if len(profile_image_path) > 255:
+                flash("Profile image path is too long (max 255 characters).", "error")
+                return redirect(url_for("edit_public_profile", username=profile_user.username))
+
+            experiences, experiences_error = _normalize_experiences_for_storage(experiences_text)
+            if experiences_error:
+                flash(experiences_error, "error")
+                return redirect(url_for("edit_public_profile", username=profile_user.username))
+
+            profile_user.bio = bio
+            profile_user.profile_image_path = profile_image_path or None
+            profile_user.experiences = experiences
+            try:
+                db.session.commit()
+                flash("Profile updated.", "success")
+            except SQLAlchemyError as exc:
+                db.session.rollback()
+                print(f"ERROR saving profile: {exc}")
+                flash("Unable to save profile right now.", "error")
+                return redirect(url_for("edit_public_profile", username=profile_user.username))
+
+            return redirect(url_for("public_profile", username=profile_user.username))
+
+        existing_experiences = profile_user.experiences
+        if not isinstance(existing_experiences, list):
+            existing_experiences = []
+        experiences_text = "\n".join(
+            str(item).strip() for item in existing_experiences if str(item).strip()
+        )
+        return render_template(
+            "profile_edit.html",
+            profile_user=profile_user,
+            experiences_text=experiences_text,
+        )
     
     @app.route("/profile_page")
     def profile_page():

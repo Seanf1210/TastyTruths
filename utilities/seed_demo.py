@@ -18,17 +18,28 @@ def _default_bio_for_role(role: str) -> str:
     return f"I am a {role}"
 
 
+def _default_experiences_for_role(role: str) -> list[str]:
+    if role == "admin":
+        return ["Site moderation", "Community management"]
+    if role == "moderator":
+        return ["Recipe review", "Content moderation"]
+    return ["Home cooking", "Trying new recipes weekly"]
+
+
 def _ensure_demo_user() -> User:
     user = User.query.filter_by(username=DEMO_USERNAME).first()
     if user:
         if not (user.bio or "").strip():
             user.bio = _default_bio_for_role("user")
+        if not isinstance(user.experiences, list) or not user.experiences:
+            user.experiences = _default_experiences_for_role("user")
         return user
     user = User(
         username=DEMO_USERNAME,
         email="demo@example.com",
         role="normal",
         bio=_default_bio_for_role("user"),
+        experiences=_default_experiences_for_role("user"),
     )
     user.set_password("demo-user")
     db.session.add(user)
@@ -40,12 +51,15 @@ def _ensure_staff_users() -> tuple[User, User]:
     if admin:
         if not (admin.bio or "").strip():
             admin.bio = _default_bio_for_role("admin")
+        if not isinstance(admin.experiences, list) or not admin.experiences:
+            admin.experiences = _default_experiences_for_role("admin")
     else:
         admin = User(
             username="demo_admin",
             email="admin@example.com",
             role="admin",
             bio=_default_bio_for_role("admin"),
+            experiences=_default_experiences_for_role("admin"),
         )
         admin.set_password("demo-admin")
         db.session.add(admin)
@@ -54,12 +68,15 @@ def _ensure_staff_users() -> tuple[User, User]:
     if moderator:
         if not (moderator.bio or "").strip():
             moderator.bio = _default_bio_for_role("moderator")
+        if not isinstance(moderator.experiences, list) or not moderator.experiences:
+            moderator.experiences = _default_experiences_for_role("moderator")
     else:
         moderator = User(
             username="demo_moderator",
             email="moderator@example.com",
             role="moderator",
             bio=_default_bio_for_role("moderator"),
+            experiences=_default_experiences_for_role("moderator"),
         )
         moderator.set_password("demo-moderator")
         db.session.add(moderator)

@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Edit Profile - {{ profile_user.username }}{% endblock %}
+{% block content %}
+<div class="profile-page container">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <section class="profile-alerts" aria-live="polite">
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }}">{{ message }}</div>
+    {% endfor %}
+  </section>
+  {% endif %}
+  {% endwith %}
+
+  <section class="profile-header">
+    <div class="profile-picture-area">
+      <h1>Edit Profile</h1>
+      <p>{{ profile_user.username }}</p>
+    </div>
+  </section>
+
+  <section class="profile-bio-area">
+    <form method="post" action="{{ url_for('edit_public_profile', username=profile_user.username) }}" class="profile-bio-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <label for="profile-image-path">Profile picture URL or static path</label>
+      <input
+        id="profile-image-path"
+        name="profile_image_path"
+        type="text"
+        maxlength="255"
+        value="{{ profile_user.profile_image_path or '' }}"
+        placeholder="https://example.com/avatar.jpg or uploads/profiles/me.jpg"
+      >
+
+      <label for="profile-bio">Bio</label>
+      <textarea
+        id="profile-bio"
+        name="bio"
+        rows="5"
+        maxlength="500"
+        placeholder="Write your bio here..."
+      >{{ profile_user.bio or "" }}</textarea>
+
+      <label for="profile-experiences">Experiences (one per line)</label>
+      <textarea
+        id="profile-experiences"
+        name="experiences_text"
+        rows="6"
+        maxlength="3000"
+        placeholder="Line cook&#10;Recipe testing&#10;Food blogging"
+      >{{ experiences_text }}</textarea>
+
+      <button type="submit" class="button">Save Profile</button>
+      <a href="{{ url_for('public_profile', username=profile_user.username) }}" class="button button-secondary">Cancel</a>
+    </form>
+  </section>
+</div>
+{% endblock %}
