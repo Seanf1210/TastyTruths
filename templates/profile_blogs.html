@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}{{ profile_user.username }}'s Blogs - Tasty Truths{% endblock %}
+{% block content %}
+<section class="blog-hero container">
+  <h1>{{ profile_user.username }}'s Blogs</h1>
+  <p>Posts written by {{ profile_user.username }}.</p>
+</section>
+
+<section class="blog-list container" aria-label="Blogs by {{ profile_user.username }}">
+  {% if posts %}
+  {% for post in posts %}
+  <article class="blog-post-card">
+    <header>
+      <h2>
+        <a href="{{ url_for('blog_post', slug=post.slug) }}">{{ post.title }}</a>
+      </h2>
+      <p class="blog-meta">
+        <time datetime="{{ post.created_at.isoformat() }}">{{ post.created_at.strftime("%B %d, %Y") }}</time>
+        <span aria-hidden="true">·</span>
+        <span class="blog-author">
+          <a href="{{ url_for('public_profile', username=profile_user.username) }}">{{ profile_user.username }}</a>
+        </span>
+      </p>
+    </header>
+    <p class="blog-summary">{{ post.summary }}</p>
+    <a class="blog-read-more" href="{{ url_for('blog_post', slug=post.slug) }}">Read more</a>
+  </article>
+  {% endfor %}
+  {% else %}
+  <p class="blog-empty">No blog posts yet for this user.</p>
+  {% endif %}
+</section>
+{% endblock %}

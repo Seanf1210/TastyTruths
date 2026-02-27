@@ -118,3 +118,33 @@ def test_admin_can_delete_account():
         assert db.session.get(User, target.id) is None
         db.session.remove()
         db.drop_all()
+
+
+def test_admin_override_can_delete_account():
+    app = create_app(
+        admin_override=True,
+        config_overrides={
+            "TESTING": True,
+            "SQLALCHEMY_DATABASE_URI": "sqlite://",
+            "SQLALCHEMY_ENGINE_OPTIONS": {
+                "connect_args": {"check_same_thread": False},
+                "poolclass": StaticPool,
+            },
+            "WTF_CSRF_ENABLED": False,
+        },
+        seed_demo=False,
+    )
+    client = app.test_client()
+
+    with app.app_context():
+        target = _create_user("victim", role="normal")
+        db.session.commit()
+
+    resp = client.post(f"/users/{target.id}/delete", follow_redirects=False)
+
+    assert resp.status_code in (302, 200)
+
+    with app.app_context():
+        assert db.session.get(User, target.id) is None
+        db.session.remove()
+        db.drop_all()

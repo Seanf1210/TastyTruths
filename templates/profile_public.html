@@ -35,5 +35,31 @@
       </div>
     </section>
   </div>
+
+  <section class="profile-user-blogs">
+    <h2>Blogs</h2>
+    {% if recent_blog_posts %}
+    <div class="blog-list" aria-label="Recent blogs by {{ profile_user.username }}">
+      {% for post in recent_blog_posts %}
+      <article class="blog-post-card">
+        <header>
+          <h3>
+            <a href="{{ url_for('blog_post', slug=post.slug) }}">{{ post.title }}</a>
+          </h3>
+          <p class="blog-meta">
+            <time datetime="{{ post.created_at.isoformat() }}">{{ post.created_at.strftime("%B %d, %Y") }}</time>
+          </p>
+        </header>
+        {% if post.summary %}
+        <p class="blog-summary">{{ post.summary }}</p>
+        {% endif %}
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="no-data">No blogs yet.</p>
+    {% endif %}
+    <a class="blog-read-more" href="{{ url_for('profile_blogs', username=profile_user.username) }}">See all blogs</a>
+  </section>
 </div>
 {% endblock %}

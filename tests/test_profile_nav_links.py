@@ -26,7 +26,7 @@ def _make_app():
     )
 
 
-def test_header_and_footer_profile_links_point_to_public_profile_when_logged_in():
+def test_footer_profile_link_points_to_public_profile_when_logged_in():
     app = _make_app()
     client = app.test_client()
 
@@ -41,8 +41,7 @@ def test_header_and_footer_profile_links_point_to_public_profile_when_logged_in(
 
     expected_href = '/profile/chef_nav'
     assert response.status_code == 200
-    assert f'class="nav-profile-link">Profile</a>' in body
-    assert f'href="{expected_href}" class="nav-profile-link"' in body
+    assert 'class="nav-profile-link"' not in body
     assert f'href="{expected_href}" class="footer-profile-link"' in body
 
     with app.app_context():
@@ -50,7 +49,7 @@ def test_header_and_footer_profile_links_point_to_public_profile_when_logged_in(
         db.drop_all()
 
 
-def test_header_and_footer_profile_links_point_to_login_when_logged_out():
+def test_footer_profile_link_points_to_login_when_logged_out():
     app = _make_app()
     client = app.test_client()
 
@@ -58,7 +57,7 @@ def test_header_and_footer_profile_links_point_to_login_when_logged_out():
     body = response.data.decode("utf-8")
 
     assert response.status_code == 200
-    assert 'href="/login" class="nav-profile-link"' in body
+    assert 'class="nav-profile-link"' not in body
     assert 'href="/login" class="footer-profile-link"' in body
 
     with app.app_context():

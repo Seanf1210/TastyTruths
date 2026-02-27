@@ -109,6 +109,7 @@ class AdminOverrideUser(UserMixin):
     def __init__(self, user_id: str = "admin-override", proxied_user=None, dietary_restrictions=None):
         self._proxied_user = proxied_user
         self._dietary_restrictions = []
+        self.role = "admin"
 
         if proxied_user is not None:
             self.id = proxied_user.id
@@ -653,6 +654,13 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
         if not profile_user:
             return render_template("404.html"), 404
 
+        recent_blog_posts = (
+            BlogPost.query.filter_by(user_id=profile_user.id)
+            .order_by(BlogPost.created_at.desc())
+            .limit(5)
+            .all()
+        )
+
         experiences = _normalize_experiences_for_display(profile_user.experiences)
         avatar_url = _avatar_url_for_user(profile_user)
         can_edit_profile = (
@@ -666,6 +674,30 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
             experiences=experiences,
             avatar_url=avatar_url,
             can_edit_profile=can_edit_profile,
+            recent_blog_posts=recent_blog_posts,
+        )
+
+    @app.get("/profile/<username>/blogs")
+    def profile_blogs(username: str):
+        normalized_username = (username or "").strip().lower()
+        if not normalized_username:
+            return render_template("404.html"), 404
+
+        profile_user = User.query.filter(
+            func.lower(User.username) == normalized_username
+        ).first()
+        if not profile_user:
+            return render_template("404.html"), 404
+
+        posts = (
+            BlogPost.query.filter_by(user_id=profile_user.id)
+            .order_by(BlogPost.created_at.desc())
+            .all()
+        )
+        return render_template(
+            "profile_blogs.html",
+            profile_user=profile_user,
+            posts=posts,
         )
 
     @app.route("/profile/<username>/edit", methods=["GET", "POST"])
