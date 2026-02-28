@@ -141,3 +141,94 @@
 
   renderChips();
 })();
+
+// --- Bio Edit Toggle ---
+(function () {
+  const editBtn = document.getElementById("edit-bio-btn");
+  const cancelBtn = document.getElementById("cancel-bio-btn");
+  const bioForm = document.getElementById("bio-form");
+  const bioDisplay = document.getElementById("bio-display");
+  const bioTextarea = document.getElementById("bio-textarea");
+
+  // If not on your own profile, elements won't exist
+  if (!editBtn || !bioForm || !bioDisplay) return;
+
+  function showEditor() {
+    bioDisplay.style.display = "none";   // hide text
+    editBtn.style.display = "none";      // hide edit button
+    bioForm.style.display = "block";     // show textarea + save
+    bioTextarea.focus();                 // auto focus textbox
+  }
+
+  function hideEditor() {
+    bioForm.style.display = "none";      // hide form
+    bioDisplay.style.display = "block";  // show text again
+    editBtn.style.display = "inline-block"; // show edit button
+  }
+
+  // Click "Edit Bio"
+  editBtn.addEventListener("click", showEditor);
+
+  // Click "Cancel"
+  if (cancelBtn) {
+    cancelBtn.addEventListener("click", hideEditor);
+  }
+})();
+// --- Updated Bio Editor ---
+(function () {
+  const editBtn = document.getElementById("edit-bio-btn");
+  const cancelBtn = document.getElementById("cancel-bio-btn");
+  const bioForm = document.getElementById("bio-form");
+  const bioDisplay = document.getElementById("bio-display");
+  const bioTextarea = document.getElementById("bio-textarea");
+  const counter = document.getElementById("bio–char–counter");
+
+  if (!bioForm || !bioTextarea || !counter) return;
+
+  function updateCounter() {
+    const max = 255;
+    // If they somehow paste more than 255, chop it off instantly
+    if (bioTextarea.value.length > max) {
+      bioTextarea.value = bioTextarea.value.substring(0, max);
+    }
+    const current = bioTextarea.value.length;
+    counter.textContent = `${current}/${max}`;
+    counter.style.color = current >= max ? "red" : "inherit";
+  }
+
+  function showEditor() {
+    // 1. Grab exactly what is shown on the screen right now
+    let currentBio = bioDisplay.textContent.trim();
+    
+    // 2. If it's just the placeholder, clear the box
+    if (currentBio === "No bio yet.") {
+      currentBio = "";
+    }
+
+    // 3. Put that text into the box so it's there to edit
+    bioTextarea.value = currentBio;
+    updateCounter();
+
+    // 4. Swap visibility
+    bioDisplay.style.display = "none";
+    bioForm.style.display = "block";
+    if (editBtn) editBtn.style.display = "none";
+
+    bioTextarea.focus();
+    bioTextarea.setSelectionRange(bioTextarea.value.length, bioTextarea.value.length);
+  }
+
+  function hideEditor() {
+    bioForm.style.display = "none";
+    bioDisplay.style.display = "block";
+    if (editBtn) editBtn.style.display = "inline-block";
+  }
+
+  // Bind the events
+  bioTextarea.addEventListener("input", updateCounter);
+  if (editBtn) editBtn.addEventListener("click", showEditor);
+  if (cancelBtn) cancelBtn.addEventListener("click", hideEditor);
+
+  // Initial call
+  updateCounter();
+})();
