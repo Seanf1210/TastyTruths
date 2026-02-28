@@ -28,20 +28,47 @@
     <div class="profile-grid">
         <section class="profile-bio-area">
             <h2>Bio</h2>
+
             <div class="bio-content">
-                <p>{{ profile_user.bio if profile_user and profile_user.bio else "No bio yet." }}</p>
+                <!-- Display Mode -->
+                <p id="bio-display">
+                    {{ profile_user.bio if profile_user and profile_user.bio else "No bio yet." }}
+                </p>
+
                 {% if current_user.is_authenticated and profile_user and current_user.id == profile_user.id %}
-                <form method="post" action="{{ url_for('update_profile_bio') }}" class="profile-bio-form">
+                <!-- Edit Button -->
+                <button type="button" class="button" id="edit-bio-btn">
+                    Edit Bio
+                </button>
+
+                <!-- Hidden Edit Form -->
+                <form
+                    method="post"
+                    action="{{ url_for('update_profile_bio') }}"
+                    class="profile-bio-form"
+                    id="bio-form"
+                    style="display: none;"
+                >
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-                    <textarea
-                        name="bio"
-                        rows="4"
-                        maxlength="500"
-                        placeholder="Write your bio here..."
-                    >{{ profile_user.bio or "" }}</textarea>
+                    <div class ="bio-textarea-wrap">
+                        <textarea
+                            id="bio-textarea"
+                            name="bio"
+                            rows="4"
+                            maxlength="500"
+                            placeholder="Write your bio here..."
+                        >{{ profile_user.bio or "" }}</textarea>
 
-                    <button type="submit" class="button">Save Bio</button>
+                        <div id = "bio–char–counter" class = "bio–char–counter"> 0/500</div>
+                    </div>
+
+                    <div class="bio-form-actions">
+                        <button type="submit" class="button">Save Bio</button>
+                        <button type="button" class="button button-secondary" id="cancel-bio-btn">
+                            Cancel
+                        </button>
+                    </div>
                 </form>
                 {% endif %}
             </div>
@@ -161,6 +188,6 @@
         maxLength: 32
     };
 </script>
-<script src="{{ url_for('static', filename='js/profile-page.js') }}"></script>
+<script src="{{ url_for('static', filename='js/profile-page.js') }}?v=2"></script>
 {% endif %}
 {% endblock %}
