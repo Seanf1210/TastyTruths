@@ -58,7 +58,7 @@ def test_public_profile_uses_default_avatar_when_missing_profile_image():
     body = response.data.decode("utf-8")
 
     assert response.status_code == 200
-    assert '/static/assets/images/account_circle.png' in body
+    assert "/static/uploads/profile_pics/default.png" in body
 
 
 def test_public_profile_does_not_display_email_or_access_level():

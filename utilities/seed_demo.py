@@ -12,6 +12,7 @@ from services.nutrition import ensure_ingredient_exists_in_assets
 SENTINEL_RECIPE_SLUG = "demo-spaghetti-bolognese"
 SENTINEL_BLOG_SLUG = "demo-welcome"
 DEMO_USERNAME = "demo_user"
+DEFAULT_PROFILE_IMAGE = "default.png"
 
 
 def _default_bio_for_role(role: str) -> str:
@@ -33,6 +34,8 @@ def _ensure_demo_user() -> User:
             user.bio = _default_bio_for_role("user")
         if not isinstance(user.experiences, list) or not user.experiences:
             user.experiences = _default_experiences_for_role("user")
+        if not (user.profile_image or "").strip():
+            user.profile_image = DEFAULT_PROFILE_IMAGE
         return user
     user = User(
         username=DEMO_USERNAME,
@@ -40,6 +43,7 @@ def _ensure_demo_user() -> User:
         role="normal",
         bio=_default_bio_for_role("user"),
         experiences=_default_experiences_for_role("user"),
+        profile_image=DEFAULT_PROFILE_IMAGE,
     )
     user.set_password("demo-user")
     db.session.add(user)
@@ -53,6 +57,8 @@ def _ensure_staff_users() -> tuple[User, User]:
             admin.bio = _default_bio_for_role("admin")
         if not isinstance(admin.experiences, list) or not admin.experiences:
             admin.experiences = _default_experiences_for_role("admin")
+        if not (admin.profile_image or "").strip():
+            admin.profile_image = DEFAULT_PROFILE_IMAGE
     else:
         admin = User(
             username="demo_admin",
@@ -60,6 +66,7 @@ def _ensure_staff_users() -> tuple[User, User]:
             role="admin",
             bio=_default_bio_for_role("admin"),
             experiences=_default_experiences_for_role("admin"),
+            profile_image=DEFAULT_PROFILE_IMAGE,
         )
         admin.set_password("demo-admin")
         db.session.add(admin)
@@ -70,6 +77,8 @@ def _ensure_staff_users() -> tuple[User, User]:
             moderator.bio = _default_bio_for_role("moderator")
         if not isinstance(moderator.experiences, list) or not moderator.experiences:
             moderator.experiences = _default_experiences_for_role("moderator")
+        if not (moderator.profile_image or "").strip():
+            moderator.profile_image = DEFAULT_PROFILE_IMAGE
     else:
         moderator = User(
             username="demo_moderator",
@@ -77,6 +86,7 @@ def _ensure_staff_users() -> tuple[User, User]:
             role="moderator",
             bio=_default_bio_for_role("moderator"),
             experiences=_default_experiences_for_role("moderator"),
+            profile_image=DEFAULT_PROFILE_IMAGE,
         )
         moderator.set_password("demo-moderator")
         db.session.add(moderator)

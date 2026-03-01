@@ -17,6 +17,7 @@ import json
 import argparse
 import random
 import sys
+from uuid import uuid4
 from functools import wraps
 from sqlalchemy import func
 from flask import Flask, request, jsonify, redirect, url_for, redirect, render_template, flash, g, session, has_request_context
@@ -103,6 +104,11 @@ COMMON_DIETARY_RESTRICTIONS = [
     "pescatarian",
 ]
 
+DEFAULT_PROFILE_IMAGE = "default.png"
+PROFILE_PICS_SUBDIR = "uploads/profile_pics"
+ALLOWED_PROFILE_PIC_EXTENSIONS = {"png", "jpg", "jpeg", "webp", "gif"}
+ALLOWED_PROFILE_PIC_MIMETYPES = {"image/png", "image/jpeg", "image/webp", "image/gif"}
+
 class AdminOverrideUser(UserMixin):
     SESSION_DIETARY_KEY = "admin_override_dietary_restrictions"
 
@@ -169,12 +175,20 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
         PERMANENT_SESSION_LIFETIME=timedelta(hours=8),
         WTF_CSRF_TIME_LIMIT=None,        # CSRF token lifetime (optional)
         MAX_CONTENT_LENGTH=2 * 1024 * 1024,  # 2MB file upload limit
+        UPLOAD_FOLDER_PROFILE_PICS=None,
+        ALLOWED_PROFILE_PIC_EXTENSIONS=ALLOWED_PROFILE_PIC_EXTENSIONS,
+        DEFAULT_PROFILE_IMAGE=DEFAULT_PROFILE_IMAGE,
+        PROFILE_PICS_SUBDIR=PROFILE_PICS_SUBDIR,
         # Keep attributes available after commit for request/test flows that
         # access ids outside the original app context.
         SQLALCHEMY_SESSION_OPTIONS={"expire_on_commit": False},
     )
     if config_overrides:
         app.config.update(config_overrides)
+    if not app.config.get("UPLOAD_FOLDER_PROFILE_PICS"):
+        app.config["UPLOAD_FOLDER_PROFILE_PICS"] = os.path.join(
+            app.static_folder, *app.config["PROFILE_PICS_SUBDIR"].split("/")
+        )
     app.config["ADMIN_OVERRIDE"] = bool(admin_override)
 
     # --- init extensions in the right order ---
@@ -623,6 +637,62 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
     def contact():
         return render_template("contact.html")
 
+    def _profile_pics_upload_dir_abs() -> str:
+        return os.path.abspath(app.config["UPLOAD_FOLDER_PROFILE_PICS"])
+
+    def _profile_pic_url(filename: str) -> str:
+        clean_name = (filename or "").strip()
+        if clean_name != os.path.basename(clean_name):
+            clean_name = app.config["DEFAULT_PROFILE_IMAGE"]
+        return url_for(
+            "static",
+            filename=f"{app.config['PROFILE_PICS_SUBDIR']}/{clean_name}",
+        )
+
+    def _avatar_url_for_user(user: User) -> str:
+        profile_image = (getattr(user, "profile_image", "") or "").strip()
+        if not profile_image:
+            profile_image = app.config["DEFAULT_PROFILE_IMAGE"]
+        return _profile_pic_url(profile_image)
+
+    def _allowed_file(filename: str) -> bool:
+        if not filename:
+            return False
+        sanitized = secure_filename(filename)
+        if "." not in sanitized:
+            return False
+        ext = sanitized.rsplit(".", 1)[1].lower()
+        return ext in set(app.config["ALLOWED_PROFILE_PIC_EXTENSIONS"])
+
+    def _is_allowed_profile_pic_mimetype(mimetype: str) -> bool:
+        normalized = (mimetype or "").strip().lower()
+        return normalized in ALLOWED_PROFILE_PIC_MIMETYPES
+
+    def _generate_profile_pic_filename(user_id: int, ext: str) -> str:
+        return f"user_{user_id}_{uuid4().hex}.{ext.lower()}"
+
+    def _safe_delete_profile_pic(path_or_filename: str) -> None:
+        candidate = (path_or_filename or "").strip()
+        default_name = app.config["DEFAULT_PROFILE_IMAGE"]
+        if not candidate or candidate == default_name:
+            return
+
+        # Only filenames are supported; reject nested paths/traversal.
+        if candidate != os.path.basename(candidate):
+            return
+
+        upload_dir = _profile_pics_upload_dir_abs()
+        target_path = os.path.abspath(os.path.join(upload_dir, candidate))
+        if os.path.commonpath([upload_dir, target_path]) != upload_dir:
+            return
+
+        try:
+            os.remove(target_path)
+        except FileNotFoundError:
+            return
+        except OSError as exc:
+            print(f"WARNING unable to delete profile picture '{candidate}': {exc}")
+
     @app.get("/profile/<username>")
     def public_profile(username: str):
         def _normalize_experiences_for_display(raw_experiences):
@@ -635,14 +705,6 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
             if not isinstance(data, list):
                 return []
             return [str(item).strip() for item in data if str(item).strip()]
-
-        def _avatar_url_for_user(user: User) -> str:
-            profile_image_path = (user.profile_image_path or "").strip()
-            if profile_image_path.startswith("http://") or profile_image_path.startswith("https://"):
-                return profile_image_path
-            if profile_image_path:
-                return url_for("static", filename=profile_image_path)
-            return url_for("static", filename="assets/images/account_circle.png")
 
         normalized_username = (username or "").strip().lower()
         if not normalized_username:
@@ -737,14 +799,13 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
 
         if request.method == "POST":
             bio = (request.form.get("bio") or "").strip()
-            profile_image_path = (request.form.get("profile_image_path") or "").strip()
             experiences_text = request.form.get("experiences_text") or ""
+            uploaded_file = request.files.get("profile_picture")
+            new_profile_image = None
+            old_profile_image = (profile_user.profile_image or "").strip()
 
             if len(bio) > 500:
                 flash("Bio is too long (max 500 characters).", "error")
-                return redirect(url_for("edit_public_profile", username=profile_user.username))
-            if len(profile_image_path) > 255:
-                flash("Profile image path is too long (max 255 characters).", "error")
                 return redirect(url_for("edit_public_profile", username=profile_user.username))
 
             experiences, experiences_error = _normalize_experiences_for_storage(experiences_text)
@@ -752,14 +813,39 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
                 flash(experiences_error, "error")
                 return redirect(url_for("edit_public_profile", username=profile_user.username))
 
+            if uploaded_file and uploaded_file.filename:
+                if not _allowed_file(uploaded_file.filename):
+                    flash("Invalid image file type. Allowed: png, jpg, jpeg, webp, gif.", "error")
+                    return redirect(url_for("edit_public_profile", username=profile_user.username))
+                if not _is_allowed_profile_pic_mimetype(uploaded_file.mimetype):
+                    flash("Uploaded file must be an image.", "error")
+                    return redirect(url_for("edit_public_profile", username=profile_user.username))
+
+                sanitized = secure_filename(uploaded_file.filename)
+                ext = sanitized.rsplit(".", 1)[1].lower()
+                new_profile_image = _generate_profile_pic_filename(profile_user.id, ext)
+                upload_dir = _profile_pics_upload_dir_abs()
+                os.makedirs(upload_dir, exist_ok=True)
+                uploaded_file.save(os.path.join(upload_dir, new_profile_image))
+
             profile_user.bio = bio
-            profile_user.profile_image_path = profile_image_path or None
+            if new_profile_image:
+                profile_user.profile_image = new_profile_image
+            elif not (profile_user.profile_image or "").strip():
+                profile_user.profile_image = app.config["DEFAULT_PROFILE_IMAGE"]
             profile_user.experiences = experiences
             try:
                 db.session.commit()
-                flash("Profile updated.", "success")
+                if new_profile_image and old_profile_image != new_profile_image:
+                    _safe_delete_profile_pic(old_profile_image)
+                flash(
+                    "Profile picture updated." if new_profile_image else "Profile updated.",
+                    "success",
+                )
             except SQLAlchemyError as exc:
                 db.session.rollback()
+                if new_profile_image:
+                    _safe_delete_profile_pic(new_profile_image)
                 print(f"ERROR saving profile: {exc}")
                 flash("Unable to save profile right now.", "error")
                 return redirect(url_for("edit_public_profile", username=profile_user.username))
@@ -776,6 +862,7 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
             "profile_edit.html",
             profile_user=profile_user,
             experiences_text=experiences_text,
+            avatar_url=_avatar_url_for_user(profile_user),
         )
     
     @app.route("/profile_page")
@@ -793,6 +880,7 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
         return render_template(
             "profile_page.html",
             profile_user=profile_user,
+            avatar_url=_avatar_url_for_user(profile_user) if profile_user else _profile_pic_url(app.config["DEFAULT_PROFILE_IMAGE"]),
             user_recipes=user_recipes,
             dietary_restrictions=dietary_restrictions,
             common_dietary_restrictions=COMMON_DIETARY_RESTRICTIONS,
@@ -873,7 +961,37 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
     def create_recipe_page():
         """Display and handle the recipe creation form (requires login)"""
         form = RecipeForm()
-        
+        # Expected POST shape:
+        # WTForms fields: title, instructions, ingredients, image, prep_time_minutes,
+        # cook_time_minutes, estimated_cost.
+        # Dynamic ingredient UI sends row arrays: ingredient_name[], ingredient_id[],
+        # ingredient_quantity[], ingredient_unit[].
+        ingredient_names = request.form.getlist("ingredient_name[]")
+        ingredient_ids = request.form.getlist("ingredient_id[]")
+        ingredient_qtys = request.form.getlist("ingredient_quantity[]")
+        ingredient_units = request.form.getlist("ingredient_unit[]")
+
+        if request.method == "POST":
+            app.logger.debug(
+                "Create recipe payload keys: form=%s files=%s json=%s",
+                sorted(request.form.keys()),
+                sorted(request.files.keys()),
+                sorted((request.get_json(silent=True) or {}).keys()),
+            )
+            app.logger.debug(
+                "Create recipe form values: title=%r instructions_len=%s prep=%r cook=%r cost=%r",
+                (request.form.get("title") or "").strip(),
+                len((request.form.get("instructions") or "").strip()),
+                request.form.get("prep_time_minutes"),
+                request.form.get("cook_time_minutes"),
+                request.form.get("estimated_cost"),
+            )
+            normalized_names = [name.strip() for name in ingredient_names if (name or "").strip()]
+            if normalized_names and not (form.ingredients.data or "").strip():
+                # Ingredient rows are authoritative; mirror them into the hidden field
+                # so WTForms validation behaves consistently.
+                form.ingredients.data = "\n".join(normalized_names)
+
         if form.validate_on_submit():
             # Handle image upload if provided
             image_filename = None
@@ -890,11 +1008,6 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
                 
                 file.save(os.path.join(upload_dir, filename))
                 image_filename = f"uploads/recipes/{filename}"
-            
-            ingredient_names = request.form.getlist("ingredient_name[]")
-            ingredient_ids = request.form.getlist("ingredient_id[]")
-            ingredient_qtys = request.form.getlist("ingredient_quantity[]")
-            ingredient_units = request.form.getlist("ingredient_unit[]")
 
             ingredients_payload = []
             if ingredient_names:
@@ -934,6 +1047,12 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
                     if line.strip()
                 ]
                 ingredients_normalized = "\n".join(ingredients_list)
+
+            app.logger.debug(
+                "Create recipe parsed ingredients: count=%s sample=%r",
+                len(ingredients_payload),
+                ingredients_payload[:3],
+            )
             
             # Create recipe
             recipe = Recipe(
@@ -948,15 +1067,34 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
             )
             
             try:
+                app.logger.debug("Create recipe calling db.session.add for title=%r", recipe.title)
                 db.session.add(recipe)
+                app.logger.debug("Create recipe calling db.session.commit")
                 db.session.commit()
+                detail_url = url_for("recipe_detail", id_slug=f"{recipe.id}-{recipe.slug}")
+                app.logger.debug(
+                    "Create recipe commit succeeded id=%s slug=%s redirect=%s",
+                    recipe.id,
+                    recipe.slug,
+                    detail_url,
+                )
                 flash("Recipe created successfully!", "success")
-                return redirect(url_for("recipe_detail", id_slug=f"{recipe.id}-{recipe.slug}"))
+                return redirect(detail_url)
             except SQLAlchemyError as e:
                 db.session.rollback()
-                print(f"ERROR saving recipe: {e}")
+                app.logger.exception("Create recipe database error: %s", e)
                 flash("An error occurred while saving the recipe. Please try again.", "error")
-        
+                return render_template("create_recipe.html", form=form), 500
+            except Exception as exc:
+                db.session.rollback()
+                app.logger.exception("Create recipe unexpected error: %s", exc)
+                flash("An unexpected error occurred while saving the recipe.", "error")
+                return render_template("create_recipe.html", form=form), 500
+
+        if request.method == "POST":
+            app.logger.debug("Create recipe validation errors: %s", form.errors)
+            return render_template("create_recipe.html", form=form), 400
+
         return render_template("create_recipe.html", form=form)
 
     @csrf.exempt
@@ -1000,6 +1138,7 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
                     last_name=last_name or None,
                     gender=gender or None,
                     role="normal",
+                    profile_image=app.config["DEFAULT_PROFILE_IMAGE"],
                 )
                 
                 # Handle date of birth
@@ -1089,7 +1228,11 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
         if User.query.filter_by(username=username).first():
             return jsonify({"error": "username already registered"}), 409
 
-        u = User(username=username, role="normal")
+        u = User(
+            username=username,
+            role="normal",
+            profile_image=app.config["DEFAULT_PROFILE_IMAGE"],
+        )
         u.set_password(password, ph)
         db.session.add(u)
         db.session.commit()
@@ -1164,7 +1307,11 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
             print("ERROR saving recipe:", e)
             return jsonify({"error": "server error saving recipe", "detail": str(e)}), 500
 
-        return jsonify({"id": r.id, "slug": r.slug, "title": r.title}), 201
+        detail_url = url_for("recipe_detail", id_slug=f"{r.id}-{r.slug}")
+        response = jsonify({"id": r.id, "slug": r.slug, "title": r.title, "url": detail_url})
+        response.status_code = 201
+        response.headers["Location"] = detail_url
+        return response
 
     @app.post("/recipes/<int:recipe_id>/delete")
     @login_required

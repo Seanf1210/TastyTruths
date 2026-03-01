@@ -14,23 +14,22 @@
 
   <section class="profile-header">
     <div class="profile-picture-area">
+      <img src="{{ avatar_url }}" alt="{{ profile_user.username }} profile picture" class="profile-pic">
       <h1>Edit Profile</h1>
       <p>{{ profile_user.username }}</p>
     </div>
   </section>
 
   <section class="profile-bio-area">
-    <form method="post" action="{{ url_for('edit_public_profile', username=profile_user.username) }}" class="profile-bio-form">
+    <form method="post" action="{{ url_for('edit_public_profile', username=profile_user.username) }}" class="profile-bio-form" enctype="multipart/form-data">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-      <label for="profile-image-path">Profile picture URL or static path</label>
+      <label for="profile-picture">Profile picture</label>
       <input
-        id="profile-image-path"
-        name="profile_image_path"
-        type="text"
-        maxlength="255"
-        value="{{ profile_user.profile_image_path or '' }}"
-        placeholder="https://example.com/avatar.jpg or uploads/profiles/me.jpg"
+        id="profile-picture"
+        name="profile_picture"
+        type="file"
+        accept="image/*,.png,.jpg,.jpeg,.webp,.gif"
       >
 
       <label for="profile-bio">Bio</label>

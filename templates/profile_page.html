@@ -14,7 +14,7 @@
 
     <section class="profile-header">
         <div class="profile-picture-area">
-            <img src="{{ url_for('static', filename='assets/images/account_circle.png') }}" alt="Profile Picture" class="profile-pic">
+            <img src="{{ avatar_url }}" alt="Profile Picture" class="profile-pic">
             <h1>{{ profile_user.username if profile_user else "Guest Chef" }}</h1>
         </div>
         {% if current_user.is_authenticated and current_user.role == 'admin' and profile_user %}

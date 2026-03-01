@@ -710,5 +710,75 @@
     },
     "notes": "",
     "grams_per_cup": 122
+  },
+  {
+    "id": "pasta",
+    "name": "Pasta",
+    "category": "",
+    "dietary_restrictions": [],
+    "nutrition_per_gram": {
+      "calories": 0.0,
+      "protein_g": 0.0,
+      "fat_g": 0.0,
+      "carbs_g": 0.0
+    },
+    "notes": "",
+    "status": "incomplete"
+  },
+  {
+    "id": "tomato_sauce",
+    "name": "Tomato sauce",
+    "category": "",
+    "dietary_restrictions": [],
+    "nutrition_per_gram": {
+      "calories": 0.0,
+      "protein_g": 0.0,
+      "fat_g": 0.0,
+      "carbs_g": 0.0
+    },
+    "notes": "",
+    "status": "incomplete"
+  },
+  {
+    "id": "lentils",
+    "name": "Lentils",
+    "category": "",
+    "dietary_restrictions": [],
+    "nutrition_per_gram": {
+      "calories": 0.0,
+      "protein_g": 0.0,
+      "fat_g": 0.0,
+      "carbs_g": 0.0
+    },
+    "notes": "",
+    "status": "incomplete"
+  },
+  {
+    "id": "vegetable_stock",
+    "name": "Vegetable stock",
+    "category": "",
+    "dietary_restrictions": [],
+    "nutrition_per_gram": {
+      "calories": 0.0,
+      "protein_g": 0.0,
+      "fat_g": 0.0,
+      "carbs_g": 0.0
+    },
+    "notes": "",
+    "status": "incomplete"
+  },
+  {
+    "id": "rice",
+    "name": "Rice",
+    "category": "",
+    "dietary_restrictions": [],
+    "nutrition_per_gram": {
+      "calories": 0.0,
+      "protein_g": 0.0,
+      "fat_g": 0.0,
+      "carbs_g": 0.0
+    },
+    "notes": "",
+    "status": "incomplete"
   }
 ]

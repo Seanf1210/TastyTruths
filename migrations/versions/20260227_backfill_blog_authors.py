@@ -43,6 +43,8 @@ def _get_or_create_fallback_user_id(bind, inspector):
         values["dietary_restrictions"] = "[]"
     if "experiences" in user_columns:
         values["experiences"] = "[]"
+    if "profile_image" in user_columns:
+        values["profile_image"] = "default.png"
     if "created_at" in user_columns:
         values["created_at"] = created_at
 

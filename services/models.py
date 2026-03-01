@@ -218,7 +218,12 @@ class User(db.Model, UserMixin):
     date_of_birth = db.Column(db.Date, nullable=True)
     gender = db.Column(db.String(20), nullable=True)
     bio = db.Column(db.Text, nullable=True, default="")
-    profile_image_path = db.Column(db.String(255), nullable=True)
+    profile_image = db.Column(
+        db.String(255),
+        nullable=False,
+        default="default.png",
+        server_default="default.png",
+    )
     experiences = db.Column(JSON, nullable=False, default=list)
     dietary_restrictions = db.Column(JSON, nullable=False, default=list)
     role = db.Column(
