@@ -218,6 +218,7 @@ class User(db.Model, UserMixin):
     date_of_birth = db.Column(db.Date, nullable=True)
     gender = db.Column(db.String(20), nullable=True)
     bio = db.Column(db.Text, nullable=True, default="")
+    experience = db.Column(db.Text, nullable=True, default="", server_default="")
     profile_image = db.Column(
         db.String(255),
         nullable=False,

@@ -2,7 +2,8 @@
 block content %}
 
 <div class="signup-form">
-  <form action="/signup" method="POST">
+  <form action="{{ url_for('signup') }}" method="POST" enctype="multipart/form-data">
+    {{ form.hidden_tag() }}
     <h2>Create An Account!</h2>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -68,6 +69,16 @@ block content %}
       <option value="other">Other</option>
       <option value="prefer_not_say">Prefer not to say</option></select
     ><br /><br /><br />
+
+    <label for="profile_picture">{{ form.profile_picture.label.text }}</label><br />
+    {{ form.profile_picture(id="profile_picture", accept="image/png,image/jpeg,image/webp") }}<br />
+    <small>PNG/JPG/JPEG/WEBP only. Up to 2MB. Will be cropped to square and resized to 256x256.</small><br />
+    {% if form.profile_picture.errors %}
+      {% for error in form.profile_picture.errors %}
+        <div class="alert alert-error">{{ error }}</div>
+      {% endfor %}
+    {% endif %}
+    <br />
 
     <div class="terms">
       <input type="checkbox" id="terms" name="terms" required />

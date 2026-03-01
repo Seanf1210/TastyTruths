@@ -2,13 +2,42 @@
 {% block title %}{{ profile_user.username }} - Profile{% endblock %}
 {% block content %}
 <div class="profile-page container">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <section class="profile-alerts" aria-live="polite">
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }}">{{ message }}</div>
+    {% endfor %}
+  </section>
+  {% endif %}
+  {% endwith %}
+
   <section class="profile-header">
     <div class="profile-picture-area">
+      {% if is_owner %}
+      <form
+        method="post"
+        action="{{ url_for('update_profile_picture', username=profile_user.username) }}"
+        enctype="multipart/form-data"
+        class="avatar-upload-form"
+      >
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input
+          type="file"
+          id="profile_picture_input"
+          name="profile_picture"
+          accept="image/png,image/jpeg,image/webp"
+          class="avatar-file-input"
+        >
+        <button type="button" class="avatar-button" aria-label="Update profile picture">
+          <img src="{{ avatar_url }}" alt="{{ profile_user.username }} profile picture" class="profile-pic">
+          <span class="avatar-overlay">Change</span>
+        </button>
+      </form>
+      {% else %}
       <img src="{{ avatar_url }}" alt="{{ profile_user.username }} profile picture" class="profile-pic">
-      <h1>{{ profile_user.username }}</h1>
-      {% if can_edit_profile %}
-      <a href="{{ url_for('edit_public_profile', username=profile_user.username) }}" class="button">Edit Profile</a>
       {% endif %}
+      <h1>{{ profile_user.username }}</h1>
     </div>
   </section>
 
@@ -16,23 +45,132 @@
     <section class="profile-bio-area">
       <h2>Bio</h2>
       <div class="bio-content">
-        <p>{{ profile_user.bio if profile_user.bio else "No bio yet." }}</p>
+        <p id="bio-display" class="profile-text-block">{{ profile_user.bio if profile_user.bio else "No bio yet." }}</p>
+
+        {% if is_owner %}
+        <button type="button" class="button" id="edit-bio-btn">Edit Bio</button>
+        <form
+          method="post"
+          action="{{ url_for('update_profile_bio_public', username=profile_user.username) }}"
+          id="bio-form"
+          class="profile-inline-form"
+          style="display:none"
+        >
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <textarea
+            id="bio-textarea"
+            name="bio"
+            rows="5"
+            maxlength="500"
+            placeholder="Write your bio here..."
+          >{{ profile_user.bio or "" }}</textarea>
+          <div class="bio-form-actions">
+            <button type="submit" class="button">Save Bio</button>
+            <button type="button" class="button button-secondary" id="cancel-bio-btn">Cancel</button>
+          </div>
+        </form>
+        {% endif %}
       </div>
     </section>
 
     <section class="profile-experience-area">
-      <h2>Experiences</h2>
+      <h2>Experience</h2>
       <div class="experience-content">
-        {% if experiences %}
+        <p id="experience-display" class="profile-text-block">{{ experience_text if experience_text else "No experience added yet." }}</p>
+
+        {% if is_owner %}
+        <button type="button" class="button" id="edit-experience-btn">Edit Experience</button>
+        <form
+          method="post"
+          action="{{ url_for('update_profile_experience', username=profile_user.username) }}"
+          id="experience-form"
+          class="profile-inline-form"
+          style="display:none"
+        >
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <textarea
+            id="experience-textarea"
+            name="experience"
+            rows="6"
+            maxlength="1500"
+            placeholder="Share your cooking experience..."
+          >{{ experience_text or "" }}</textarea>
+          <div class="bio-form-actions">
+            <button type="submit" class="button">Save Experience</button>
+            <button type="button" class="button button-secondary" id="cancel-experience-btn">Cancel</button>
+          </div>
+        </form>
+        {% endif %}
+      </div>
+    </section>
+
+    <section class="profile-dietary-area">
+      <h2>Dietary Restrictions</h2>
+      {% if is_owner %}
+      <p class="dietary-help-text">Select common preferences and add your own restrictions.</p>
+      <form method="post" action="{{ url_for('update_profile_dietary', username=profile_user.username) }}" class="dietary-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <fieldset class="dietary-checkboxes">
+          <legend>Common restrictions</legend>
+          {% for restriction in common_dietary_restrictions %}
+          <label class="dietary-option">
+            <input
+              type="checkbox"
+              name="dietary_restrictions"
+              value="{{ restriction }}"
+              {% if restriction in dietary_restrictions %}checked{% endif %}
+            >
+            <span>{{ restriction.replace("-", " ")|title }}</span>
+          </label>
+          {% endfor %}
+        </fieldset>
+
+        {% set custom_restrictions = [] %}
+        {% for item in dietary_restrictions %}
+          {% if item not in common_dietary_restrictions %}
+            {% set _ = custom_restrictions.append(item) %}
+          {% endif %}
+        {% endfor %}
+
+        {% if custom_restrictions %}
+        <fieldset class="dietary-checkboxes">
+          <legend>Custom restrictions</legend>
+          {% for restriction in custom_restrictions %}
+          <label class="dietary-option">
+            <input type="checkbox" name="dietary_restrictions" value="{{ restriction }}" checked>
+            <span>{{ restriction }}</span>
+          </label>
+          {% endfor %}
+        </fieldset>
+        {% endif %}
+
+        <div class="dietary-custom-input">
+          <label for="custom_restriction">Add custom restriction</label>
+          <input
+            id="custom_restriction"
+            type="text"
+            name="custom_restriction"
+            maxlength="40"
+            placeholder="e.g. low sodium"
+            autocomplete="off"
+          >
+        </div>
+
+        <button type="submit" class="button">Save Restrictions</button>
+      </form>
+      {% else %}
+      <div class="experience-content">
+        {% if dietary_restrictions %}
         <ul>
-          {% for experience in experiences %}
-          <li>{{ experience }}</li>
+          {% for restriction in dietary_restrictions %}
+          <li>{{ restriction }}</li>
           {% endfor %}
         </ul>
         {% else %}
-        <p class="no-data">No experiences listed.</p>
+        <p class="no-data">No dietary restrictions listed.</p>
         {% endif %}
       </div>
+      {% endif %}
     </section>
   </div>
 
@@ -62,4 +200,8 @@
     <a class="blog-read-more" href="{{ url_for('profile_blogs', username=profile_user.username) }}">See all blogs</a>
   </section>
 </div>
+{% if is_owner %}
+<script src="{{ url_for('static', filename='js/profile-avatar-upload.js') }}"></script>
+<script src="{{ url_for('static', filename='js/profile-public-edit.js') }}"></script>
+{% endif %}
 {% endblock %}

@@ -3,6 +3,7 @@ import os
 import tempfile
 
 from sqlalchemy.pool import StaticPool
+from PIL import Image
 
 from app import create_app
 from services.db import db
@@ -41,6 +42,15 @@ def _upload_payload(name: str, content: bytes = b"image-bytes", content_type: st
     }
 
 
+def _image_bytes(fmt: str = "PNG", size: tuple[int, int] = (64, 64)) -> bytes:
+    mode = "RGBA" if fmt in {"PNG", "WEBP"} else "RGB"
+    color = (200, 30, 30, 255) if mode == "RGBA" else (200, 30, 30)
+    image = Image.new(mode, size, color=color)
+    buf = io.BytesIO()
+    image.save(buf, format=fmt)
+    return buf.getvalue()
+
+
 def test_logged_in_user_can_get_and_post_own_profile_edit():
     with tempfile.TemporaryDirectory() as upload_dir:
         app = _make_app(upload_dir=upload_dir)
@@ -58,7 +68,7 @@ def test_logged_in_user_can_get_and_post_own_profile_edit():
 
         post_response = client.post(
             "/profile/owner/edit",
-            data=_upload_payload("avatar.png"),
+            data=_upload_payload("avatar.png", _image_bytes("PNG"), "image/png"),
             content_type="multipart/form-data",
             follow_redirects=False,
         )
@@ -68,8 +78,7 @@ def test_logged_in_user_can_get_and_post_own_profile_edit():
         with app.app_context():
             saved = User.query.filter_by(username="owner").first()
             assert saved is not None
-            assert saved.profile_image.startswith(f"user_{saved.id}_")
-            assert saved.profile_image.endswith(".png")
+            assert saved.profile_image.endswith(".webp")
             assert saved.bio == "Updated bio"
             assert saved.experiences == ["Line cook", "Recipe tester"]
             assert os.path.exists(os.path.join(upload_dir, saved.profile_image))
@@ -92,7 +101,7 @@ def test_logged_out_user_cannot_access_profile_edit_routes():
         get_response = client.get("/profile/owner/edit", follow_redirects=False)
         post_response = client.post(
             "/profile/owner/edit",
-            data=_upload_payload("avatar.png"),
+            data=_upload_payload("avatar.png", _image_bytes("PNG"), "image/png"),
             content_type="multipart/form-data",
             follow_redirects=False,
         )
@@ -147,6 +156,43 @@ def test_logged_in_user_cannot_edit_another_users_profile():
             db.drop_all()
 
 
+def test_moderator_cannot_edit_another_users_profile():
+    with tempfile.TemporaryDirectory() as upload_dir:
+        app = _make_app(upload_dir=upload_dir)
+        client = app.test_client()
+
+        with app.app_context():
+            owner = User(
+                username="owner",
+                password_hash="placeholder",
+                bio="Original bio",
+                experiences=["Original experience"],
+            )
+            moderator = User(username="mod", password_hash="placeholder", role="moderator")
+            db.session.add_all([owner, moderator])
+            db.session.commit()
+            mod_id = moderator.id
+
+        _login(client, mod_id)
+        response = client.post(
+            "/profile/owner/edit",
+            data=_upload_payload("avatar.png", _image_bytes("PNG"), "image/png"),
+            content_type="multipart/form-data",
+            follow_redirects=False,
+        )
+
+        assert response.status_code == 403
+
+        with app.app_context():
+            updated = User.query.filter_by(username="owner").first()
+            assert updated is not None
+            assert updated.profile_image == "default.png"
+            assert updated.bio == "Original bio"
+            assert updated.experiences == ["Original experience"]
+            db.session.remove()
+            db.drop_all()
+
+
 def test_uploading_new_picture_replaces_old_and_ignores_missing_old_file():
     with tempfile.TemporaryDirectory() as upload_dir:
         app = _make_app(upload_dir=upload_dir)
@@ -162,7 +208,7 @@ def test_uploading_new_picture_replaces_old_and_ignores_missing_old_file():
 
         first_upload = client.post(
             "/profile/owner/edit",
-            data=_upload_payload("first.png", b"first-image"),
+            data=_upload_payload("first.png", _image_bytes("PNG"), "image/png"),
             content_type="multipart/form-data",
             follow_redirects=False,
         )
@@ -180,7 +226,7 @@ def test_uploading_new_picture_replaces_old_and_ignores_missing_old_file():
 
         second_upload = client.post(
             "/profile/owner/edit",
-            data=_upload_payload("second.jpg", b"second-image", "image/jpeg"),
+            data=_upload_payload("second.jpg", _image_bytes("JPEG"), "image/jpeg"),
             content_type="multipart/form-data",
             follow_redirects=False,
         )
@@ -189,7 +235,7 @@ def test_uploading_new_picture_replaces_old_and_ignores_missing_old_file():
         with app.app_context():
             updated = User.query.filter_by(username="owner").first()
             assert updated.profile_image != first_name
-            assert updated.profile_image.endswith(".jpg")
+            assert updated.profile_image.endswith(".webp")
             assert os.path.exists(os.path.join(upload_dir, updated.profile_image))
 
         with app.app_context():
@@ -211,7 +257,7 @@ def test_profile_image_persists_after_logout_and_login():
         _login(client, user_id)
         upload_response = client.post(
             "/profile/owner/edit",
-            data=_upload_payload("persist.webp", b"persist-image", "image/webp"),
+            data=_upload_payload("persist.webp", _image_bytes("WEBP"), "image/webp"),
             content_type="multipart/form-data",
             follow_redirects=False,
         )
@@ -258,8 +304,9 @@ def test_invalid_file_extension_is_rejected():
             follow_redirects=False,
         )
 
-        assert response.status_code == 302
-        assert response.headers["Location"].endswith("/profile/owner/edit")
+        assert response.status_code == 400
+        body = response.data.decode("utf-8")
+        assert "Only PNG/JPG/JPEG/WEBP allowed." in body
 
         with app.app_context():
             saved = User.query.filter_by(username="owner").first()
@@ -297,7 +344,8 @@ def test_oversized_profile_picture_is_rejected():
             follow_redirects=False,
         )
 
-        assert response.status_code == 413
+        assert response.status_code == 302
+        assert response.headers["Location"].endswith("/profile/owner")
 
         with app.app_context():
             saved = User.query.filter_by(username="owner").first()
@@ -326,11 +374,33 @@ def test_public_profile_shows_edit_button_only_when_viewing_self():
     other_body = other_profile.data.decode("utf-8")
 
     assert own_profile.status_code == 200
-    assert 'href="/profile/owner/edit"' in own_body
-    assert "Edit Profile" in own_body
+    assert "avatar-upload-form" in own_body
 
     assert other_profile.status_code == 200
-    assert 'href="/profile/other/edit"' not in other_body
+    assert "avatar-upload-form" not in other_body
+
+    with app.app_context():
+        db.session.remove()
+        db.drop_all()
+
+
+def test_staff_user_cannot_see_edit_controls_on_other_profile():
+    app = _make_app()
+    client = app.test_client()
+
+    with app.app_context():
+        owner = User(username="owner", password_hash="placeholder")
+        moderator = User(username="mod", password_hash="placeholder", role="moderator")
+        db.session.add_all([owner, moderator])
+        db.session.commit()
+        mod_id = moderator.id
+
+    _login(client, mod_id)
+    other_profile = client.get("/profile/owner")
+    other_body = other_profile.data.decode("utf-8")
+
+    assert other_profile.status_code == 200
+    assert "avatar-upload-form" not in other_body
 
     with app.app_context():
         db.session.remove()

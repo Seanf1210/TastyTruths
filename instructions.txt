@@ -9,10 +9,8 @@ If an update breaks the database run:
 
 flask db upgrade
 
+(after adding sections to the appropriate file)
 
-NOTE:
-The admin login option will not function as a logged in admin
-for purposes of testing deleting posts.
 =========================================================
 DEMO USERNAMES
 =========================================================
