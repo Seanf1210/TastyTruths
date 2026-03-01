@@ -2305,3 +2305,20 @@ details[open] .recipe-controls-arrow {
     grid-template-columns: 1fr;
   }
 }
+
+.profile-bio-form textarea {
+  resize: none;        /* disables dragging the corner */
+  width: 100%;         /* keeps it consistent width */
+  max-width: 1000px;    /* optional: prevents it from stretching too wide */
+  height: 120px;       /* fixed height */
+  min-height: 120px;   /* prevents shrinking */
+  max-height: 120px;   /* prevents growing */
+}
+.bio-char-counter {
+  position: absolute;
+  right: 10px;
+  bottom: 6px;
+  font-size: 0.8rem;
+  opacity: 0.7;
+  pointer-events: none; /* prevents blocking clicks */
+}

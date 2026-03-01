@@ -940,8 +940,8 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
         bio = (request.form.get("bio") or "").strip()
 
         # Optional limit (matches your textarea maxlength) to prevent database bloat
-        if len(bio) > 500:
-            flash("Bio is too long (max 500 characters).", "error")
+        if len(bio) > 255:
+            flash("Bio is too long (max 255 characters).", "error")
             return redirect(url_for("profile_page"))
 
         current_user.bio = bio
