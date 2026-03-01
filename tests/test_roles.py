@@ -1,4 +1,5 @@
 from sqlalchemy.pool import StaticPool
+import re
 
 from app import create_app
 from services.db import db
@@ -25,7 +26,7 @@ def _login(client, user_id: int) -> None:
         session["_fresh"] = True
 
 
-def _make_app():
+def _make_app(csrf_enabled: bool = False):
     return create_app(
         config_overrides={
             "TESTING": True,
@@ -34,19 +35,26 @@ def _make_app():
                 "connect_args": {"check_same_thread": False},
                 "poolclass": StaticPool,
             },
-            "WTF_CSRF_ENABLED": False,
+            "WTF_CSRF_ENABLED": csrf_enabled,
         },
         seed_demo=False,
     )
 
 
-def test_normal_user_cannot_delete_recipe():
+def _extract_csrf_token(html: str) -> str:
+    match = re.search(r'name="csrf_token"\s+value="([^"]+)"', html)
+    assert match is not None
+    return match.group(1)
+
+
+def test_normal_user_cannot_delete_other_users_recipe():
     app = _make_app()
     client = app.test_client()
 
     with app.app_context():
+        owner = _create_user("owner_user", role="normal")
         user = _create_user("normal_user", role="normal")
-        recipe = _create_recipe("Recipe", author_id=user.id)
+        recipe = _create_recipe("Recipe", author_id=owner.id)
         db.session.commit()
 
     _login(client, user.id)
@@ -56,6 +64,26 @@ def test_normal_user_cannot_delete_recipe():
 
     with app.app_context():
         assert db.session.get(Recipe, recipe.id) is not None
+        db.session.remove()
+        db.drop_all()
+
+
+def test_recipe_owner_can_delete_recipe():
+    app = _make_app()
+    client = app.test_client()
+
+    with app.app_context():
+        owner = _create_user("owner_user", role="normal")
+        recipe = _create_recipe("Recipe", author_id=owner.id)
+        db.session.commit()
+
+    _login(client, owner.id)
+    resp = client.post(f"/recipes/{recipe.id}/delete", follow_redirects=False)
+
+    assert resp.status_code in (302, 200)
+
+    with app.app_context():
+        assert db.session.get(Recipe, recipe.id) is None
         db.session.remove()
         db.drop_all()
 
@@ -71,6 +99,34 @@ def test_moderator_can_delete_recipe():
 
     _login(client, mod.id)
     resp = client.post(f"/recipes/{recipe.id}/delete", follow_redirects=False)
+
+    assert resp.status_code in (302, 200)
+
+    with app.app_context():
+        assert db.session.get(Recipe, recipe.id) is None
+        db.session.remove()
+        db.drop_all()
+
+
+def test_recipe_delete_requires_valid_csrf_token():
+    app = _make_app(csrf_enabled=True)
+    client = app.test_client()
+
+    with app.app_context():
+        owner = _create_user("owner_user", role="normal")
+        recipe = _create_recipe("Recipe", author_id=owner.id)
+        db.session.commit()
+
+    _login(client, owner.id)
+    detail = client.get(f"/recipes/{recipe.id}-{recipe.slug}")
+    assert detail.status_code == 200
+    token = _extract_csrf_token(detail.get_data(as_text=True))
+
+    resp = client.post(
+        f"/recipes/{recipe.id}/delete",
+        data={"csrf_token": token},
+        follow_redirects=False,
+    )
 
     assert resp.status_code in (302, 200)
 

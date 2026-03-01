@@ -1315,11 +1315,12 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
 
     @app.post("/recipes/<int:recipe_id>/delete")
     @login_required
-    @require_staff
     def delete_recipe(recipe_id: int):
         recipe = db.session.get(Recipe, recipe_id)
         if not recipe:
             return render_template("404.html"), 404
+        if not (is_staff(current_user) or recipe.author_id == current_user.id):
+            return _forbidden_response()
         try:
             db.session.delete(recipe)
             db.session.commit()
