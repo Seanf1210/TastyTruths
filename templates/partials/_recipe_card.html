@@ -13,6 +13,15 @@
   <div class="recipe-card-content">
     <h3 class="recipe-card-title">{{ recipe.title }}</h3>
 
+    {% if recipe.author %}
+    <div class="recipe-card-author" style="margin-bottom: 8px;">
+      <a href="{{ url_for('public_profile', username=recipe.author.username) }}" class="author-profile-link">
+        <img src="{{ avatar_url_for_user(recipe.author) }}" alt="{{ recipe.author.username }}'s profile picture" class="inline-avatar">
+        <span class="recipe-author">{{ recipe.author.username }}</span>
+      </a>
+    </div>
+    {% endif %}
+
     {% if recipe.description %}
     <p class="recipe-card-description">{{ recipe.description[:120] }}{% if recipe.description|length > 120 %}...{% endif %}</p>
     {% else %}

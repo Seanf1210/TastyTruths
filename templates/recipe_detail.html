@@ -11,7 +11,13 @@
         {% if recipe.created_at %}
           Posted {{ recipe.created_at.strftime('%B %d, %Y') }}
         {% endif %}
-        {% if recipe.author_id %}
+        {% if recipe.author %}
+          by
+          <a href="{{ url_for('public_profile', username=recipe.author.username) }}" class="author-profile-link">
+            <img src="{{ avatar_url_for_user(recipe.author) }}" alt="{{ recipe.author.username }}'s profile picture" class="inline-avatar">
+            <span class="recipe-author">{{ recipe.author.username }}</span>
+          </a>
+        {% elif recipe.author_id %}
           by <span class="recipe-author">User #{{ recipe.author_id }}</span>
         {% endif %}
       </p>

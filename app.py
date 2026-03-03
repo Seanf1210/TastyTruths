@@ -672,6 +672,10 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
             profile_image = app.config["DEFAULT_PROFILE_IMAGE"]
         return _profile_pic_url(profile_image)
 
+    @app.context_processor
+    def inject_avatar():
+        return dict(avatar_url_for_user=_avatar_url_for_user)
+
     @app.errorhandler(RequestEntityTooLarge)
     def handle_file_too_large(_exc):
         flash("Image too large. Maximum upload size is 2MB.", "error")
@@ -1905,6 +1909,8 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
                     "dietary_tags": r.dietary_tags or [],
                     "image_filename": r.image_filename or "",
                     "created_at": r.created_at.isoformat() if r.created_at else None,
+                    "author_name": r.author.username if r.author else None,
+                    "author_avatar_url": _avatar_url_for_user(r.author) if r.author else None,
                 }
                 for r in rows
             ]

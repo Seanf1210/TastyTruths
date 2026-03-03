@@ -148,6 +148,7 @@ class Recipe(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     author_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    author = db.relationship("User", backref="recipes")
 
 class BlogPost(db.Model):
     __tablename__ = "blog_posts"
