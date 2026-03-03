@@ -117,3 +117,41 @@ class BlogPostForm(FlaskForm):
     )
 
     submit = SubmitField("Publish Post")
+
+
+class SignupForm(FlaskForm):
+    """Signup form fields handled via Flask-WTF/CSRF."""
+
+    profile_picture = FileField(
+        "Profile picture (optional)",
+        validators=[
+            Optional(),
+            FileAllowed(
+                ["jpg", "jpeg", "png", "webp"],
+                message="Only PNG/JPG/JPEG/WEBP allowed.",
+            ),
+        ],
+    )
+
+
+class ProfileEditForm(FlaskForm):
+    """Edit profile form with optional profile picture update."""
+
+    profile_picture = FileField(
+        "Update profile picture",
+        validators=[
+            Optional(),
+            FileAllowed(
+                ["jpg", "jpeg", "png", "webp"],
+                message="Only PNG/JPG/JPEG/WEBP allowed.",
+            ),
+        ],
+    )
+    bio = TextAreaField(
+        "Bio",
+        validators=[Optional(), Length(max=500, message="Bio is too long (max 500 characters).")],
+    )
+    experiences_text = TextAreaField(
+        "Experiences (one per line)",
+        validators=[Optional(), Length(max=3000)],
+    )

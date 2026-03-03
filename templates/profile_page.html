@@ -12,13 +12,38 @@
     {% endif %}
     {% endwith %}
 
+    {% set page_user = user if user is defined else profile_user %}
+    {% set is_owner = is_owner if is_owner is defined else (current_user.is_authenticated and page_user and current_user.id == page_user.id) %}
+
     <section class="profile-header">
         <div class="profile-picture-area">
-            <img src="{{ url_for('static', filename='assets/images/account_circle.png') }}" alt="Profile Picture" class="profile-pic">
-            <h1>{{ profile_user.username if profile_user else "Guest Chef" }}</h1>
+            {% if is_owner and page_user %}
+            <form
+                method="post"
+                action="{{ url_for('update_my_profile_picture') }}"
+                enctype="multipart/form-data"
+                class="avatar-upload-form"
+            >
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input
+                    type="file"
+                    id="profile_picture_input"
+                    name="profile_picture"
+                    accept="image/png,image/jpeg,image/webp"
+                    class="avatar-file-input"
+                >
+                <button type="button" class="avatar-button" aria-label="Update profile picture">
+                    <img src="{{ avatar_url }}" alt="Profile Picture" class="profile-pic">
+                    <span class="avatar-overlay">Change</span>
+                </button>
+            </form>
+            {% else %}
+            <img src="{{ avatar_url }}" alt="Profile Picture" class="profile-pic">
+            {% endif %}
+            <h1>{{ page_user.username if page_user else "Guest Chef" }}</h1>
         </div>
-        {% if current_user.is_authenticated and current_user.role == 'admin' and profile_user %}
-        <form class="profile-admin-actions" method="post" action="{{ url_for('delete_account', user_id=profile_user.id) }}" onsubmit="return confirm('Delete this user account?');">
+        {% if current_user.is_authenticated and current_user.role == 'admin' and page_user %}
+        <form class="profile-admin-actions" method="post" action="{{ url_for('delete_account', user_id=page_user.id) }}" onsubmit="return confirm('Delete this user account?');">
             {{ csrf_token() }}
             <button type="submit" class="button button-danger">Delete Account</button>
         </form>
@@ -32,10 +57,10 @@
             <div class="bio-content">
                 <!-- Display Mode -->
                 <p id="bio-display">
-                    {{ profile_user.bio if profile_user and profile_user.bio else "No bio yet." }}
+                    {{ page_user.bio if page_user and page_user.bio else "No bio yet." }}
                 </p>
 
-                {% if current_user.is_authenticated and profile_user and current_user.id == profile_user.id %}
+                {% if is_owner %}
                 <!-- Edit Button -->
                 <button type="button" class="button" id="edit-bio-btn">
                     Edit Bio
@@ -44,7 +69,7 @@
                 <!-- Hidden Edit Form -->
                 <form
                     method="post"
-                    action="{{ url_for('update_profile_bio') }}"
+                    action="{{ url_for('update_my_profile_bio') }}"
                     class="profile-bio-form"
                     id="bio-form"
                     style="display: none;"
@@ -58,9 +83,9 @@
                             rows="4"
                             maxlength="500"
                             placeholder="Write your bio here..."
-                        >{{ profile_user.bio or "" }}</textarea>
+                        >{{ page_user.bio or "" }}</textarea>
 
-                        <div id = "bio–char–counter" class = "bio–char–counter"> 0/500</div>
+                        <div id="bio-char-counter" class="bio-char-counter">0/500</div>
                     </div>
 
                     <div class="bio-form-actions">
@@ -77,19 +102,48 @@
         <section class="profile-experience-area">
             <h2>Experience</h2>
             <div class="experience-content">
-                <p>Years of home cooking experience, specializing in student-friendly meals. PLACEHOLDER</p>
+                <p id="experience-display" class="profile-text-block">
+                    {{ experience_text if experience_text else "No experience added yet." }}
+                </p>
+                {% if is_owner %}
+                <button type="button" class="button" id="edit-experience-btn">
+                    Edit Experience
+                </button>
+                <form
+                    method="post"
+                    action="{{ url_for('update_my_profile_experience') }}"
+                    class="profile-bio-form"
+                    id="experience-form"
+                    style="display: none;"
+                >
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <textarea
+                        id="experience-textarea"
+                        name="experience"
+                        rows="6"
+                        maxlength="1500"
+                        placeholder="Share your cooking experience..."
+                    >{{ experience_text or "" }}</textarea>
+                    <div class="bio-form-actions">
+                        <button type="submit" class="button">Save Experience</button>
+                        <button type="button" class="button button-secondary" id="cancel-experience-btn">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+                {% endif %}
             </div>
         </section>
 
         <section class="profile-dietary-area">
             <h2>Dietary Restrictions</h2>
-            {% if profile_user %}
+            {% if page_user %}
             <p class="dietary-help-text">Select common preferences and add your own restrictions.</p>
             <form
                 id="dietary-restrictions-form"
                 class="dietary-form"
                 method="post"
-                action="{{ url_for('update_profile_dietary_restrictions') }}"
+                action="{{ url_for('update_my_profile_dietary') }}"
             >
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="dietary_restrictions_json" id="dietary-restrictions-json">
@@ -115,6 +169,7 @@
                         <input
                             id="dietary-custom-tag"
                             type="text"
+                            name="custom_restriction"
                             maxlength="32"
                             list="dietary-suggestions"
                             autocomplete="off"
@@ -188,7 +243,7 @@
         {% endif %}
     </section>
 </div>
-{% if profile_user %}
+{% if page_user %}
 <script>
     window.profileDietaryRestrictions = {{ dietary_restrictions|tojson }};
     window.profileDietaryRestrictionsConfig = {
@@ -197,5 +252,8 @@
     };
 </script>
 <script src="{{ url_for('static', filename='js/profile-page.js') }}?v=2"></script>
+{% if is_owner %}
+<script src="{{ url_for('static', filename='js/profile-avatar-upload.js') }}"></script>
+{% endif %}
 {% endif %}
 {% endblock %}

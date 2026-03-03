@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import json
+import os
 import re
+import shutil
 from typing import Iterable
 
 from services.db import db
@@ -12,10 +14,32 @@ from services.nutrition import ensure_ingredient_exists_in_assets
 SENTINEL_RECIPE_SLUG = "demo-spaghetti-bolognese"
 SENTINEL_BLOG_SLUG = "demo-welcome"
 DEMO_USERNAME = "demo_user"
+DEFAULT_PROFILE_IMAGE = "default.png"
+SEED_PROFILE_IMAGE_FILENAME = "stock_alpaca.jpg"
+
+
+def _ensure_seed_profile_image() -> None:
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    source = os.path.join(project_root, "assets", "images", SEED_PROFILE_IMAGE_FILENAME)
+    destination_dir = os.path.join(project_root, "static", "uploads", "profile_pics")
+    destination = os.path.join(destination_dir, SEED_PROFILE_IMAGE_FILENAME)
+    if not os.path.exists(source):
+        return
+    os.makedirs(destination_dir, exist_ok=True)
+    if not os.path.exists(destination):
+        shutil.copy2(source, destination)
 
 
 def _default_bio_for_role(role: str) -> str:
     return f"I am a {role}"
+
+
+def _default_experience_for_role(role: str) -> str:
+    if role == "admin":
+        return "I help manage community content and keep the platform running smoothly."
+    if role == "moderator":
+        return "I review community submissions and support recipe quality."
+    return "I enjoy home cooking and sharing practical recipes for busy schedules."
 
 
 def _default_experiences_for_role(role: str) -> list[str]:
@@ -31,15 +55,20 @@ def _ensure_demo_user() -> User:
     if user:
         if not (user.bio or "").strip():
             user.bio = _default_bio_for_role("user")
+        if not (user.experience or "").strip():
+            user.experience = _default_experience_for_role("user")
         if not isinstance(user.experiences, list) or not user.experiences:
             user.experiences = _default_experiences_for_role("user")
+        user.profile_image = SEED_PROFILE_IMAGE_FILENAME
         return user
     user = User(
         username=DEMO_USERNAME,
         email="demo@example.com",
         role="normal",
         bio=_default_bio_for_role("user"),
+        experience=_default_experience_for_role("user"),
         experiences=_default_experiences_for_role("user"),
+        profile_image=SEED_PROFILE_IMAGE_FILENAME,
     )
     user.set_password("demo-user")
     db.session.add(user)
@@ -51,15 +80,20 @@ def _ensure_staff_users() -> tuple[User, User]:
     if admin:
         if not (admin.bio or "").strip():
             admin.bio = _default_bio_for_role("admin")
+        if not (admin.experience or "").strip():
+            admin.experience = _default_experience_for_role("admin")
         if not isinstance(admin.experiences, list) or not admin.experiences:
             admin.experiences = _default_experiences_for_role("admin")
+        admin.profile_image = SEED_PROFILE_IMAGE_FILENAME
     else:
         admin = User(
             username="demo_admin",
             email="admin@example.com",
             role="admin",
             bio=_default_bio_for_role("admin"),
+            experience=_default_experience_for_role("admin"),
             experiences=_default_experiences_for_role("admin"),
+            profile_image=SEED_PROFILE_IMAGE_FILENAME,
         )
         admin.set_password("demo-admin")
         db.session.add(admin)
@@ -68,15 +102,20 @@ def _ensure_staff_users() -> tuple[User, User]:
     if moderator:
         if not (moderator.bio or "").strip():
             moderator.bio = _default_bio_for_role("moderator")
+        if not (moderator.experience or "").strip():
+            moderator.experience = _default_experience_for_role("moderator")
         if not isinstance(moderator.experiences, list) or not moderator.experiences:
             moderator.experiences = _default_experiences_for_role("moderator")
+        moderator.profile_image = SEED_PROFILE_IMAGE_FILENAME
     else:
         moderator = User(
             username="demo_moderator",
             email="moderator@example.com",
             role="moderator",
             bio=_default_bio_for_role("moderator"),
+            experience=_default_experience_for_role("moderator"),
             experiences=_default_experiences_for_role("moderator"),
+            profile_image=SEED_PROFILE_IMAGE_FILENAME,
         )
         moderator.set_password("demo-moderator")
         db.session.add(moderator)
@@ -333,10 +372,21 @@ def seed_demo_data() -> bool:
     if sentinel_recipe or sentinel_blog:
         return False
 
+    _ensure_seed_profile_image()
     author = _ensure_demo_user()
-    _ensure_staff_users()
+    admin, moderator = _ensure_staff_users()
     db.session.flush()
-    recipe_rows = list(_recipe_rows())
+    seed_users = [author, admin, moderator]
+    base_recipe_templates = list(_recipe_rows())[:5]
+    recipe_rows = []
+    for user_index, seed_user in enumerate(seed_users):
+        for template in base_recipe_templates:
+            row = dict(template)
+            if user_index > 0:
+                row["title"] = f"{template['title']} ({seed_user.username})"
+            row["author_id"] = seed_user.id
+            recipe_rows.append(row)
+
     for row in recipe_rows:
         raw = row.get("ingredients") or ""
         try:

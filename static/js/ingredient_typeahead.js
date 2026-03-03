@@ -3,10 +3,18 @@
   const addBtn = document.getElementById("add-ingredient-row");
   const form = document.querySelector("form");
   const hiddenTextarea = document.getElementById("ingredients");
+  const ingredientClientError = document.getElementById("ingredient-client-error");
 
   if (!list || !addBtn || !form || !hiddenTextarea) {
     return;
   }
+  hiddenTextarea.required = false;
+
+  const showIngredientError = (message) => {
+    if (!ingredientClientError) return;
+    ingredientClientError.textContent = message || "";
+    ingredientClientError.style.display = message ? "block" : "none";
+  };
 
   const debounce = (fn, wait = 200) => {
     let timer = null;
@@ -138,10 +146,26 @@
   addBtn.addEventListener("click", addRow);
   list.querySelectorAll(".ingredient-row").forEach(attachTypeahead);
 
-  form.addEventListener("submit", () => {
+  form.addEventListener("submit", (event) => {
     const names = Array.from(list.querySelectorAll(".ingredient-name"))
       .map((input) => input.value.trim())
       .filter(Boolean);
+    if (!names.length) {
+      event.preventDefault();
+      showIngredientError("Please add at least one ingredient before creating your recipe.");
+      const firstNameInput = list.querySelector(".ingredient-name");
+      if (firstNameInput) firstNameInput.focus();
+      return;
+    }
+    showIngredientError("");
     hiddenTextarea.value = names.join("\n");
+  });
+
+  list.addEventListener("input", (event) => {
+    if (event.target && event.target.classList.contains("ingredient-name")) {
+      if (event.target.value.trim()) {
+        showIngredientError("");
+      }
+    }
   });
 })();

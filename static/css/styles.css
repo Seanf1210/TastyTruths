@@ -2315,10 +2315,52 @@ details[open] .recipe-controls-arrow {
   max-height: 120px;   /* prevents growing */
 }
 .bio-char-counter {
-  position: absolute;
+  position: relative;
   right: 10px;
   bottom: 6px;
   font-size: 0.8rem;
   opacity: 0.7;
   pointer-events: none; /* prevents blocking clicks */
+}
+
+.avatar-upload-form {
+  position: relative;
+  display: inline-block;
+}
+
+.avatar-file-input {
+  display: none;
+}
+
+.avatar-button {
+  position: relative;
+  display: inline-block;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.avatar-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  background: rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.avatar-button:hover .avatar-overlay,
+.avatar-button:focus .avatar-overlay {
+  opacity: 1;
+}
+
+.profile-text-block {
+  white-space: pre-line;
 }

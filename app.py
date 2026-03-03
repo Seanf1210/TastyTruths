@@ -25,11 +25,12 @@ from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect, generate_csrf
 from argon2 import PasswordHasher
 from sqlalchemy.exc import SQLAlchemyError
+from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
 import os
 from services.db import db
 from services.models import Recipe, RecipeSlugHistory, BlogPost, User, Ingredient
-from services.forms import RecipeForm, BlogPostForm
+from services.forms import RecipeForm, BlogPostForm, SignupForm, ProfileEditForm
 from services.ingredients import ALLOWED_NUTRIENT_SORT_KEYS, build_ingredient_sort
 from services.ingredient_index import load_ingredients_index, match_ingredient_id, search_suggestions
 from services.nutrition import (
@@ -41,6 +42,7 @@ from services.nutrition import (
 )
 from services.filtering import filter_ingredients_by_dietary_tags
 from utilities.seed_demo import seed_demo_data
+from utilities.images import save_profile_picture, delete_profile_picture
 
 ph = PasswordHasher()
 login_manager = LoginManager()
@@ -102,6 +104,10 @@ COMMON_DIETARY_RESTRICTIONS = [
     "kosher",
     "pescatarian",
 ]
+
+DEFAULT_PROFILE_IMAGE = "default.png"
+PROFILE_PICS_SUBDIR = "uploads/profile_pics"
+ALLOWED_PROFILE_PIC_EXTENSIONS = {"png", "jpg", "jpeg", "webp"}
 
 class AdminOverrideUser(UserMixin):
     SESSION_DIETARY_KEY = "admin_override_dietary_restrictions"
@@ -169,12 +175,40 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
         PERMANENT_SESSION_LIFETIME=timedelta(hours=8),
         WTF_CSRF_TIME_LIMIT=None,        # CSRF token lifetime (optional)
         MAX_CONTENT_LENGTH=2 * 1024 * 1024,  # 2MB file upload limit
+        UPLOAD_FOLDER=os.path.join("static", "uploads", "profile_pics"),
+        UPLOAD_FOLDER_PROFILE_PICS=None,
+        PROFILE_PIC_UPLOAD_DIR=os.path.join("static", "uploads", "profile_pics"),
+        PROFILE_PIC_ALLOWED_EXTS=ALLOWED_PROFILE_PIC_EXTENSIONS,
+        PROFILE_PIC_MAX_W=6000,
+        PROFILE_PIC_MAX_H=6000,
+        PROFILE_PIC_MAX_PIXELS=20_000_000,
+        PROFILE_PIC_OUTPUT_SIZE=(256, 256),
+        PROFILE_PIC_OUTPUT_FORMAT="WEBP",
+        PROFILE_PIC_OUTPUT_QUALITY=80,
+        ALLOWED_PROFILE_PIC_EXTENSIONS=ALLOWED_PROFILE_PIC_EXTENSIONS,
+        DEFAULT_PROFILE_IMAGE=DEFAULT_PROFILE_IMAGE,
+        PROFILE_PICS_SUBDIR=PROFILE_PICS_SUBDIR,
         # Keep attributes available after commit for request/test flows that
         # access ids outside the original app context.
         SQLALCHEMY_SESSION_OPTIONS={"expire_on_commit": False},
     )
     if config_overrides:
         app.config.update(config_overrides)
+    if not app.config.get("UPLOAD_FOLDER_PROFILE_PICS"):
+        configured_upload = (
+            app.config.get("PROFILE_PIC_UPLOAD_DIR")
+            or app.config.get("UPLOAD_FOLDER")
+            or os.path.join(
+            "static", *app.config["PROFILE_PICS_SUBDIR"].split("/")
+        )
+        )
+        if os.path.isabs(configured_upload):
+            app.config["UPLOAD_FOLDER_PROFILE_PICS"] = configured_upload
+        else:
+            app.config["UPLOAD_FOLDER_PROFILE_PICS"] = os.path.join(
+                app.root_path, configured_upload
+            )
+    os.makedirs(app.config["UPLOAD_FOLDER_PROFILE_PICS"], exist_ok=True)
     app.config["ADMIN_OVERRIDE"] = bool(admin_override)
 
     # --- init extensions in the right order ---
@@ -623,35 +657,68 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
     def contact():
         return render_template("contact.html")
 
-    @app.get("/profile/<username>")
-    def public_profile(username: str):
-        def _normalize_experiences_for_display(raw_experiences):
-            data = raw_experiences or []
-            if isinstance(data, str):
-                try:
-                    data = json.loads(data)
-                except json.JSONDecodeError:
-                    data = [line.strip() for line in data.splitlines() if line.strip()]
-            if not isinstance(data, list):
-                return []
-            return [str(item).strip() for item in data if str(item).strip()]
+    def _profile_pic_url(filename: str) -> str:
+        clean_name = (filename or "").strip()
+        if clean_name != os.path.basename(clean_name):
+            clean_name = app.config["DEFAULT_PROFILE_IMAGE"]
+        return url_for(
+            "static",
+            filename=f"{app.config['PROFILE_PICS_SUBDIR']}/{clean_name}",
+        )
 
-        def _avatar_url_for_user(user: User) -> str:
-            profile_image_path = (user.profile_image_path or "").strip()
-            if profile_image_path.startswith("http://") or profile_image_path.startswith("https://"):
-                return profile_image_path
-            if profile_image_path:
-                return url_for("static", filename=profile_image_path)
-            return url_for("static", filename="assets/images/account_circle.png")
+    def _avatar_url_for_user(user: User) -> str:
+        profile_image = (getattr(user, "profile_image", "") or "").strip()
+        if not profile_image:
+            profile_image = app.config["DEFAULT_PROFILE_IMAGE"]
+        return _profile_pic_url(profile_image)
 
+    @app.errorhandler(RequestEntityTooLarge)
+    def handle_file_too_large(_exc):
+        flash("Image too large. Maximum upload size is 2MB.", "error")
+        endpoint = request.endpoint or ""
+        if endpoint == "signup":
+            return redirect(url_for("signup"))
+        if endpoint in {
+            "edit_public_profile",
+            "update_profile_picture",
+            "update_profile_bio_public",
+            "update_profile_experience",
+            "update_profile_dietary",
+            "update_my_profile_picture",
+            "update_my_profile_bio",
+            "update_my_profile_experience",
+            "update_my_profile_dietary",
+        }:
+            username = (request.view_args or {}).get("username")
+            if username:
+                return redirect(url_for("public_profile", username=username))
+            return redirect(url_for("profile_page"))
+        return ("Request entity too large", 413)
+
+    def _resolve_profile_user(username: str):
         normalized_username = (username or "").strip().lower()
         if not normalized_username:
-            return render_template("404.html"), 404
+            return None
 
         profile_user = User.query.filter(
             func.lower(User.username) == normalized_username
         ).first()
-        if not profile_user:
+        return profile_user
+
+    def require_profile_owner(username: str):
+        profile_user = _resolve_profile_user(username)
+        if profile_user is None:
+            return None, (render_template("404.html"), 404)
+        if not current_user.is_authenticated:
+            return None, login_manager.unauthorized()
+        if current_user.id != profile_user.id:
+            return None, _forbidden_response()
+        return profile_user, None
+
+    @app.get("/profile/<username>")
+    def public_profile(username: str):
+        profile_user = _resolve_profile_user(username)
+        if profile_user is None:
             return render_template("404.html"), 404
 
         recent_blog_posts = (
@@ -661,21 +728,177 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
             .all()
         )
 
-        experiences = _normalize_experiences_for_display(profile_user.experiences)
+        experience_text = (profile_user.experience or "").strip()
+        if not experience_text:
+            legacy_experiences = profile_user.experiences or []
+            if isinstance(legacy_experiences, str):
+                try:
+                    legacy_experiences = json.loads(legacy_experiences)
+                except json.JSONDecodeError:
+                    legacy_experiences = [
+                        line.strip() for line in legacy_experiences.splitlines() if line.strip()
+                    ]
+            if isinstance(legacy_experiences, list):
+                normalized_legacy = [
+                    str(item).strip() for item in legacy_experiences if str(item).strip()
+                ]
+                if normalized_legacy:
+                    experience_text = "\n".join(normalized_legacy)
+
+        dietary_restrictions = [
+            str(item).strip()
+            for item in (profile_user.dietary_restrictions or [])
+            if str(item).strip()
+        ]
+
         avatar_url = _avatar_url_for_user(profile_user)
-        can_edit_profile = (
-            current_user.is_authenticated
-            and (current_user.username or "").strip().lower() == normalized_username
-        )
+        is_owner = current_user.is_authenticated and current_user.id == profile_user.id
 
         return render_template(
             "profile_public.html",
             profile_user=profile_user,
-            experiences=experiences,
+            experience_text=experience_text,
+            dietary_restrictions=dietary_restrictions,
+            common_dietary_restrictions=COMMON_DIETARY_RESTRICTIONS,
             avatar_url=avatar_url,
-            can_edit_profile=can_edit_profile,
+            is_owner=is_owner,
             recent_blog_posts=recent_blog_posts,
         )
+
+    @app.post("/profile/<username>/picture")
+    @login_required
+    def update_profile_picture(username: str):
+        profile_user, unauthorized_response = require_profile_owner(username)
+        if unauthorized_response is not None:
+            return unauthorized_response
+
+        uploaded_file = request.files.get("profile_picture")
+        if not uploaded_file or not (uploaded_file.filename or "").strip():
+            flash("Please choose a profile picture to upload.", "error")
+            return redirect(url_for("public_profile", username=profile_user.username))
+
+        old_profile_image = (profile_user.profile_image or "").strip()
+        new_profile_image = None
+        try:
+            new_profile_image = save_profile_picture(uploaded_file)
+            profile_user.profile_image = new_profile_image
+            db.session.commit()
+        except ValueError as exc:
+            flash(str(exc), "error")
+            return redirect(url_for("public_profile", username=profile_user.username))
+        except SQLAlchemyError as exc:
+            db.session.rollback()
+            if new_profile_image:
+                delete_profile_picture(new_profile_image)
+            print(f"ERROR saving profile picture: {exc}")
+            flash("Unable to save profile picture right now.", "error")
+            return redirect(url_for("public_profile", username=profile_user.username))
+
+        if old_profile_image and old_profile_image != new_profile_image:
+            delete_profile_picture(old_profile_image)
+
+        flash("Profile picture updated.", "success")
+        return redirect(url_for("public_profile", username=profile_user.username))
+
+    @app.post("/profile/<username>/bio")
+    @login_required
+    def update_profile_bio_public(username: str):
+        profile_user, unauthorized_response = require_profile_owner(username)
+        if unauthorized_response is not None:
+            return unauthorized_response
+
+        bio = (request.form.get("bio") or "").strip()
+        if len(bio) > 500:
+            flash("Bio is too long (max 500 characters).", "error")
+            return redirect(url_for("public_profile", username=profile_user.username))
+
+        profile_user.bio = bio
+        try:
+            db.session.commit()
+            flash("Bio updated.", "success")
+        except SQLAlchemyError as exc:
+            db.session.rollback()
+            print(f"ERROR saving bio: {exc}")
+            flash("Unable to save bio right now.", "error")
+        return redirect(url_for("public_profile", username=profile_user.username))
+
+    @app.post("/profile/<username>/experience")
+    @login_required
+    def update_profile_experience(username: str):
+        profile_user, unauthorized_response = require_profile_owner(username)
+        if unauthorized_response is not None:
+            return unauthorized_response
+
+        experience = (request.form.get("experience") or "").strip()
+        if len(experience) > 1500:
+            flash("Experience is too long (max 1500 characters).", "error")
+            return redirect(url_for("public_profile", username=profile_user.username))
+
+        profile_user.experience = experience
+        try:
+            db.session.commit()
+            flash("Experience updated.", "success")
+        except SQLAlchemyError as exc:
+            db.session.rollback()
+            print(f"ERROR saving experience: {exc}")
+            flash("Unable to save experience right now.", "error")
+        return redirect(url_for("public_profile", username=profile_user.username))
+
+    @app.post("/profile/<username>/dietary")
+    @login_required
+    def update_profile_dietary(username: str):
+        profile_user, unauthorized_response = require_profile_owner(username)
+        if unauthorized_response is not None:
+            return unauthorized_response
+
+        values = [str(item).strip().lower() for item in request.form.getlist("dietary_restrictions")]
+        custom_restriction = (request.form.get("custom_restriction") or "").strip()
+
+        if custom_restriction:
+            normalized_custom = " ".join(custom_restriction.lower().split())
+            if not normalized_custom:
+                flash("Custom dietary restriction cannot be empty.", "error")
+                return redirect(url_for("public_profile", username=profile_user.username))
+            if len(normalized_custom) > User.MAX_DIETARY_RESTRICTION_LENGTH:
+                flash(
+                    f"Custom dietary restriction must be {User.MAX_DIETARY_RESTRICTION_LENGTH} characters or fewer.",
+                    "error",
+                )
+                return redirect(url_for("public_profile", username=profile_user.username))
+            if any(not (ch.isalnum() or ch in {" ", "-"}) for ch in normalized_custom):
+                flash(
+                    "Custom dietary restriction can only include letters, numbers, spaces, and hyphens.",
+                    "error",
+                )
+                return redirect(url_for("public_profile", username=profile_user.username))
+            values.append(normalized_custom)
+
+        normalized = []
+        seen = set()
+        for value in values:
+            cleaned = " ".join((value or "").strip().lower().split())
+            if not cleaned:
+                continue
+            if cleaned not in seen:
+                seen.add(cleaned)
+                normalized.append(cleaned)
+
+        if len(normalized) > User.MAX_DIETARY_RESTRICTIONS:
+            flash(
+                f"You can save up to {User.MAX_DIETARY_RESTRICTIONS} dietary restrictions.",
+                "error",
+            )
+            return redirect(url_for("public_profile", username=profile_user.username))
+
+        profile_user.dietary_restrictions = normalized
+        try:
+            db.session.commit()
+            flash("Dietary restrictions updated.", "success")
+        except SQLAlchemyError as exc:
+            db.session.rollback()
+            print(f"ERROR saving dietary restrictions: {exc}")
+            flash("Unable to save dietary restrictions right now.", "error")
+        return redirect(url_for("public_profile", username=profile_user.username))
 
     @app.get("/profile/<username>/blogs")
     def profile_blogs(username: str):
@@ -735,36 +958,83 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
                 return None, f"You can list up to {max_items} experiences."
             return deduped, None
 
-        if request.method == "POST":
-            bio = (request.form.get("bio") or "").strip()
-            profile_image_path = (request.form.get("profile_image_path") or "").strip()
-            experiences_text = request.form.get("experiences_text") or ""
-
-            if len(bio) > 500:
-                flash("Bio is too long (max 500 characters).", "error")
-                return redirect(url_for("edit_public_profile", username=profile_user.username))
-            if len(profile_image_path) > 255:
-                flash("Profile image path is too long (max 255 characters).", "error")
-                return redirect(url_for("edit_public_profile", username=profile_user.username))
+        form = ProfileEditForm()
+        if form.validate_on_submit():
+            bio = (form.bio.data or "").strip()
+            experiences_text = form.experiences_text.data or ""
+            uploaded_file = form.profile_picture.data
+            new_profile_image = None
+            old_profile_image = (profile_user.profile_image or "").strip()
 
             experiences, experiences_error = _normalize_experiences_for_storage(experiences_text)
             if experiences_error:
-                flash(experiences_error, "error")
-                return redirect(url_for("edit_public_profile", username=profile_user.username))
+                form.experiences_text.errors.append(experiences_error)
+                avatar_url = _avatar_url_for_user(profile_user)
+                return (
+                    render_template(
+                        "profile_edit.html",
+                        profile_user=profile_user,
+                        experiences_text=experiences_text,
+                        avatar_url=avatar_url,
+                        form=form,
+                    ),
+                    400,
+                )
+
+            if uploaded_file and uploaded_file.filename:
+                try:
+                    # Server-side validation + normalization to WEBP avatar happens here.
+                    new_profile_image = save_profile_picture(uploaded_file)
+                except ValueError as exc:
+                    form.profile_picture.errors.append(str(exc))
+                    avatar_url = _avatar_url_for_user(profile_user)
+                    return (
+                        render_template(
+                            "profile_edit.html",
+                            profile_user=profile_user,
+                            experiences_text=experiences_text,
+                            avatar_url=avatar_url,
+                            form=form,
+                        ),
+                        400,
+                    )
 
             profile_user.bio = bio
-            profile_user.profile_image_path = profile_image_path or None
+            if new_profile_image:
+                profile_user.profile_image = new_profile_image
+            elif not (profile_user.profile_image or "").strip():
+                profile_user.profile_image = app.config["DEFAULT_PROFILE_IMAGE"]
             profile_user.experiences = experiences
             try:
                 db.session.commit()
-                flash("Profile updated.", "success")
+                if new_profile_image and old_profile_image != new_profile_image:
+                    delete_profile_picture(old_profile_image)
+                flash(
+                    "Profile picture updated." if new_profile_image else "Profile updated.",
+                    "success",
+                )
             except SQLAlchemyError as exc:
                 db.session.rollback()
+                if new_profile_image:
+                    delete_profile_picture(new_profile_image)
                 print(f"ERROR saving profile: {exc}")
                 flash("Unable to save profile right now.", "error")
                 return redirect(url_for("edit_public_profile", username=profile_user.username))
 
             return redirect(url_for("public_profile", username=profile_user.username))
+
+        if request.method == "POST":
+            avatar_url = _avatar_url_for_user(profile_user)
+            return (
+                render_template(
+                    "profile_edit.html",
+                    profile_user=profile_user,
+                    experiences_text=form.experiences_text.data or "",
+                    avatar_url=avatar_url,
+                    form=form,
+                ),
+                400,
+            )
 
         existing_experiences = profile_user.experiences
         if not isinstance(existing_experiences, list):
@@ -772,10 +1042,14 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
         experiences_text = "\n".join(
             str(item).strip() for item in existing_experiences if str(item).strip()
         )
+        form.bio.data = profile_user.bio or ""
+        form.experiences_text.data = experiences_text
         return render_template(
             "profile_edit.html",
             profile_user=profile_user,
             experiences_text=experiences_text,
+            avatar_url=_avatar_url_for_user(profile_user),
+            form=form,
         )
     
     @app.route("/profile_page")
@@ -783,6 +1057,7 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
         profile_user = current_user if current_user.is_authenticated else None
         user_recipes = []
         dietary_restrictions = []
+        experience_text = ""
         if profile_user:
             user_recipes = (
                 Recipe.query.filter_by(author_id=profile_user.id)
@@ -790,13 +1065,159 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
                 .all()
             )
             dietary_restrictions = list(profile_user.dietary_restrictions or [])
+            experience_text = (profile_user.experience or "").strip()
+            if not experience_text:
+                legacy_experiences = profile_user.experiences or []
+                if isinstance(legacy_experiences, list):
+                    cleaned = [str(item).strip() for item in legacy_experiences if str(item).strip()]
+                    experience_text = "\n".join(cleaned)
         return render_template(
             "profile_page.html",
+            user=profile_user,
             profile_user=profile_user,
+            avatar_url=_avatar_url_for_user(profile_user) if profile_user else _profile_pic_url(app.config["DEFAULT_PROFILE_IMAGE"]),
             user_recipes=user_recipes,
             dietary_restrictions=dietary_restrictions,
             common_dietary_restrictions=COMMON_DIETARY_RESTRICTIONS,
+            is_owner=bool(profile_user and current_user.is_authenticated and current_user.id == profile_user.id),
+            experience_text=experience_text,
         )
+
+    @app.post("/profile/picture")
+    @login_required
+    def update_my_profile_picture():
+        profile_user = current_user
+        app.logger.info(
+            "profile update route=picture current_user=%s target_user=%s",
+            getattr(current_user, "username", None),
+            getattr(profile_user, "username", None),
+        )
+        uploaded_file = request.files.get("profile_picture")
+        if not uploaded_file or not (uploaded_file.filename or "").strip():
+            flash("Please choose a profile picture to upload.", "error")
+            return redirect(url_for("profile_page"))
+
+        old_profile_image = (profile_user.profile_image or "").strip()
+        new_profile_image = None
+        try:
+            new_profile_image = save_profile_picture(uploaded_file)
+            profile_user.profile_image = new_profile_image
+            db.session.commit()
+        except ValueError as exc:
+            flash(str(exc), "error")
+            return redirect(url_for("profile_page"))
+        except SQLAlchemyError as exc:
+            db.session.rollback()
+            if new_profile_image:
+                delete_profile_picture(new_profile_image)
+            print(f"ERROR saving profile picture: {exc}")
+            flash("Unable to save profile picture right now.", "error")
+            return redirect(url_for("profile_page"))
+
+        if old_profile_image and old_profile_image != new_profile_image:
+            delete_profile_picture(old_profile_image)
+        flash("Profile picture updated.", "success")
+        return redirect(url_for("profile_page"))
+
+    @app.post("/profile/bio")
+    @login_required
+    def update_my_profile_bio():
+        app.logger.info(
+            "profile update route=bio current_user=%s target_user=%s",
+            getattr(current_user, "username", None),
+            getattr(current_user, "username", None),
+        )
+        bio = (request.form.get("bio") or "").strip()
+        if len(bio) > 500:
+            flash("Bio is too long (max 500 characters).", "error")
+            return redirect(url_for("profile_page"))
+        current_user.bio = bio
+        try:
+            db.session.commit()
+            flash("Bio updated.", "success")
+        except SQLAlchemyError as exc:
+            db.session.rollback()
+            print(f"ERROR saving bio: {exc}")
+            flash("Unable to save bio right now.", "error")
+        return redirect(url_for("profile_page"))
+
+    @app.post("/profile/experience")
+    @login_required
+    def update_my_profile_experience():
+        app.logger.info(
+            "profile update route=experience current_user=%s target_user=%s",
+            getattr(current_user, "username", None),
+            getattr(current_user, "username", None),
+        )
+        experience = (request.form.get("experience") or "").strip()
+        if len(experience) > 1500:
+            flash("Experience is too long (max 1500 characters).", "error")
+            return redirect(url_for("profile_page"))
+        current_user.experience = experience
+        try:
+            db.session.commit()
+            flash("Experience updated.", "success")
+        except SQLAlchemyError as exc:
+            db.session.rollback()
+            print(f"ERROR saving experience: {exc}")
+            flash("Unable to save experience right now.", "error")
+        return redirect(url_for("profile_page"))
+
+    @app.post("/profile/dietary")
+    @login_required
+    def update_my_profile_dietary():
+        app.logger.info(
+            "profile update route=dietary current_user=%s target_user=%s",
+            getattr(current_user, "username", None),
+            getattr(current_user, "username", None),
+        )
+        raw_json = (request.form.get("dietary_restrictions_json") or "").strip()
+        values = None
+        if raw_json:
+            try:
+                values = json.loads(raw_json)
+            except json.JSONDecodeError:
+                flash("Dietary restrictions payload is invalid.", "error")
+                return redirect(url_for("profile_page"))
+        else:
+            values = request.form.getlist("dietary_restrictions")
+
+        custom_restriction = (request.form.get("custom_restriction") or "").strip()
+        if custom_restriction:
+            normalized_custom = " ".join(custom_restriction.lower().split())
+            if not normalized_custom:
+                flash("Custom dietary restriction cannot be empty.", "error")
+                return redirect(url_for("profile_page"))
+            if len(normalized_custom) > User.MAX_DIETARY_RESTRICTION_LENGTH:
+                flash(
+                    f"Custom dietary restriction must be {User.MAX_DIETARY_RESTRICTION_LENGTH} characters or fewer.",
+                    "error",
+                )
+                return redirect(url_for("profile_page"))
+            if any(not (ch.isalnum() or ch in {" ", "-"}) for ch in normalized_custom):
+                flash(
+                    "Custom dietary restriction can only include letters, numbers, spaces, and hyphens.",
+                    "error",
+                )
+                return redirect(url_for("profile_page"))
+            if not isinstance(values, list):
+                values = []
+            values.append(normalized_custom)
+
+        normalized, error = User.normalize_dietary_restrictions(values)
+        if error:
+            flash(error, "error")
+            return redirect(url_for("profile_page"))
+
+        current_user.dietary_restrictions = normalized
+        try:
+            db.session.commit()
+            flash("Dietary restrictions saved.", "success")
+        except SQLAlchemyError as exc:
+            db.session.rollback()
+            print(f"ERROR saving dietary restrictions: {exc}")
+            flash("Unable to save dietary restrictions right now.", "error")
+        return redirect(url_for("profile_page"))
 
     @app.post("/users/<int:user_id>/delete")
     @login_required
@@ -873,7 +1294,37 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
     def create_recipe_page():
         """Display and handle the recipe creation form (requires login)"""
         form = RecipeForm()
-        
+        # Expected POST shape:
+        # WTForms fields: title, instructions, ingredients, image, prep_time_minutes,
+        # cook_time_minutes, estimated_cost.
+        # Dynamic ingredient UI sends row arrays: ingredient_name[], ingredient_id[],
+        # ingredient_quantity[], ingredient_unit[].
+        ingredient_names = request.form.getlist("ingredient_name[]")
+        ingredient_ids = request.form.getlist("ingredient_id[]")
+        ingredient_qtys = request.form.getlist("ingredient_quantity[]")
+        ingredient_units = request.form.getlist("ingredient_unit[]")
+
+        if request.method == "POST":
+            app.logger.debug(
+                "Create recipe payload keys: form=%s files=%s json=%s",
+                sorted(request.form.keys()),
+                sorted(request.files.keys()),
+                sorted((request.get_json(silent=True) or {}).keys()),
+            )
+            app.logger.debug(
+                "Create recipe form values: title=%r instructions_len=%s prep=%r cook=%r cost=%r",
+                (request.form.get("title") or "").strip(),
+                len((request.form.get("instructions") or "").strip()),
+                request.form.get("prep_time_minutes"),
+                request.form.get("cook_time_minutes"),
+                request.form.get("estimated_cost"),
+            )
+            normalized_names = [name.strip() for name in ingredient_names if (name or "").strip()]
+            if normalized_names and not (form.ingredients.data or "").strip():
+                # Ingredient rows are authoritative; mirror them into the hidden field
+                # so WTForms validation behaves consistently.
+                form.ingredients.data = "\n".join(normalized_names)
+
         if form.validate_on_submit():
             # Handle image upload if provided
             image_filename = None
@@ -890,11 +1341,6 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
                 
                 file.save(os.path.join(upload_dir, filename))
                 image_filename = f"uploads/recipes/{filename}"
-            
-            ingredient_names = request.form.getlist("ingredient_name[]")
-            ingredient_ids = request.form.getlist("ingredient_id[]")
-            ingredient_qtys = request.form.getlist("ingredient_quantity[]")
-            ingredient_units = request.form.getlist("ingredient_unit[]")
 
             ingredients_payload = []
             if ingredient_names:
@@ -934,6 +1380,12 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
                     if line.strip()
                 ]
                 ingredients_normalized = "\n".join(ingredients_list)
+
+            app.logger.debug(
+                "Create recipe parsed ingredients: count=%s sample=%r",
+                len(ingredients_payload),
+                ingredients_payload[:3],
+            )
             
             # Create recipe
             recipe = Recipe(
@@ -948,21 +1400,45 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
             )
             
             try:
+                app.logger.debug("Create recipe calling db.session.add for title=%r", recipe.title)
                 db.session.add(recipe)
+                app.logger.debug("Create recipe calling db.session.commit")
                 db.session.commit()
+                detail_url = url_for("recipe_detail", id_slug=f"{recipe.id}-{recipe.slug}")
+                app.logger.debug(
+                    "Create recipe commit succeeded id=%s slug=%s redirect=%s",
+                    recipe.id,
+                    recipe.slug,
+                    detail_url,
+                )
                 flash("Recipe created successfully!", "success")
-                return redirect(url_for("recipe_detail", id_slug=f"{recipe.id}-{recipe.slug}"))
+                return redirect(detail_url)
             except SQLAlchemyError as e:
                 db.session.rollback()
-                print(f"ERROR saving recipe: {e}")
+                app.logger.exception("Create recipe database error: %s", e)
                 flash("An error occurred while saving the recipe. Please try again.", "error")
-        
+                return render_template("create_recipe.html", form=form), 500
+            except Exception as exc:
+                db.session.rollback()
+                app.logger.exception("Create recipe unexpected error: %s", exc)
+                flash("An unexpected error occurred while saving the recipe.", "error")
+                return render_template("create_recipe.html", form=form), 500
+
+        if request.method == "POST":
+            app.logger.debug("Create recipe validation errors: %s", form.errors)
+            return render_template("create_recipe.html", form=form), 400
+
         return render_template("create_recipe.html", form=form)
 
-    @csrf.exempt
     @app.route("/signup", methods=["GET", "POST"])
     def signup():
+        form = SignupForm()
         if request.method == "POST":
+            if not form.validate():
+                return render_template("signup.html", form=form), 400
+
+            uploaded_file = form.profile_picture.data
+            saved_profile_image = None
             try:
                 username = (request.form.get("username") or "").strip()
                 password = request.form.get("password") or ""
@@ -976,21 +1452,21 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
                 # Basic validation
                 if not username or not password:
                     flash("Missing username or password", "error")
-                    return render_template("signup.html"), 400
+                    return render_template("signup.html", form=form), 400
 
                 if password != confirm:
                     flash("Passwords do not match.", "error")
-                    return render_template("signup.html"), 400
+                    return render_template("signup.html", form=form), 400
 
                 # Check if username already exists
                 if User.query.filter_by(username=username).first():
                     flash("That username is already taken. Please choose another.", "error")
-                    return render_template("signup.html"), 409
+                    return render_template("signup.html", form=form), 409
                     
                 # Check if email already exists
                 if email and User.query.filter_by(email=email).first():
                     flash("Email already registered", "error")
-                    return render_template("signup.html"), 409
+                    return render_template("signup.html", form=form), 409
 
                 # Create the user with all fields
                 u = User(
@@ -1000,7 +1476,15 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
                     last_name=last_name or None,
                     gender=gender or None,
                     role="normal",
+                    profile_image=app.config["DEFAULT_PROFILE_IMAGE"],
                 )
+
+                if uploaded_file and uploaded_file.filename:
+                    try:
+                        saved_profile_image = save_profile_picture(uploaded_file)
+                    except ValueError as exc:
+                        form.profile_picture.errors.append(str(exc))
+                        return render_template("signup.html", form=form), 400
                 
                 # Handle date of birth
                 if dob:
@@ -1012,6 +1496,9 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
                 
                 u.set_password(password, ph)
                 db.session.add(u)
+                if saved_profile_image:
+                    u.profile_image = saved_profile_image
+
                 db.session.commit()
                 
                 flash("Account created successfully! Please log in.", "success")
@@ -1019,13 +1506,15 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
             
             except Exception as e:
                 db.session.rollback()
+                if saved_profile_image:
+                    delete_profile_picture(saved_profile_image)
                 print(f"ERROR during signup: {e}")
                 import traceback
                 traceback.print_exc()
                 flash("An error occurred during signup. Please try again.", "error")
-                return render_template("signup.html"), 500
+                return render_template("signup.html", form=form), 500
 
-        return render_template("signup.html")
+        return render_template("signup.html", form=form)
 
     
     # ---- login manager user loader ----
@@ -1089,7 +1578,11 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
         if User.query.filter_by(username=username).first():
             return jsonify({"error": "username already registered"}), 409
 
-        u = User(username=username, role="normal")
+        u = User(
+            username=username,
+            role="normal",
+            profile_image=app.config["DEFAULT_PROFILE_IMAGE"],
+        )
         u.set_password(password, ph)
         db.session.add(u)
         db.session.commit()
@@ -1164,15 +1657,20 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
             print("ERROR saving recipe:", e)
             return jsonify({"error": "server error saving recipe", "detail": str(e)}), 500
 
-        return jsonify({"id": r.id, "slug": r.slug, "title": r.title}), 201
+        detail_url = url_for("recipe_detail", id_slug=f"{r.id}-{r.slug}")
+        response = jsonify({"id": r.id, "slug": r.slug, "title": r.title, "url": detail_url})
+        response.status_code = 201
+        response.headers["Location"] = detail_url
+        return response
 
     @app.post("/recipes/<int:recipe_id>/delete")
     @login_required
-    @require_staff
     def delete_recipe(recipe_id: int):
         recipe = db.session.get(Recipe, recipe_id)
         if not recipe:
             return render_template("404.html"), 404
+        if not (is_staff(current_user) or recipe.author_id == current_user.id):
+            return _forbidden_response()
         try:
             db.session.delete(recipe)
             db.session.commit()

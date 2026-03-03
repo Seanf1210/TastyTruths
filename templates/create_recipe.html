@@ -14,7 +14,7 @@
       {% endif %}
     {% endwith %}
     
-    <form method="POST" enctype="multipart/form-data">
+    <form method="POST" action="{{ url_for('create_recipe_page') }}" enctype="multipart/form-data">
       {{ form.hidden_tag() }}
       
       <!-- Title -->
@@ -57,10 +57,10 @@
       <div class="form-group">
         <label for="{{ form.ingredients.id }}">{{ form.ingredients.label }} <span class="required">*</span></label>
         {% if form.ingredients.errors %}
-          {{ form.ingredients(class="form-control form-control-error", style="display:none;") }}
+          {{ form.ingredients(class="form-control form-control-error", style="display:none;", required=false, aria_hidden="true") }}
           <small class="form-error">{{ form.ingredients.errors[0] }}</small>
         {% else %}
-          {{ form.ingredients(class="form-control", style="display:none;") }}
+          {{ form.ingredients(class="form-control", style="display:none;", required=false, aria_hidden="true") }}
         {% endif %}
         <div id="ingredient-list" class="ingredient-list">
           <div class="ingredient-row">
@@ -90,6 +90,7 @@
         <button type="button" class="button button-secondary" id="add-ingredient-row">
           Add ingredient
         </button>
+        <small id="ingredient-client-error" class="form-error" style="display:none;" role="alert"></small>
         <small class="form-hint">{{ form.ingredients.render_kw.placeholder }}</small>
       </div>
 

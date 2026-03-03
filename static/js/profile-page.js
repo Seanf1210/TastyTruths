@@ -181,7 +181,7 @@
   const bioForm = document.getElementById("bio-form");
   const bioDisplay = document.getElementById("bio-display");
   const bioTextarea = document.getElementById("bio-textarea");
-  const counter = document.getElementById("bio–char–counter");
+  const counter = document.getElementById("bio-char-counter");
 
   if (!bioForm || !bioTextarea || !counter) return;
 
@@ -231,4 +231,29 @@
 
   // Initial call
   updateCounter();
+})();
+
+// --- Experience Edit Toggle ---
+(function () {
+  const editBtn = document.getElementById("edit-experience-btn");
+  const cancelBtn = document.getElementById("cancel-experience-btn");
+  const experienceForm = document.getElementById("experience-form");
+  const experienceDisplay = document.getElementById("experience-display");
+
+  if (!editBtn || !cancelBtn || !experienceForm || !experienceDisplay) return;
+
+  function showEditor() {
+    experienceDisplay.style.display = "none";
+    editBtn.style.display = "none";
+    experienceForm.style.display = "block";
+  }
+
+  function hideEditor() {
+    experienceForm.style.display = "none";
+    experienceDisplay.style.display = "block";
+    editBtn.style.display = "inline-block";
+  }
+
+  editBtn.addEventListener("click", showEditor);
+  cancelBtn.addEventListener("click", hideEditor);
 })();

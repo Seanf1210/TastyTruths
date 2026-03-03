@@ -14,42 +14,55 @@
 
   <section class="profile-header">
     <div class="profile-picture-area">
+      <img src="{{ avatar_url }}" alt="{{ profile_user.username }} profile picture" class="profile-pic">
       <h1>Edit Profile</h1>
       <p>{{ profile_user.username }}</p>
     </div>
   </section>
 
   <section class="profile-bio-area">
-    <form method="post" action="{{ url_for('edit_public_profile', username=profile_user.username) }}" class="profile-bio-form">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <form method="post" action="{{ url_for('edit_public_profile', username=profile_user.username) }}" class="profile-bio-form" enctype="multipart/form-data">
+      {{ form.hidden_tag() }}
 
-      <label for="profile-image-path">Profile picture URL or static path</label>
-      <input
-        id="profile-image-path"
-        name="profile_image_path"
-        type="text"
-        maxlength="255"
-        value="{{ profile_user.profile_image_path or '' }}"
-        placeholder="https://example.com/avatar.jpg or uploads/profiles/me.jpg"
-      >
+      <label for="profile-picture">{{ form.profile_picture.label.text }}</label>
+      {{ form.profile_picture(
+        id="profile-picture",
+        accept="image/png,image/jpeg,image/webp"
+      ) }}
+      <small>PNG/JPG/JPEG/WEBP only. Up to 2MB. Will be cropped to square and resized to 256x256.</small>
+      {% if form.profile_picture.errors %}
+        {% for error in form.profile_picture.errors %}
+          <div class="alert alert-error">{{ error }}</div>
+        {% endfor %}
+      {% endif %}
 
       <label for="profile-bio">Bio</label>
-      <textarea
+      {{ form.bio(
         id="profile-bio"
-        name="bio"
-        rows="5"
-        maxlength="500"
+        ,
+        rows="5",
+        maxlength="500",
         placeholder="Write your bio here..."
-      >{{ profile_user.bio or "" }}</textarea>
+      ) }}
+      {% if form.bio.errors %}
+        {% for error in form.bio.errors %}
+          <div class="alert alert-error">{{ error }}</div>
+        {% endfor %}
+      {% endif %}
 
       <label for="profile-experiences">Experiences (one per line)</label>
-      <textarea
+      {{ form.experiences_text(
         id="profile-experiences"
-        name="experiences_text"
-        rows="6"
-        maxlength="3000"
+        ,
+        rows="6",
+        maxlength="3000",
         placeholder="Line cook&#10;Recipe testing&#10;Food blogging"
-      >{{ experiences_text }}</textarea>
+      ) }}
+      {% if form.experiences_text.errors %}
+        {% for error in form.experiences_text.errors %}
+          <div class="alert alert-error">{{ error }}</div>
+        {% endfor %}
+      {% endif %}
 
       <button type="submit" class="button">Save Profile</button>
       <a href="{{ url_for('public_profile', username=profile_user.username) }}" class="button button-secondary">Cancel</a>
