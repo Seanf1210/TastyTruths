@@ -2315,7 +2315,7 @@ details[open] .recipe-controls-arrow {
   max-height: 120px;   /* prevents growing */
 }
 .bio-char-counter {
-  position: absolute;
+  position: relative;
   right: 10px;
   bottom: 6px;
   font-size: 0.8rem;
