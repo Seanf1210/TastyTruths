@@ -2,6 +2,7 @@
 from datetime import datetime
 from argon2 import PasswordHasher
 from sqlalchemy import event, JSON
+from sqlalchemy.exc import IntegrityError
 from flask_login import UserMixin
 from services.db import db
 from utilities.slug import base_slug, uniquify_slug
@@ -169,6 +170,36 @@ class RecipeSlugHistory(db.Model):
     old_slug = db.Column(db.String(90), index=True, nullable=False)
     changed_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
+
+class Friendship(db.Model):
+    __tablename__ = "friendships"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    friend_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    __table_args__ = (
+        db.UniqueConstraint("user_id", "friend_id", name="uq_friendships_user_friend"),
+        db.CheckConstraint("user_id != friend_id", name="ck_friendships_no_self"),
+        db.Index("ix_friendships_user_id", "user_id"),
+        db.Index("ix_friendships_friend_id", "friend_id"),
+    )
+
+    user = db.relationship("User", foreign_keys=[user_id])
+    friend = db.relationship("User", foreign_keys=[friend_id])
+
+    def __repr__(self):
+        return f"<Friendship {self.user_id}->{self.friend_id}>"
+
 # --- Normalize dietary tag names ---
 @event.listens_for(DietaryTag, "before_insert")
 @event.listens_for(DietaryTag, "before_update")
@@ -236,6 +267,20 @@ class User(db.Model, UserMixin):
     )
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     blog_posts = db.relationship("BlogPost", back_populates="author", cascade="all, delete-orphan")
+    friendships = db.relationship(
+        "Friendship",
+        foreign_keys="Friendship.user_id",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+    friends = db.relationship(
+        "User",
+        secondary="friendships",
+        primaryjoin="User.id==Friendship.user_id",
+        secondaryjoin="User.id==Friendship.friend_id",
+        lazy="selectin",
+        viewonly=True,
+    )
 
     @property
     def is_admin(self) -> bool:
@@ -255,6 +300,59 @@ class User(db.Model, UserMixin):
             return hasher.verify(self.password_hash, raw_password)
         except Exception:
             return False
+
+    def add_friend(self, friend: "User"):
+        if friend is None:
+            return False, "Friend is required."
+        if getattr(friend, "id", None) is None or getattr(self, "id", None) is None:
+            raise ValueError("Users must be saved before adding friends.")
+        if self.id == friend.id:
+            return False, "You cannot friend yourself."
+
+        session = db.session
+        try:
+            with session.begin_nested():
+                already = (
+                    session.query(Friendship)
+                    .filter_by(user_id=self.id, friend_id=friend.id)
+                    .first()
+                )
+                if already:
+                    return False, "Already friends."
+                session.add(Friendship(user_id=self.id, friend_id=friend.id))
+                session.add(Friendship(user_id=friend.id, friend_id=self.id))
+            session.commit()
+            return True, "Friend added."
+        except IntegrityError:
+            session.rollback()
+            return False, "Already friends."
+
+        except Exception:
+            session.rollback()
+            raise
+
+    def remove_friend(self, friend: "User") -> bool:
+        if friend is None:
+            return False
+        if getattr(friend, "id", None) is None or getattr(self, "id", None) is None:
+            return False
+
+        session = db.session
+        with session.begin_nested():
+            deleted = session.query(Friendship).filter_by(user_id=self.id, friend_id=friend.id).delete(synchronize_session=False)
+            deleted += session.query(Friendship).filter_by(user_id=friend.id, friend_id=self.id).delete(synchronize_session=False)
+        session.commit()
+        return deleted > 0
+
+    def list_friends(self):
+        if getattr(self, "id", None) is None:
+            return []
+        return (
+            User.query.join(Friendship, Friendship.friend_id == User.id)
+            .filter(Friendship.user_id == self.id)
+            .order_by(User.username)
+            .all()
+        )
 
     @classmethod
     def normalize_dietary_restrictions(cls, values):

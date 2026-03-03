@@ -26,6 +26,16 @@ Standard
 username:demo_user
 password:demo-user
 
+"username": "demo_social",
+"password": "demo-social",
+
+"username": "demo_one_friend",
+"password": "demo-one",
+
+"username": "demo_three_friends",
+"password": "demo-three",
+
+
 =========================================================
 CREATE A VIRTUAL ENVIRONMENT
 =========================================================

@@ -17,6 +17,33 @@ DEMO_USERNAME = "demo_user"
 DEFAULT_PROFILE_IMAGE = "default.png"
 SEED_PROFILE_IMAGE_FILENAME = "stock_alpaca.jpg"
 
+ADDITIONAL_USERS = [
+    {
+        "username": "demo_social",
+        "email": "social@example.com",
+        "password": "demo-social",
+        "bio": "I love meeting new cooks and trying every recipe here.",
+        "experience": "Community builder and recipe tester.",
+        "experiences": ["Hosting potlucks", "Recipe feedback", "Sharing tips"],
+    },
+    {
+        "username": "demo_one_friend",
+        "email": "onefriend@example.com",
+        "password": "demo-one",
+        "bio": "Keeping my circle small while I learn the basics.",
+        "experience": "Practicing simple dishes.",
+        "experiences": ["Beginner cooking"],
+    },
+    {
+        "username": "demo_three_friends",
+        "email": "threefriends@example.com",
+        "password": "demo-three",
+        "bio": "Building a close crew of kitchen buddies.",
+        "experience": "Swapping family recipes.",
+        "experiences": ["Family recipes", "Weeknight meals"],
+    },
+]
+
 
 def _ensure_seed_profile_image() -> None:
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -121,6 +148,62 @@ def _ensure_staff_users() -> tuple[User, User]:
         db.session.add(moderator)
 
     return admin, moderator
+
+
+def _ensure_additional_seed_users() -> dict[str, User]:
+    created = {}
+    for row in ADDITIONAL_USERS:
+        user = User.query.filter_by(username=row["username"]).first()
+        if user:
+            if not (user.bio or "").strip():
+                user.bio = row["bio"]
+            if not (user.experience or "").strip():
+                user.experience = row["experience"]
+            if not isinstance(user.experiences, list) or not user.experiences:
+                user.experiences = row["experiences"]
+            user.profile_image = SEED_PROFILE_IMAGE_FILENAME
+        else:
+            user = User(
+                username=row["username"],
+                email=row["email"],
+                role="normal",
+                bio=row["bio"],
+                experience=row["experience"],
+                experiences=row["experiences"],
+                profile_image=SEED_PROFILE_IMAGE_FILENAME,
+            )
+            user.set_password(row["password"])
+            db.session.add(user)
+        created[row["username"]] = user
+    return created
+
+
+def _seed_friendships(all_users: list[User], extra_users: dict[str, User]) -> None:
+    if not extra_users:
+        return
+
+    lookup = {user.username: user for user in all_users}
+    social = extra_users.get("demo_social")
+    one_friend = extra_users.get("demo_one_friend")
+    three_friends = extra_users.get("demo_three_friends")
+
+    if social:
+        for user in all_users:
+            if user.id != social.id:
+                social.add_friend(user)
+
+    if one_friend and social:
+        one_friend.add_friend(social)
+
+    if three_friends:
+        targets = [
+            lookup.get("demo_social"),
+            lookup.get("demo_user"),
+            lookup.get("demo_admin"),
+        ]
+        for target in targets:
+            if target and target.id != three_friends.id:
+                three_friends.add_friend(target)
 
 
 def _recipe_rows() -> Iterable[dict]:
@@ -375,11 +458,14 @@ def seed_demo_data() -> bool:
     _ensure_seed_profile_image()
     author = _ensure_demo_user()
     admin, moderator = _ensure_staff_users()
+    extra_users = _ensure_additional_seed_users()
     db.session.flush()
-    seed_users = [author, admin, moderator]
+    recipe_seed_users = [author, admin, moderator]
+    seed_users = recipe_seed_users + list(extra_users.values())
+    _seed_friendships(seed_users, extra_users)
     base_recipe_templates = list(_recipe_rows())[:5]
     recipe_rows = []
-    for user_index, seed_user in enumerate(seed_users):
+    for user_index, seed_user in enumerate(recipe_seed_users):
         for template in base_recipe_templates:
             row = dict(template)
             if user_index > 0:
