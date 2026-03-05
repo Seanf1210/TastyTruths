@@ -2364,3 +2364,25 @@ details[open] .recipe-controls-arrow {
 .profile-text-block {
   white-space: pre-line;
 }
+
+/* Inline Avatar */
+.inline-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+.author-profile-link {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.author-profile-link:hover {
+  text-decoration: underline;
+}
