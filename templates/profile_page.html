@@ -256,9 +256,9 @@
             {% for friend in friend_cards %}
             <article class="friend-card">
                 <img src="{{ friend.avatar_url }}" alt="{{ friend.user.username }} profile picture" class="friend-card-avatar">
-                <div class="friend-card-content">
+                <div class="friend-card-content friend-info">
                     <h3><a href="{{ url_for('public_profile', username=friend.user.username) }}">{{ friend.user.username }}</a></h3>
-                    <p>{{ friend.bio_snippet or "No bio yet." }}</p>
+                    <p class="friend-bio">{{ friend.bio_snippet or "No bio yet." }}</p>
                 </div>
             </article>
             {% endfor %}
