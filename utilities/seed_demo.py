@@ -156,6 +156,39 @@ def _ensure_staff_users() -> tuple[User, User]:
     return admin, moderator
 
 
+def _ensure_additional_seed_users() -> list[User]:
+    users: list[User] = []
+    for row in ADDITIONAL_USERS:
+        username = row["username"]
+        user = User.query.filter_by(username=username).first()
+        if user:
+            if not (user.email or "").strip():
+                user.email = row["email"]
+            if not (user.bio or "").strip():
+                user.bio = row["bio"]
+            if not (user.experience or "").strip():
+                user.experience = row["experience"]
+            if not isinstance(user.experiences, list) or not user.experiences:
+                user.experiences = list(row["experiences"])
+            if not (user.role or "").strip():
+                user.role = "normal"
+            user.profile_image = SEED_PROFILE_IMAGE_FILENAME
+        else:
+            user = User(
+                username=username,
+                email=row["email"],
+                role="normal",
+                bio=row["bio"],
+                experience=row["experience"],
+                experiences=list(row["experiences"]),
+                profile_image=SEED_PROFILE_IMAGE_FILENAME,
+            )
+            user.set_password(row["password"])
+            db.session.add(user)
+        users.append(user)
+    return users
+
+
 def _ensure_friend_request(
     requester: User,
     recipient: User,
@@ -184,6 +217,27 @@ def _ensure_friendship_seed_data(author: User, admin: User, moderator: User) -> 
     _ensure_friend_request(moderator, author, FRIEND_REQUEST_PENDING)
     _ensure_friend_request(admin, moderator, FRIEND_REQUEST_DECLINED)
     _ensure_friend_request(author, admin, FRIEND_REQUEST_ACCEPTED)
+
+
+def _ensure_additional_social_graph(
+    author: User,
+    admin: User,
+    moderator: User,
+    extra_users: list[User],
+) -> None:
+    if len(extra_users) < 3:
+        return
+
+    social_user, one_friend_user, three_friends_user = extra_users[:3]
+    ensure_bidirectional_friendship(author.id, social_user.id)
+    ensure_bidirectional_friendship(author.id, one_friend_user.id)
+    ensure_bidirectional_friendship(author.id, three_friends_user.id)
+    ensure_bidirectional_friendship(admin.id, three_friends_user.id)
+    ensure_bidirectional_friendship(moderator.id, three_friends_user.id)
+
+    _ensure_friend_request(social_user, moderator, FRIEND_REQUEST_PENDING)
+    _ensure_friend_request(one_friend_user, admin, FRIEND_REQUEST_DECLINED)
+    _ensure_friend_request(three_friends_user, social_user, FRIEND_REQUEST_ACCEPTED)
 
 
 def _recipe_rows() -> Iterable[dict]:
@@ -437,6 +491,7 @@ def seed_demo_data() -> bool:
     db.session.flush()
 
     _ensure_friendship_seed_data(author, admin, moderator)
+    _ensure_additional_social_graph(author, admin, moderator, extra_users)
 
     sentinel_recipe = Recipe.query.filter_by(slug=SENTINEL_RECIPE_SLUG).first()
     sentinel_blog = BlogPost.query.filter_by(slug=SENTINEL_BLOG_SLUG).first()
@@ -444,7 +499,7 @@ def seed_demo_data() -> bool:
         db.session.commit()
         return False
 
-    seed_users = [author, admin, moderator]
+    recipe_seed_users = [author, admin, moderator, *extra_users]
     base_recipe_templates = list(_recipe_rows())[:5]
     recipe_rows = []
     for user_index, seed_user in enumerate(recipe_seed_users):

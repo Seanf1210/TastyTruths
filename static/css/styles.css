@@ -1403,6 +1403,12 @@ a:hover {
   margin-right: 0.75rem;
 }
 
+.profile-pic,
+.inline-avatar,
+.friend-card-avatar {
+  border-radius: 50%;
+}
+
 .user-info {
   display: flex;
   flex-direction: column;

@@ -699,6 +699,13 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
             return snippet
         return f"{snippet[: max_length - 3].rstrip()}..."
 
+    @app.context_processor
+    def inject_template_helpers():
+        return {
+            "avatar_url_for_user": _avatar_url_for_user,
+            "profile_pic_url": _profile_pic_url,
+        }
+
     def _build_friend_cards(users) -> list[dict]:
         return [
             {
