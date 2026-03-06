@@ -716,16 +716,18 @@
     recipes.forEach((recipe) => {
       const li = document.createElement("li");
       const totalText = Number.isFinite(recipe._totalMinutes) ? ` • ${recipe._totalMinutes} min total` : "";
+      const authorProfileSlug = String(recipe.author_username || recipe.author_name || "").trim();
+      const displayTitle = String(recipe.display_title || recipe.title || "Untitled Recipe");
       const authorHtml = recipe.author_name 
         ? `<div style="margin-top: 4px; margin-bottom: 4px;">
-             <a href="/profile/${encodeURIComponent(recipe.author_name)}" class="author-profile-link">
+             <a href="/profile/${encodeURIComponent(authorProfileSlug)}" class="author-profile-link">
                <img src="${escapeHtml(recipe.author_avatar_url)}" alt="${escapeHtml(recipe.author_name)}'s profile picture" class="inline-avatar">
                <span>${escapeHtml(recipe.author_name)}</span>
              </a>
            </div>`
         : "";
       li.innerHTML = `
-        <a href="/recipes/${recipe.id}-${recipe.slug}" style="font-weight: bold; font-size: 1.1em;">${escapeHtml(recipe.title || "Untitled Recipe")}</a>
+        <a href="/recipes/${recipe.id}-${recipe.slug}" style="font-weight: bold; font-size: 1.1em;">${escapeHtml(displayTitle)}</a>
         ${authorHtml}
         ${recipe.cuisine ? `<span> • ${escapeHtml(recipe.cuisine)}</span>` : ""}
         ${totalText ? `<span>${escapeHtml(totalText)}</span>` : ""}
@@ -751,9 +753,11 @@
     recipes.slice(0, 3).forEach((recipe) => {
       const article = document.createElement("article");
       article.className = "recipe-card";
+      const authorProfileSlug = String(recipe.author_username || recipe.author_name || "").trim();
+      const displayTitle = String(recipe.display_title || recipe.title || "Untitled Recipe");
       const authorHtml = recipe.author_name
         ? `<div class="recipe-card-author" style="margin-bottom: 8px;">
-             <a href="/profile/${encodeURIComponent(recipe.author_name)}" class="author-profile-link">
+             <a href="/profile/${encodeURIComponent(authorProfileSlug)}" class="author-profile-link">
                <img src="${escapeHtml(recipe.author_avatar_url)}" alt="${escapeHtml(recipe.author_name)}'s profile picture" class="inline-avatar">
                <span class="recipe-author">${escapeHtml(recipe.author_name)}</span>
              </a>
@@ -762,10 +766,10 @@
 
       article.innerHTML = `
         <div class="recipe-card-image">
-          <img src="${escapeHtml(resolveRecipeImageSrc(recipe))}" alt="${escapeHtml(recipe.title || "Recipe image")}" />
+          <img src="${escapeHtml(resolveRecipeImageSrc(recipe))}" alt="${escapeHtml(displayTitle)}" />
         </div>
         <div class="recipe-card-content">
-          <h3 class="recipe-card-title">${escapeHtml(recipe.title || "Untitled Recipe")}</h3>
+          <h3 class="recipe-card-title">${escapeHtml(displayTitle)}</h3>
           ${authorHtml}
           <p class="recipe-card-description">${escapeHtml((recipe.description || "No description available.").slice(0, 120))}</p>
           <div class="recipe-card-meta">

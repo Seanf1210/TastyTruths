@@ -4,24 +4,14 @@
 <article class="recipe-card">
   <div class="recipe-card-image">
     {% if recipe.image_filename %}
-    <img src="{{ url_for('static', filename=recipe.image_filename) }}" alt="{{ recipe.title }}" />
+    <img src="{{ url_for('static', filename=recipe.image_filename) }}" alt="{{ display_recipe_title(recipe) }}" />
     {% else %}
-    <img src="{{ url_for('static', filename='assets/images/placeholder_recipe.png') }}" alt="{{ recipe.title }}" />
+    <img src="{{ url_for('static', filename='assets/images/placeholder_recipe.png') }}" alt="{{ display_recipe_title(recipe) }}" />
     {% endif %}
   </div>
 
   <div class="recipe-card-content">
-    <h3 class="recipe-card-title">{{ recipe.title }}</h3>
-    {% if recipe.author %}
-    <p class="recipe-card-author">
-      By <a href="{{ url_for('public_profile', username=recipe.author.username) }}">{{ recipe.author.username }}</a>
-    </p>
-    {% if current_user.is_authenticated and current_user.id != recipe.author.id %}
-      {% with target_user=recipe.author, next_url=request.full_path.rstrip('?'), add_button_class='button button-secondary', remove_button_class='button button-secondary' %}
-        {% include "partials/_friend_form.html" %}
-      {% endwith %}
-    {% endif %}
-    {% endif %}
+    <h3 class="recipe-card-title">{{ display_recipe_title(recipe) }}</h3>
 
     {% if recipe.author %}
     <div class="recipe-card-author" style="margin-bottom: 8px;">
@@ -30,6 +20,11 @@
         <span class="recipe-author">{{ recipe.author.username }}</span>
       </a>
     </div>
+    {% if current_user.is_authenticated and current_user.id != recipe.author.id %}
+      {% with target_user=recipe.author, next_url=request.full_path.rstrip('?'), add_button_class='button button-secondary', remove_button_class='button button-secondary' %}
+        {% include "partials/_friend_form.html" %}
+      {% endwith %}
+    {% endif %}
     {% endif %}
 
     {% if recipe.description %}

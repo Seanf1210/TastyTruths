@@ -691,6 +691,15 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
             profile_image = app.config["DEFAULT_PROFILE_IMAGE"]
         return _profile_pic_url(profile_image)
 
+    def _display_recipe_title(recipe: Recipe) -> str:
+        raw_title = (getattr(recipe, "title", "") or "").strip()
+        author = getattr(recipe, "author", None)
+        author_username = (getattr(author, "username", "") or "").strip()
+        suffix = f" ({author_username})" if author_username else ""
+        if suffix and raw_title.endswith(suffix):
+            return raw_title[: -len(suffix)].rstrip()
+        return raw_title
+
     def _bio_snippet_for_user(user: User, max_length: int = 120) -> str:
         snippet = (getattr(user, "bio", "") or "").strip()
         if not snippet:
@@ -703,6 +712,7 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
     def inject_template_helpers():
         return {
             "avatar_url_for_user": _avatar_url_for_user,
+            "display_recipe_title": _display_recipe_title,
             "profile_pic_url": _profile_pic_url,
         }
 
@@ -2169,8 +2179,12 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
                 {
                     "id": r.id,
                     "title": r.title,
+                    "display_title": _display_recipe_title(r),
                     "slug": r.slug,
                     "description": r.description or "",
+                    "author_name": r.author.username if r.author else "",
+                    "author_username": r.author.username if r.author else "",
+                    "author_avatar_url": _avatar_url_for_user(r.author) if r.author else "",
                     "cuisine": r.cuisine or "",
                     "prep_time_minutes": r.prep_time_minutes,
                     "cook_time_minutes": r.cook_time_minutes,

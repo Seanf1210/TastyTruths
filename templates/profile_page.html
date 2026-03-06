@@ -214,7 +214,7 @@
                 <div class="recipe-card-image">
                     <a href="{{ url_for('recipe_detail', id_slug=recipe.id ~ '-' ~ recipe.slug) }}">
                         {% if recipe.image_filename %}
-                            <img src="{{ url_for('static', filename=recipe.image_filename) }}" alt="{{ recipe.title }}">
+                            <img src="{{ url_for('static', filename=recipe.image_filename) }}" alt="{{ display_recipe_title(recipe) }}">
                         {% else %}
                             <img src="{{ url_for('static', filename='assets/images/placeholder_recipe.png') }}" alt="Placeholder">
                         {% endif %}
@@ -223,7 +223,7 @@
                 <div class="recipe-card-content">
                     <h3 class="recipe-card-title">
                         <a href="{{ url_for('recipe_detail', id_slug=recipe.id ~ '-' ~ recipe.slug) }}">
-                            {{ recipe.title }}
+                            {{ display_recipe_title(recipe) }}
                         </a>
                     </h3>
                     <p class="recipe-card-description">
