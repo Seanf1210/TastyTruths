@@ -176,7 +176,7 @@ body {
   position: fixed;
   top: 0;
   left: 0;
-  height: 135px;
+  min-height: 110px;
   width: 100%;
   background-color: var(--color-head-foot);
   z-index: 1000;
@@ -188,6 +188,8 @@ body {
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
+  gap: var(--space-4);
+  min-height: 110px;
   padding: var(--space-3) calc(var(--space-3) + var(--space-1));
 }
 
@@ -204,8 +206,11 @@ body {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: calc(var(--space-6) + var(--space-6));
+  justify-content: center;
+  flex: 1 1 auto;
+  gap: clamp(var(--space-3), 3vw, var(--space-5));
   padding: var(--space-2) 0;
+  flex-wrap: wrap;
 }
 
 .main-nav a,
@@ -226,16 +231,20 @@ body {
 /* Auth links: column on desktop; row on mobile in media query */
 .auth-links {
   display: flex;
-  flex-direction: row; 
-  align-items: center; /* Vertically centers the moon with the buttons */
-  gap: var(--space-3);  /* Adds space between buttons and the moon */
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 0 0 auto;
+  gap: var(--space-2);
 }
 
-/* Add this new class to keep the buttons stacked vertically */
 .auth-buttons-stack {
   display: flex;
-  flex-direction: column;
-  gap: calc(var(--space-1) + 2px);
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  flex-wrap: wrap;
 }
 
 /* Remove the inline styles from the button in base.html and use this instead */
@@ -246,6 +255,9 @@ body {
   font-size: 1.8rem;
   display: flex;
   align-items: center;
+  justify-content: center;
+  min-width: 42px;
+  min-height: 42px;
   padding: 0;
   transition: transform 0.2s ease;
 }
@@ -1296,13 +1308,60 @@ a:hover {
    RESPONSIVE
    ========================================================= */
 @media (max-width: 768px) {
+  body {
+    padding-top: 185px;
+  }
+
+  .site-header {
+    min-height: 165px;
+  }
+
+  .header-container {
+    align-items: flex-start;
+    min-height: 165px;
+    padding-top: var(--space-2);
+    padding-bottom: var(--space-2);
+  }
+
+  .main-nav {
+    justify-content: flex-start;
+    gap: var(--space-2);
+  }
+
   .auth-links {
     flex-direction: row;
     align-items: center;
+    align-self: flex-start;
+  }
+
+  .auth-buttons-stack {
+    justify-content: flex-start;
   }
 }
 
 @media (max-width: 420px) {
+  body {
+    padding-top: 225px;
+  }
+
+  .header-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .main-nav {
+    justify-content: center;
+  }
+
+  .auth-links {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .auth-buttons-stack {
+    flex: 1 1 auto;
+  }
+
   .blog-preview-container {
     gap: calc(var(--space-2) - 2px);
   }
@@ -2361,6 +2420,155 @@ details[open] .recipe-controls-arrow {
   opacity: 1;
 }
 
+.profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.profile-picture-area {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.profile-heading-block h1 {
+  margin: 0;
+}
+
+.profile-friend-count-label {
+  margin: var(--space-1) 0 0;
+  color: var(--color-muted-text);
+  font-weight: 600;
+}
+
+.profile-friends-link {
+  display: inline-block;
+  margin-top: var(--space-1);
+}
+
+.profile-friend-panel {
+  min-width: 220px;
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
+}
+
+.profile-friend-actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.profile-friend-login-hint,
+.profile-friend-message {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.profile-friend-message.is-error {
+  color: #933;
+}
+
+.profile-friend-message.is-success {
+  color: #2f6b2f;
+}
+
+.profile-friend-message.is-info {
+  color: var(--color-muted-text);
+}
+
+.friend-action-form {
+  display: inline-flex;
+  margin: 0;
+}
+
+.blog-friend-action {
+  display: inline-flex;
+  margin-left: var(--space-2);
+}
+
+.recipe-card-author {
+  margin: 0 0 var(--space-2) 0;
+  color: var(--color-muted-text);
+}
+
+.recipe-author-actions {
+  margin-top: var(--space-2);
+}
+
+.profile-friends-section,
+.friends-page {
+  margin-top: var(--space-5);
+}
+
+.friends-page-header {
+  margin-bottom: var(--space-4);
+}
+
+.friends-page-header h1 {
+  margin-bottom: var(--space-1);
+}
+
+.friends-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-3);
+}
+
+.friend-card {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-outline);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.friend-card-avatar {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.friend-card-content {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.friend-card-content h2,
+.friend-card-content h3 {
+  margin: 0;
+}
+
+.friend-card-content p {
+  margin: 0;
+}
+
+.friend-card-links {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
 .profile-text-block {
   white-space: pre-line;
+}
+
+@media (max-width: 768px) {
+  .profile-header {
+    align-items: stretch;
+  }
+
+  .profile-friend-panel {
+    min-width: 0;
+    width: 100%;
+  }
 }

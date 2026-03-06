@@ -1,0 +1,20 @@
+{% if target_user and current_user.is_authenticated and current_user.id != target_user.id %}
+  {% set next_target = next_url if next_url is defined and next_url else request.full_path.rstrip('?') %}
+  {% if target_user.id in (viewer_friend_ids if viewer_friend_ids is defined else []) %}
+  <form method="post" action="{{ url_for('remove_friend', username=target_user.username) }}" class="friend-action-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="next" value="{{ next_target }}">
+    <button type="submit" class="{{ remove_button_class if remove_button_class is defined else 'button button-secondary' }}">
+      {{ remove_label if remove_label is defined else 'Remove Friend' }}
+    </button>
+  </form>
+  {% else %}
+  <form method="post" action="{{ url_for('add_friend', username=target_user.username) }}" class="friend-action-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="next" value="{{ next_target }}">
+    <button type="submit" class="{{ add_button_class if add_button_class is defined else 'button' }}">
+      {{ add_label if add_label is defined else 'Add Friend' }}
+    </button>
+  </form>
+  {% endif %}
+{% endif %}

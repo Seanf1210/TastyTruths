@@ -7,7 +7,13 @@ import shutil
 from typing import Iterable
 
 from services.db import db
-from services.models import BlogPost, Recipe, User
+from services.friendships import (
+    FRIEND_REQUEST_ACCEPTED,
+    FRIEND_REQUEST_DECLINED,
+    FRIEND_REQUEST_PENDING,
+    ensure_bidirectional_friendship,
+)
+from services.models import BlogPost, FriendRequest, Recipe, User
 from services.nutrition import ensure_ingredient_exists_in_assets
 
 
@@ -121,6 +127,36 @@ def _ensure_staff_users() -> tuple[User, User]:
         db.session.add(moderator)
 
     return admin, moderator
+
+
+def _ensure_friend_request(
+    requester: User,
+    recipient: User,
+    status: str,
+) -> FriendRequest:
+    friend_request = FriendRequest.query.filter_by(
+        requester_id=requester.id,
+        recipient_id=recipient.id,
+        status=status,
+    ).first()
+    if friend_request:
+        return friend_request
+
+    friend_request = FriendRequest(
+        requester_id=requester.id,
+        recipient_id=recipient.id,
+        status=status,
+    )
+    db.session.add(friend_request)
+    db.session.flush()
+    return friend_request
+
+
+def _ensure_friendship_seed_data(author: User, admin: User, moderator: User) -> None:
+    ensure_bidirectional_friendship(author.id, admin.id)
+    _ensure_friend_request(moderator, author, FRIEND_REQUEST_PENDING)
+    _ensure_friend_request(admin, moderator, FRIEND_REQUEST_DECLINED)
+    _ensure_friend_request(author, admin, FRIEND_REQUEST_ACCEPTED)
 
 
 def _recipe_rows() -> Iterable[dict]:
@@ -367,15 +403,19 @@ def _blog_rows(author_id: int) -> Iterable[dict]:
 
 
 def seed_demo_data() -> bool:
-    sentinel_recipe = Recipe.query.filter_by(slug=SENTINEL_RECIPE_SLUG).first()
-    sentinel_blog = BlogPost.query.filter_by(slug=SENTINEL_BLOG_SLUG).first()
-    if sentinel_recipe or sentinel_blog:
-        return False
-
     _ensure_seed_profile_image()
     author = _ensure_demo_user()
     admin, moderator = _ensure_staff_users()
     db.session.flush()
+
+    _ensure_friendship_seed_data(author, admin, moderator)
+
+    sentinel_recipe = Recipe.query.filter_by(slug=SENTINEL_RECIPE_SLUG).first()
+    sentinel_blog = BlogPost.query.filter_by(slug=SENTINEL_BLOG_SLUG).first()
+    if sentinel_recipe or sentinel_blog:
+        db.session.commit()
+        return False
+
     seed_users = [author, admin, moderator]
     base_recipe_templates = list(_recipe_rows())[:5]
     recipe_rows = []

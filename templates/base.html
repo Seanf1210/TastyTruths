@@ -53,6 +53,7 @@
         <div class="auth-links">
           <div class="auth-buttons-stack">
             {% if current_user.is_authenticated %}
+              <a href="{{ url_for('friends_page') }}" class="button">Friends</a>
               <a href="{{ url_for('profile_page') }}" class="button profile-btn">
                 <ion-icon name="person-circle-outline"></ion-icon>
                 {{ current_user.username }}
