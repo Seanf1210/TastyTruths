@@ -312,8 +312,12 @@ body {
   font-weight: 600;
 }
 
-.profile-btn ion-icon {
-  font-size: 1.2rem;
+.header-profile-avatar {
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
 }
 
 /* =========================================================

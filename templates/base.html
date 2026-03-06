@@ -55,12 +55,23 @@
             {% if current_user.is_authenticated %}
               <a href="{{ url_for('friends_page') }}" class="button">Friends</a>
               <a href="{{ url_for('profile_page') }}" class="button profile-btn">
-                <ion-icon name="person-circle-outline"></ion-icon>
+                <img
+                  src="{{ avatar_url_for_user(current_user) }}"
+                  alt="{{ current_user.username }} profile picture"
+                  class="header-profile-avatar"
+                />
                 {{ current_user.username }}
               </a>
               <a href="{{ url_for('logout') }}" class="button">Logout</a>
             {% else %}
-              <a href="{{ url_for('login') }}" class="button">Login</a>
+              <a href="{{ url_for('login') }}" class="button profile-btn">
+                <img
+                  src="{{ profile_pic_url('default.png') }}"
+                  alt="Default profile picture"
+                  class="header-profile-avatar"
+                />
+                Login
+              </a>
               <a href="{{ url_for('signup') }}" class="button signup">Sign Up</a>
             {% endif %}
           </div>
