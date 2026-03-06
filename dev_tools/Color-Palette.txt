@@ -16,7 +16,7 @@ Two Palettes:
     #90A955
     #ECF39E
 
-Dark Pallete:
+Dark Pallet:
     #0b0f0c;            /* page background */
     #121814;       /* cards */
     #18211b; /* muted cards/sections */

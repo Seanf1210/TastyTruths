@@ -21,6 +21,13 @@
           by <span class="recipe-author">User #{{ recipe.author_id }}</span>
         {% endif %}
       </p>
+      {% if recipe_author and current_user.is_authenticated and current_user.id != recipe_author.id %}
+      <div class="recipe-author-actions">
+        {% with target_user=recipe_author, next_url=request.full_path.rstrip('?') %}
+          {% include "partials/_friend_form.html" %}
+        {% endwith %}
+      </div>
+      {% endif %}
     </div>
 
     <!-- Image -->

@@ -7,7 +7,13 @@ import shutil
 from typing import Iterable
 
 from services.db import db
-from services.models import BlogPost, Recipe, User
+from services.friendships import (
+    FRIEND_REQUEST_ACCEPTED,
+    FRIEND_REQUEST_DECLINED,
+    FRIEND_REQUEST_PENDING,
+    ensure_bidirectional_friendship,
+)
+from services.models import BlogPost, FriendRequest, Recipe, User
 from services.nutrition import ensure_ingredient_exists_in_assets
 
 
@@ -150,60 +156,34 @@ def _ensure_staff_users() -> tuple[User, User]:
     return admin, moderator
 
 
-def _ensure_additional_seed_users() -> dict[str, User]:
-    created = {}
-    for row in ADDITIONAL_USERS:
-        user = User.query.filter_by(username=row["username"]).first()
-        if user:
-            if not (user.bio or "").strip():
-                user.bio = row["bio"]
-            if not (user.experience or "").strip():
-                user.experience = row["experience"]
-            if not isinstance(user.experiences, list) or not user.experiences:
-                user.experiences = row["experiences"]
-            user.profile_image = SEED_PROFILE_IMAGE_FILENAME
-        else:
-            user = User(
-                username=row["username"],
-                email=row["email"],
-                role="normal",
-                bio=row["bio"],
-                experience=row["experience"],
-                experiences=row["experiences"],
-                profile_image=SEED_PROFILE_IMAGE_FILENAME,
-            )
-            user.set_password(row["password"])
-            db.session.add(user)
-        created[row["username"]] = user
-    return created
+def _ensure_friend_request(
+    requester: User,
+    recipient: User,
+    status: str,
+) -> FriendRequest:
+    friend_request = FriendRequest.query.filter_by(
+        requester_id=requester.id,
+        recipient_id=recipient.id,
+        status=status,
+    ).first()
+    if friend_request:
+        return friend_request
+
+    friend_request = FriendRequest(
+        requester_id=requester.id,
+        recipient_id=recipient.id,
+        status=status,
+    )
+    db.session.add(friend_request)
+    db.session.flush()
+    return friend_request
 
 
-def _seed_friendships(all_users: list[User], extra_users: dict[str, User]) -> None:
-    if not extra_users:
-        return
-
-    lookup = {user.username: user for user in all_users}
-    social = extra_users.get("demo_social")
-    one_friend = extra_users.get("demo_one_friend")
-    three_friends = extra_users.get("demo_three_friends")
-
-    if social:
-        for user in all_users:
-            if user.id != social.id:
-                social.add_friend(user)
-
-    if one_friend and social:
-        one_friend.add_friend(social)
-
-    if three_friends:
-        targets = [
-            lookup.get("demo_social"),
-            lookup.get("demo_user"),
-            lookup.get("demo_admin"),
-        ]
-        for target in targets:
-            if target and target.id != three_friends.id:
-                three_friends.add_friend(target)
+def _ensure_friendship_seed_data(author: User, admin: User, moderator: User) -> None:
+    ensure_bidirectional_friendship(author.id, admin.id)
+    _ensure_friend_request(moderator, author, FRIEND_REQUEST_PENDING)
+    _ensure_friend_request(admin, moderator, FRIEND_REQUEST_DECLINED)
+    _ensure_friend_request(author, admin, FRIEND_REQUEST_ACCEPTED)
 
 
 def _recipe_rows() -> Iterable[dict]:
@@ -450,19 +430,21 @@ def _blog_rows(author_id: int) -> Iterable[dict]:
 
 
 def seed_demo_data() -> bool:
-    sentinel_recipe = Recipe.query.filter_by(slug=SENTINEL_RECIPE_SLUG).first()
-    sentinel_blog = BlogPost.query.filter_by(slug=SENTINEL_BLOG_SLUG).first()
-    if sentinel_recipe or sentinel_blog:
-        return False
-
     _ensure_seed_profile_image()
     author = _ensure_demo_user()
     admin, moderator = _ensure_staff_users()
     extra_users = _ensure_additional_seed_users()
     db.session.flush()
-    recipe_seed_users = [author, admin, moderator]
-    seed_users = recipe_seed_users + list(extra_users.values())
-    _seed_friendships(seed_users, extra_users)
+
+    _ensure_friendship_seed_data(author, admin, moderator)
+
+    sentinel_recipe = Recipe.query.filter_by(slug=SENTINEL_RECIPE_SLUG).first()
+    sentinel_blog = BlogPost.query.filter_by(slug=SENTINEL_BLOG_SLUG).first()
+    if sentinel_recipe or sentinel_blog:
+        db.session.commit()
+        return False
+
+    seed_users = [author, admin, moderator]
     base_recipe_templates = list(_recipe_rows())[:5]
     recipe_rows = []
     for user_index, seed_user in enumerate(recipe_seed_users):

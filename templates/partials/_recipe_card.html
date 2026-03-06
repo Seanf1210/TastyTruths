@@ -12,6 +12,16 @@
 
   <div class="recipe-card-content">
     <h3 class="recipe-card-title">{{ recipe.title }}</h3>
+    {% if recipe.author %}
+    <p class="recipe-card-author">
+      By <a href="{{ url_for('public_profile', username=recipe.author.username) }}">{{ recipe.author.username }}</a>
+    </p>
+    {% if current_user.is_authenticated and current_user.id != recipe.author.id %}
+      {% with target_user=recipe.author, next_url=request.full_path.rstrip('?'), add_button_class='button button-secondary', remove_button_class='button button-secondary' %}
+        {% include "partials/_friend_form.html" %}
+      {% endwith %}
+    {% endif %}
+    {% endif %}
 
     {% if recipe.author %}
     <div class="recipe-card-author" style="margin-bottom: 8px;">

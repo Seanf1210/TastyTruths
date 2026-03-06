@@ -1,8 +1,7 @@
 # services/models.py
 from datetime import datetime
 from argon2 import PasswordHasher
-from sqlalchemy import event, JSON
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy import CheckConstraint, Index, JSON, UniqueConstraint, event
 from flask_login import UserMixin
 from services.db import db
 from utilities.slug import base_slug, uniquify_slug
@@ -149,7 +148,7 @@ class Recipe(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     author_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
-    author = db.relationship("User", backref="recipes")
+    author = db.relationship("User", foreign_keys=[author_id], back_populates="recipes")
 
 class BlogPost(db.Model):
     __tablename__ = "blog_posts"
@@ -172,6 +171,49 @@ class RecipeSlugHistory(db.Model):
     changed_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
 
+class FriendRequest(db.Model):
+    __tablename__ = "friend_requests"
+
+    id = db.Column(db.Integer, primary_key=True)
+    requester_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    recipient_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    status = db.Column(
+        db.String(20),
+        nullable=False,
+        default="pending",
+        server_default="pending",
+    )
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False,
+    )
+
+    requester = db.relationship("User", foreign_keys=[requester_id])
+    recipient = db.relationship("User", foreign_keys=[recipient_id])
+
+    __table_args__ = (
+        CheckConstraint("requester_id <> recipient_id", name="ck_friend_requests_not_self"),
+        CheckConstraint(
+            "status IN ('pending', 'accepted', 'declined', 'canceled')",
+            name="ck_friend_requests_status",
+        ),
+        Index("ix_friend_requests_requester_id", "requester_id"),
+        Index("ix_friend_requests_recipient_id", "recipient_id"),
+        Index("ix_friend_requests_status", "status"),
+    )
+
+
 class Friendship(db.Model):
     __tablename__ = "friendships"
 
@@ -188,18 +230,14 @@ class Friendship(db.Model):
     )
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
-    __table_args__ = (
-        db.UniqueConstraint("user_id", "friend_id", name="uq_friendships_user_friend"),
-        db.CheckConstraint("user_id != friend_id", name="ck_friendships_no_self"),
-        db.Index("ix_friendships_user_id", "user_id"),
-        db.Index("ix_friendships_friend_id", "friend_id"),
-    )
-
     user = db.relationship("User", foreign_keys=[user_id])
     friend = db.relationship("User", foreign_keys=[friend_id])
 
-    def __repr__(self):
-        return f"<Friendship {self.user_id}->{self.friend_id}>"
+    __table_args__ = (
+        CheckConstraint("user_id <> friend_id", name="ck_friendships_not_self"),
+        CheckConstraint("user_id < friend_id", name="ck_friendships_canonical_order"),
+        UniqueConstraint("user_id", "friend_id", name="uq_friendships_user_friend"),
+    )
 
 # --- Normalize dietary tag names ---
 @event.listens_for(DietaryTag, "before_insert")
@@ -268,20 +306,7 @@ class User(db.Model, UserMixin):
     )
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     blog_posts = db.relationship("BlogPost", back_populates="author", cascade="all, delete-orphan")
-    friendships = db.relationship(
-        "Friendship",
-        foreign_keys="Friendship.user_id",
-        cascade="all, delete-orphan",
-        lazy="selectin",
-    )
-    friends = db.relationship(
-        "User",
-        secondary="friendships",
-        primaryjoin="User.id==Friendship.user_id",
-        secondaryjoin="User.id==Friendship.friend_id",
-        lazy="selectin",
-        viewonly=True,
-    )
+    recipes = db.relationship("Recipe", back_populates="author")
 
     @property
     def is_admin(self) -> bool:
@@ -388,3 +413,28 @@ class User(db.Model, UserMixin):
 
     def __repr__(self):
         return f"<User {self.username}>"
+
+    def add_friend(self, other_user):
+        from services.friendships import add_friendship
+
+        return add_friendship(self, other_user)
+
+    def remove_friend(self, other_user):
+        from services.friendships import remove_friendship
+
+        return remove_friendship(self, other_user)
+
+    def is_friends_with(self, other_user) -> bool:
+        from services.friendships import are_friends
+
+        return are_friends(getattr(self, "id", None), getattr(other_user, "id", None))
+
+    def get_friends(self):
+        from services.friendships import get_friends_for_user
+
+        return get_friends_for_user(getattr(self, "id", None))
+
+    def friend_count(self) -> int:
+        from services.friendships import get_friend_count
+
+        return get_friend_count(getattr(self, "id", None))

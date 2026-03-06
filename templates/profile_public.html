@@ -37,7 +37,22 @@
       {% else %}
       <img src="{{ avatar_url }}" alt="{{ profile_user.username }} profile picture" class="profile-pic">
       {% endif %}
-      <h1>{{ profile_user.username }}</h1>
+      <div class="profile-heading-block">
+        <h1>{{ profile_user.username }}</h1>
+        <p class="profile-friend-count-label">Friends: <span id="friend-count">{{ friend_count }}</span></p>
+        <a class="profile-friends-link" href="{{ url_for('profile_friends', username=profile_user.username) }}">View all friends</a>
+      </div>
+    </div>
+
+    <div class="profile-friend-panel">
+      {% if not current_user.is_authenticated and not is_owner %}
+      <p class="profile-friend-login-hint">Log in to add friends.</p>
+      {% endif %}
+      <div class="profile-friend-actions">
+        {% with target_user=profile_user, next_url=request.full_path.rstrip('?') %}
+          {% include "partials/_friend_form.html" %}
+        {% endwith %}
+      </div>
     </div>
   </section>
 
@@ -198,6 +213,25 @@
     <p class="no-data">No blogs yet.</p>
     {% endif %}
     <a class="blog-read-more" href="{{ url_for('profile_blogs', username=profile_user.username) }}">See all blogs</a>
+  </section>
+
+  <section class="profile-friends-section">
+    <h2>Friends</h2>
+    {% if friend_cards %}
+    <div class="friends-card-grid">
+      {% for friend in friend_cards[:6] %}
+      <article class="friend-card">
+        <img src="{{ friend.avatar_url }}" alt="{{ friend.user.username }} profile picture" class="friend-card-avatar">
+        <div class="friend-card-content">
+          <h3><a href="{{ url_for('public_profile', username=friend.user.username) }}">{{ friend.user.username }}</a></h3>
+          <p>{{ friend.bio_snippet or "No bio yet." }}</p>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="no-data">No friends yet.</p>
+    {% endif %}
   </section>
 </div>
 {% if is_owner %}

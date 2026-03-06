@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title }} - Tasty Truths{% endblock %}
+{% block content %}
+<section class="friends-page container">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <section class="profile-alerts" aria-live="polite">
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }}">{{ message }}</div>
+    {% endfor %}
+  </section>
+  {% endif %}
+  {% endwith %}
+
+  <header class="friends-page-header">
+    <h1>{{ page_title }}</h1>
+    <p>{{ friend_count }} friend{% if friend_count != 1 %}s{% endif %}</p>
+  </header>
+
+  {% if friend_cards %}
+  <div class="friends-card-grid">
+    {% for friend in friend_cards %}
+    <article class="friend-card">
+      <img src="{{ friend.avatar_url }}" alt="{{ friend.user.username }} profile picture" class="friend-card-avatar">
+      <div class="friend-card-content">
+        <h2><a href="{{ url_for('public_profile', username=friend.user.username) }}">{{ friend.user.username }}</a></h2>
+        <p>{{ friend.bio_snippet or "No bio yet." }}</p>
+        <div class="friend-card-links">
+          <a href="{{ url_for('public_profile', username=friend.user.username) }}" class="button">View Profile</a>
+          <a href="{{ url_for('profile_blogs', username=friend.user.username) }}" class="button button-secondary">Blogs</a>
+          {% if current_user.is_authenticated and current_user.id != friend.user.id %}
+            {% with target_user=friend.user, next_url=request.full_path.rstrip('?') %}
+              {% include "partials/_friend_form.html" %}
+            {% endwith %}
+          {% endif %}
+        </div>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="no-data">
+    {% if is_own_friends_page %}
+    You have no friends yet.
+    {% else %}
+    {{ page_user.username }} has no friends yet.
+    {% endif %}
+  </p>
+  {% endif %}
+</section>
+{% endblock %}

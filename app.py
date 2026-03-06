@@ -18,18 +18,31 @@ import argparse
 import random
 import sys
 from functools import wraps
+from urllib.parse import urlparse
 from sqlalchemy import func
-from flask import Flask, request, jsonify, redirect, url_for, redirect, render_template, flash, g, session, has_request_context
+from flask import Flask, request, jsonify, redirect, url_for, redirect, render_template, flash, g
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect, generate_csrf
 from argon2 import PasswordHasher
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
 import os
 from services.db import db
-from services.models import Recipe, RecipeSlugHistory, BlogPost, User, Ingredient
+from services.friendships import (
+    FriendshipError,
+    add_friendship,
+    are_friends,
+    create_friend_request,
+    get_friend_ids,
+    get_friend_count,
+    get_friends_for_user,
+    get_relationship_summary,
+    remove_friendship,
+    respond_to_friend_request,
+)
+from services.models import BlogPost, FriendRequest, Ingredient, Recipe, RecipeSlugHistory, User
 from services.forms import RecipeForm, BlogPostForm, SignupForm, ProfileEditForm
 from services.ingredients import ALLOWED_NUTRIENT_SORT_KEYS, build_ingredient_sort
 from services.ingredient_index import load_ingredients_index, match_ingredient_id, search_suggestions
@@ -110,57 +123,51 @@ PROFILE_PICS_SUBDIR = "uploads/profile_pics"
 ALLOWED_PROFILE_PIC_EXTENSIONS = {"png", "jpg", "jpeg", "webp"}
 
 class AdminOverrideUser(UserMixin):
-    SESSION_DIETARY_KEY = "admin_override_dietary_restrictions"
+    OVERRIDE_USERNAME = "__admin_override__"
+    OVERRIDE_DEFAULTS = {
+        "email": None,
+        "role": "admin",
+        "bio": "Development-only admin override account.",
+        "experience": "Admin override account with full user capabilities for local development.",
+        "experiences": ["Development testing", "Admin override"],
+        "dietary_restrictions": [],
+        "profile_image": DEFAULT_PROFILE_IMAGE,
+    }
 
-    def __init__(self, user_id: str = "admin-override", proxied_user=None, dietary_restrictions=None):
-        self._proxied_user = proxied_user
-        self._dietary_restrictions = []
-        self.role = "admin"
+    def __init__(self, proxied_user: User):
+        object.__setattr__(self, "_proxied_user", proxied_user)
 
-        if proxied_user is not None:
-            self.id = proxied_user.id
-            self.username = proxied_user.username
-        else:
-            self.id = user_id
-            self.username = user_id
-            if dietary_restrictions is not None:
-                self.dietary_restrictions = dietary_restrictions
+    @classmethod
+    def get_or_create_user(cls) -> User:
+        user = User.query.filter_by(username=cls.OVERRIDE_USERNAME).first()
+        if user is not None:
+            changed = False
+            for field, default_value in cls.OVERRIDE_DEFAULTS.items():
+                current_value = getattr(user, field, None)
+                if current_value in (None, ""):
+                    setattr(user, field, list(default_value) if isinstance(default_value, list) else default_value)
+                    changed = True
+            if (user.role or "normal") != "admin":
+                user.role = "admin"
+                changed = True
+            if changed:
+                db.session.commit()
+            return user
 
-    @staticmethod
-    def _normalize_restrictions(values):
-        if values is None:
-            return []
-        if isinstance(values, tuple):
-            values = list(values)
-        normalized, error = User.normalize_dietary_restrictions(values)
-        if error:
-            return []
-        return list(normalized or [])
+        user = User(username=cls.OVERRIDE_USERNAME, **cls.OVERRIDE_DEFAULTS)
+        user.set_password("admin-override")
+        db.session.add(user)
+        db.session.commit()
+        return user
 
-    @property
-    def dietary_restrictions(self):
-        if self._proxied_user is not None:
-            return list(self._proxied_user.dietary_restrictions or [])
+    def __getattr__(self, name):
+        return getattr(self._proxied_user, name)
 
-        if has_request_context():
-            normalized = self._normalize_restrictions(
-                session.get(self.SESSION_DIETARY_KEY, self._dietary_restrictions)
-            )
-            self._dietary_restrictions = normalized
-            # Admin override users are non-persistent; restrictions are session-only.
-            session[self.SESSION_DIETARY_KEY] = list(normalized)
-        return list(self._dietary_restrictions)
-
-    @dietary_restrictions.setter
-    def dietary_restrictions(self, values):
-        normalized = self._normalize_restrictions(values)
-        if self._proxied_user is not None:
-            self._proxied_user.dietary_restrictions = normalized
+    def __setattr__(self, name, value):
+        if name == "_proxied_user":
+            object.__setattr__(self, name, value)
             return
-        self._dietary_restrictions = normalized
-        if has_request_context():
-            # Admin override users are non-persistent; restrictions are session-only.
-            session[self.SESSION_DIETARY_KEY] = list(normalized)
+        setattr(self._proxied_user, name, value)
 
 def create_app(admin_override: bool = False, config_overrides=None, seed_demo: bool = True):
     app = Flask(__name__, static_folder="static", template_folder="templates")
@@ -225,7 +232,7 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
         def _admin_override_user():
             # DEVELOPMENT ONLY — NEVER ENABLE IN PRODUCTION
             g._login_user = AdminOverrideUser(
-                dietary_restrictions=session.get(AdminOverrideUser.SESSION_DIETARY_KEY, [])
+                proxied_user=AdminOverrideUser.get_or_create_user()
             )
     
     @app.route("/logout")
@@ -550,12 +557,20 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
             )
             recipe.nutrition_totals = totals
 
-        return render_template("recipes.html", featured_recipes=featured_recipes)
+        return render_template(
+            "recipes.html",
+            featured_recipes=featured_recipes,
+            viewer_friend_ids=_current_user_friend_ids(),
+        )
 
     @app.route("/blog")
     def blog():
         posts = BlogPost.query.order_by(BlogPost.created_at.desc()).all()
-        return render_template("blog.html", posts=posts)
+        return render_template(
+            "blog.html",
+            posts=posts,
+            viewer_friend_ids=_current_user_friend_ids(),
+        )
 
     @app.get("/blogs/random")
     def random_blog():
@@ -602,7 +617,11 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
         post = BlogPost.query.filter_by(slug=slug).first()
         if not post:
             return render_template("404.html"), 404
-        return render_template("blog_post.html", post=post)
+        return render_template(
+            "blog_post.html",
+            post=post,
+            viewer_friend_ids=_current_user_friend_ids(),
+        )
 
     @app.route("/blog/<slug>/edit", methods=["GET", "POST"])
     @login_required
@@ -672,9 +691,60 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
             profile_image = app.config["DEFAULT_PROFILE_IMAGE"]
         return _profile_pic_url(profile_image)
 
-    @app.context_processor
-    def inject_avatar():
-        return dict(avatar_url_for_user=_avatar_url_for_user)
+    def _bio_snippet_for_user(user: User, max_length: int = 120) -> str:
+        snippet = (getattr(user, "bio", "") or "").strip()
+        if not snippet:
+            return ""
+        if len(snippet) <= max_length:
+            return snippet
+        return f"{snippet[: max_length - 3].rstrip()}..."
+
+    def _build_friend_cards(users) -> list[dict]:
+        return [
+            {
+                "user": friend,
+                "avatar_url": _avatar_url_for_user(friend),
+                "bio_snippet": _bio_snippet_for_user(friend),
+            }
+            for friend in (users or [])
+        ]
+
+    def _current_user_friend_ids() -> set[int]:
+        if not current_user.is_authenticated:
+            return set()
+        cached = getattr(g, "_current_user_friend_ids", None)
+        if cached is None:
+            cached = get_friend_ids(current_user.id)
+            g._current_user_friend_ids = cached
+        return cached
+
+    def _safe_redirect_target(target_url: str | None, fallback_url: str):
+        if not target_url:
+            return redirect(fallback_url)
+        normalized = target_url.strip()
+        if not normalized or normalized.startswith("//"):
+            return redirect(fallback_url)
+        parsed = urlparse(normalized)
+        if parsed.scheme or parsed.netloc:
+            if parsed.netloc != request.host:
+                return redirect(fallback_url)
+            path = parsed.path or "/"
+            if not path.startswith("/"):
+                return redirect(fallback_url)
+            if parsed.query:
+                path = f"{path}?{parsed.query}"
+            return redirect(path)
+        if normalized.startswith("/"):
+            return redirect(normalized)
+        return redirect(fallback_url)
+
+    def _redirect_back(fallback_url: str):
+        target = (
+            (request.form.get("next") or "").strip()
+            or (request.args.get("next") or "").strip()
+            or (request.referrer or "").strip()
+        )
+        return _safe_redirect_target(target, fallback_url)
 
     @app.errorhandler(RequestEntityTooLarge)
     def handle_file_too_large(_exc):
@@ -719,6 +789,92 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
             return None, _forbidden_response()
         return profile_user, None
 
+    @app.post("/friends/add/<username>")
+    @login_required
+    def add_friend(username: str):
+        target_user = _resolve_profile_user(username)
+        if target_user is None:
+            flash("User not found.", "error")
+            return _redirect_back(url_for("friends_page"))
+        if target_user.id == current_user.id:
+            flash("You cannot add yourself as a friend.", "error")
+            return _redirect_back(url_for("public_profile", username=current_user.username))
+
+        try:
+            add_friendship(current_user, target_user)
+            db.session.commit()
+            if hasattr(g, "_current_user_friend_ids"):
+                g._current_user_friend_ids = None
+            flash(f"You are now friends with {target_user.username}.", "success")
+        except FriendshipError as exc:
+            db.session.rollback()
+            flash(exc.message, "error")
+        except IntegrityError:
+            db.session.rollback()
+            flash("That friendship already exists.", "info")
+        except SQLAlchemyError as exc:
+            db.session.rollback()
+            print(f"ERROR adding friend: {exc}")
+            flash("Unable to add friend right now.", "error")
+
+        return _redirect_back(url_for("public_profile", username=target_user.username))
+
+    @app.post("/friends/remove/<username>")
+    @login_required
+    def remove_friend(username: str):
+        target_user = _resolve_profile_user(username)
+        if target_user is None:
+            flash("User not found.", "error")
+            return _redirect_back(url_for("friends_page"))
+
+        try:
+            removed = remove_friendship(current_user, target_user)
+            db.session.commit()
+            if hasattr(g, "_current_user_friend_ids"):
+                g._current_user_friend_ids = None
+            if removed:
+                flash(f"Removed {target_user.username} from your friends.", "success")
+            else:
+                flash(f"You were not friends with {target_user.username}.", "info")
+        except SQLAlchemyError as exc:
+            db.session.rollback()
+            print(f"ERROR removing friend: {exc}")
+            flash("Unable to remove friend right now.", "error")
+
+        return _redirect_back(url_for("public_profile", username=target_user.username))
+
+    @app.get("/friends")
+    @login_required
+    def friends_page():
+        friends = get_friends_for_user(current_user.id)
+        return render_template(
+            "friends.html",
+            page_title="My Friends",
+            page_user=current_user,
+            friend_cards=_build_friend_cards(friends),
+            friend_count=len(friends),
+            viewer_friend_ids=_current_user_friend_ids(),
+            is_own_friends_page=True,
+        )
+
+    @app.get("/profile/<username>/friends")
+    def profile_friends(username: str):
+        profile_user = _resolve_profile_user(username)
+        if profile_user is None:
+            return render_template("404.html"), 404
+
+        viewer_friend_ids = _current_user_friend_ids()
+        friends = get_friends_for_user(profile_user.id)
+        return render_template(
+            "friends.html",
+            page_title=f"{profile_user.username}'s Friends",
+            page_user=profile_user,
+            friend_cards=_build_friend_cards(friends),
+            friend_count=len(friends),
+            viewer_friend_ids=viewer_friend_ids,
+            is_own_friends_page=current_user.is_authenticated and current_user.id == profile_user.id,
+        )
+
     @app.get("/profile/<username>")
     def public_profile(username: str):
         profile_user = _resolve_profile_user(username)
@@ -757,6 +913,8 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
 
         avatar_url = _avatar_url_for_user(profile_user)
         is_owner = current_user.is_authenticated and current_user.id == profile_user.id
+        profile_friends = get_friends_for_user(profile_user.id)
+        viewer_friend_ids = _current_user_friend_ids()
 
         return render_template(
             "profile_public.html",
@@ -766,6 +924,9 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
             common_dietary_restrictions=COMMON_DIETARY_RESTRICTIONS,
             avatar_url=avatar_url,
             is_owner=is_owner,
+            friend_count=len(profile_friends),
+            friend_cards=_build_friend_cards(profile_friends),
+            viewer_friend_ids=viewer_friend_ids,
             recent_blog_posts=recent_blog_posts,
         )
 
@@ -925,6 +1086,7 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
             "profile_blogs.html",
             profile_user=profile_user,
             posts=posts,
+            viewer_friend_ids=_current_user_friend_ids(),
         )
 
     @app.route("/profile/<username>/edit", methods=["GET", "POST"])
@@ -1062,6 +1224,7 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
         user_recipes = []
         dietary_restrictions = []
         experience_text = ""
+        profile_friends = []
         if profile_user:
             user_recipes = (
                 Recipe.query.filter_by(author_id=profile_user.id)
@@ -1070,6 +1233,7 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
             )
             dietary_restrictions = list(profile_user.dietary_restrictions or [])
             experience_text = (profile_user.experience or "").strip()
+            profile_friends = get_friends_for_user(profile_user.id)
             if not experience_text:
                 legacy_experiences = profile_user.experiences or []
                 if isinstance(legacy_experiences, list):
@@ -1085,6 +1249,8 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
             common_dietary_restrictions=COMMON_DIETARY_RESTRICTIONS,
             is_owner=bool(profile_user and current_user.is_authenticated and current_user.id == profile_user.id),
             experience_text=experience_text,
+            friend_count=len(profile_friends),
+            friend_cards=_build_friend_cards(profile_friends),
         )
 
     @app.post("/profile/picture")
@@ -1530,6 +1696,101 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
     def _json():
         return request.get_json(force=True) or {}
 
+    def _friend_auth_error():
+        return jsonify({"error": "authentication required"}), 401
+
+    @app.post("/api/friends/request")
+    def api_friends_request():
+        if not current_user.is_authenticated:
+            return _friend_auth_error()
+
+        data = request.get_json(silent=True) or {}
+        username = (data.get("username") or "").strip()
+        recipient = _resolve_profile_user(username)
+        if recipient is None:
+            return jsonify({"error": "Recipient user does not exist."}), 400
+        if recipient.id == current_user.id:
+            return jsonify({"error": "You cannot add yourself as a friend."}), 400
+
+        try:
+            friend_request = create_friend_request(current_user.id, recipient.id)
+            db.session.commit()
+        except FriendshipError as exc:
+            db.session.rollback()
+            return jsonify({"error": exc.message, "code": exc.error_code}), exc.status_code
+        except SQLAlchemyError as exc:
+            db.session.rollback()
+            print(f"ERROR creating friend request: {exc}")
+            return jsonify({"error": "Unable to create friend request right now."}), 500
+
+        return (
+            jsonify(
+                {
+                    "status": friend_request.status,
+                    "request_id": friend_request.id,
+                    "friend_count": get_friend_count(current_user.id),
+                    "relationship_state": "outgoing_pending",
+                }
+            ),
+            201,
+        )
+
+    @app.post("/api/friends/respond")
+    def api_friends_respond():
+        if not current_user.is_authenticated:
+            return _friend_auth_error()
+
+        data = request.get_json(silent=True) or {}
+        request_id = data.get("request_id")
+        action = (data.get("action") or "").strip().lower()
+        try:
+            request_id = int(request_id)
+        except (TypeError, ValueError):
+            return jsonify({"error": "request_id must be an integer."}), 400
+
+        friend_request = db.session.get(FriendRequest, request_id)
+        if friend_request is None:
+            return jsonify({"error": "Friend request not found."}), 404
+
+        try:
+            status = respond_to_friend_request(friend_request, current_user.id, action)
+            db.session.commit()
+        except FriendshipError as exc:
+            db.session.rollback()
+            return jsonify({"error": exc.message, "code": exc.error_code}), exc.status_code
+        except SQLAlchemyError as exc:
+            db.session.rollback()
+            print(f"ERROR responding to friend request: {exc}")
+            return jsonify({"error": "Unable to update friend request right now."}), 500
+
+        return jsonify(
+            {
+                "status": status,
+                "request_id": friend_request.id,
+                "friend_count": get_friend_count(current_user.id),
+                "requester_friend_count": get_friend_count(friend_request.requester_id),
+                "relationship_state": "friends" if status == "accepted" else "none",
+            }
+        )
+
+    @app.get("/api/friends/summary")
+    def api_friends_summary():
+        username = (request.args.get("username") or "").strip()
+        profile_user = _resolve_profile_user(username)
+        if profile_user is None:
+            return jsonify({"error": "User not found."}), 404
+
+        viewer_user_id = current_user.id if current_user.is_authenticated else None
+        summary = get_relationship_summary(viewer_user_id, profile_user.id)
+        return jsonify(
+            {
+                "username": profile_user.username,
+                "friend_count": summary["friend_count"],
+                "relationship_state": summary["relationship_state"],
+                "request_id": summary["request_id"],
+            }
+        )
+
     @app.get("/api/users/<int:user_id>/dietary-restrictions")
     @login_required
     def get_user_dietary_restrictions(user_id: int):
@@ -1863,6 +2124,7 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
         return render_template(
             "recipe_detail.html",
             recipe=r,
+            recipe_author=r.author,
             ingredients=ingredients_list,
             nutrition=nutrition_totals,
             nutrition_note=nutrition_note,
@@ -1871,6 +2133,7 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
             ingredient_filter_clear_url=url_for(
                 "recipe_detail", id_slug=f"{r.id}-{r.slug}"
             ),
+            viewer_friend_ids=_current_user_friend_ids(),
         )
 
     @app.get("/recipes/random")
@@ -1909,8 +2172,6 @@ def create_app(admin_override: bool = False, config_overrides=None, seed_demo: b
                     "dietary_tags": r.dietary_tags or [],
                     "image_filename": r.image_filename or "",
                     "created_at": r.created_at.isoformat() if r.created_at else None,
-                    "author_name": r.author.username if r.author else None,
-                    "author_avatar_url": _avatar_url_for_user(r.author) if r.author else None,
                 }
                 for r in rows
             ]
@@ -2007,4 +2268,13 @@ def _run_dev_server():
 if __name__ == "__main__":
     _run_dev_server()
 else:
-    app = create_app()
+    if "pytest" in sys.modules:
+        app = create_app(
+            config_overrides={
+                "TESTING": True,
+                "SQLALCHEMY_DATABASE_URI": "sqlite://",
+            },
+            seed_demo=False,
+        )
+    else:
+        app = create_app()

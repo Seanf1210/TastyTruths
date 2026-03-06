@@ -51,6 +51,13 @@
             <img src="{{ avatar_url_for_user(post.author) }}" alt="{{ post.author.username }}'s profile picture" class="inline-avatar">
             <span itemprop="name">{{ post.author.username }}</span>
           </a>
+          {% if current_user.is_authenticated and current_user.id != post.author.id %}
+          <span class="blog-friend-action">
+            {% with target_user=post.author, next_url=request.full_path.rstrip('?'), add_button_class='button button-secondary', remove_button_class='button button-secondary' %}
+              {% include "partials/_friend_form.html" %}
+            {% endwith %}
+          </span>
+          {% endif %}
           {% else %}
           <span itemprop="name">Unknown</span>
           {% endif %}
